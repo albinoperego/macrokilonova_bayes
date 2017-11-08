@@ -1,5 +1,12 @@
 import numpy as np
 
+class Data(object):
+    def __init__(self,data)
+        self.data = data
+
+    def __call__(self):
+        return self.data
+
 class MassAngularDistribution(object):
 
     def __init__(self,angular_law_distribution):
@@ -53,3 +60,6 @@ if __name__=="__main__":
     M = MassAngularDistribution("sin2")
     x = M(1.0,angular_distribution, step_angle=0.1)
     print x,x.sum()
+
+    D = Data(np.linspace(0,1,10))
+    print D()
