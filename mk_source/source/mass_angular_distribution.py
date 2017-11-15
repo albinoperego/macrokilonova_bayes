@@ -42,7 +42,7 @@ def step_mass_distribution(m_tot, angles_array, **kwargs):
     
     o = []
     for a in angles_array:
-        if np.sin(0.5*(a[1]-a[0])) < np.sin(step_angle):
+        if np.sin(0.5*(a[1]+a[0])) < np.sin(step_angle):
             o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
         else:
             o.append(np.maximum(m_tot * 1.e-4,1.e-5))
