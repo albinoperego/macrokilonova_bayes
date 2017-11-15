@@ -36,20 +36,36 @@ def sin2_mass_distribution(m_tot,angles_array, **kwargs):
 def step_mass_distribution(m_tot, angles_array, **kwargs):
 
     step_angle = kwargs['step_angle']
+    high_lat_flag = kwargs['high_lat_flag']
     if step_angle is None:
         print("Error! Must specify a step angle in radians! exiting\n")
         exit(-1)
-    
+
+    if high_lat_flag is None:
+        print("Error! User must specify high or low latitude side! exiting\n")
+        exit(-1)
+    elif (high_lat_flag != 1 and high_lat_flag != 0):
+        print("Error! User must specify 1 for high latitude and 0 for low latitude! exiting\n")
+        exit(-1)    
+
     o = []
-    for a in angles_array:
-        if np.sin(0.5*(a[1]+a[0])) < np.sin(step_angle):
-            o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
-        else:
-            o.append(np.maximum(m_tot * 1.e-4,1.e-5))
+    if (high_lat_flag == 1):
+	for a in angles_array:
+            if np.sin(0.5*(a[1]+a[0])) < np.sin(step_angle):
+	        o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
+            else:
+	        o.append(np.maximum(m_tot * 1.e-4,1.e-5))
+    else:
+	for a in angles_array:
+            if np.sin(0.5*(a[1]+a[0])) > np.sin(step_angle):
+	        o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
+            else:
+	        o.append(np.maximum(m_tot * 1.e-4,1.e-5))
+
     return np.array(o)
 
 if __name__=="__main__":
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
-    M = MassAngularDistribution("sin2")
-    x = M(1.0,angular_distribution, step_angle=0.1)
+    M = MassAngularDistribution("step")
+    x = M(1.0,angular_distribution, step_angle=1.1,high_lat_flag=0)
     print x,x.sum()
