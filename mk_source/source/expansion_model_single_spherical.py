@@ -1,6 +1,5 @@
 import numpy as np
 import units
-from scipy import interpolate
 
 class ExpansionModelSingleSpherical(object):
 
