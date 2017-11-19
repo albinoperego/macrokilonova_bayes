@@ -90,7 +90,7 @@ def expansion_angular_distribution(model_name,angular_distribution,omega_distrib
         t0eps = 1.3
         L_bol.append(np.array([bol_lum(alpha,en,et,t,t0eps,sigma0,m) for en,et,t,m in zip(eps_nuc,e_th,time,m_rad)]))
 
-    return r_ph,L_bol
+    return np.asarray(r_ph),np.asarray(L_bol)
 
 
 if __name__=="__main__":
