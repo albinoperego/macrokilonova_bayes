@@ -35,7 +35,7 @@ def sin2_mass_distribution(m_tot,angles_array, **kwargs):
 
 def step_mass_distribution(m_tot, angles_array, **kwargs):
 
-    step_angle = kwargs['step_angle']
+    step_angle = kwargs['step_angle_mass']
     high_lat_flag = kwargs['high_lat_flag']
     if step_angle is None:
         print("Error! Must specify a step angle in radians! exiting\n")
@@ -67,5 +67,5 @@ def step_mass_distribution(m_tot, angles_array, **kwargs):
 if __name__=="__main__":
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     M = MassAngularDistribution("step")
-    x = M(1.0,angular_distribution, step_angle=1.1,high_lat_flag=0)
+    x = M(1.0,angular_distribution, step_angle_mass=1.1,high_lat_flag=0)
     print x,x.sum()

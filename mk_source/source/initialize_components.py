@@ -9,14 +9,16 @@ import units
 
 def InitializeComponent(mass_dist,vel_dist,op_dist):
     MAD = mass_angular_distribution.MassAngularDistribution(mass_dist)
-    VAD  = velocity_angular_distribution.VelocityAngularDistribution(vel_dist)
-    OAD  = opacity_angular_distribution.OpacityAngularDistribution(op_dist)
+    VAD = velocity_angular_distribution.VelocityAngularDistribution(vel_dist)
+    OAD = opacity_angular_distribution.OpacityAngularDistribution(op_dist)
     return MAD,VAD,OAD
 
-def FillComponent(m_tot,angular_distribution,**kwargs):
-    x = M(m_tot,angular_distribution)
-    y = V(angular_distribution,**kwargs)
-    z = V(angular_distribution,**kwargs)
+def FillComponent(MM,VV,OO,m_tot,angular_distribution,**kwargs):
+    print ('I am filling')
+    x = MM(m_tot,angular_distribution,**kwargs)
+    print ('x done')
+    y = VV(angular_distribution,**kwargs)
+    z = OO(angular_distribution,**kwargs)
     return x,y,z
 
 def r_ph_calc(vel,t):
@@ -32,7 +34,7 @@ def calc_eps_nuc(kappa,time,val_min):
   return tmp 
 
 def ft_eps_nuc(time):
-  time_day=time*sec2day
+  time_day=time*units.sec2day
   tmp = min(max(4*time_day-4.,-20),20)
   return 0.5 + 2.5/(1.+np.exp(tmp))
 
@@ -43,11 +45,12 @@ def bol_lum(alpha,eps_nuc,eps_th,t,t0,sigma0,m_em):
   eps=heat_rate(eps_nuc,alpha,eps_th,t,t0,sigma0)
   return m_em*eps
 
-def expansion_angular_distribution(model_name,angular_distribution,omega_distribution,m_tot,time,**kwargs):
+def expansion_angular_distribution(MM,VV,OO,ET,model_name,angular_distribution,omega_distribution,m_tot,time,**kwargs):
 
     M = expansion_model_single_spherical.ExpansionModelSingleSpherical(model_name)
-    m_ej_dist,v_rms_dist,kappa_dist = FillComponent(m_tot,angular_distribution,**kwargs)   
+    m_ej_dist,v_rms_dist,kappa_dist = FillComponent(MM,VV,OO,m_tot,angular_distribution,**kwargs)   
     v_min = 0.0001
+
 
     r_ph = []
     L_bol = []
@@ -56,7 +59,10 @@ def expansion_angular_distribution(model_name,angular_distribution,omega_distrib
 
         vel,m_vel,t_diff,t_fs = M(Omega,m_ej,v_rms,v_min,kappa)
 
-        print('I am here')
+        print('I am before t_diff extremes')
+        print 'Min t_diff',min(t_diff)
+        print 'Max t_diff',max(t_diff)
+
 
         f_vel_t_diff = interpolate.interp1d(t_diff[::-1],vel[::-1])
         f_vel_t_fs   = interpolate.interp1d(t_fs[::-1],vel[::-1])
@@ -94,7 +100,7 @@ def expansion_angular_distribution(model_name,angular_distribution,omega_distrib
 
 
 if __name__=="__main__":
-    M,V,O = InitializeComponent("sin2","step","step")
+    MM,VV,OO = InitializeComponent("sin2","step","step")
     ET = thermalization.Thermalization("BKWM")
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     omega_distribution = [0.01,0.2,0.5]
@@ -102,7 +108,7 @@ if __name__=="__main__":
     time_max = 172800.   #
     n_time = 200
     time = np.linspace(time_min,time_max,n_time)
-    r_ph, L_bol = expansion_angular_distribution("GK",angular_distribution,omega_distribution,0.1,time,low_lat_vel=0.2,high_lat_vel=0.001,step_angle_vel=1.0,low_lat_op=0.2,high_lat_op=0.001,step_angle_op=1.0)
+    r_ph, L_bol = expansion_angular_distribution(MM,VV,OO,ET,"GK",angular_distribution,omega_distribution,0.1,time,low_lat_vel=0.2,high_lat_vel=0.001,step_angle_vel=1.0,low_lat_op=0.2,high_lat_op=0.001,step_angle_op=1.0)
 
     print r_ph
 
