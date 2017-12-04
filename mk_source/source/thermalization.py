@@ -43,8 +43,8 @@ def BKWM_therm_efficiency(**kwargs):
         exit(-1)
     coeff=therm_efficiency_params(m,omega,v)
     time_days=t*units.sec2day
-    tmp = 2.*coeff[1]*time_days**coeff[2]
-    return 0.36*(np.exp(-coeff[0]*time_days) + np.log(1.+tmp)/tmp )
+    tmp = float(2.*coeff[1]*time_days**coeff[2])
+    return float(0.36*(np.exp(-coeff[0]*time_days) + np.log(1.+tmp)/tmp ))
 
 def cnst_therm_efficiency(**kwargs):
     thef = kwargs['cnst_eff']

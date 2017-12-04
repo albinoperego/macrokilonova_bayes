@@ -7,17 +7,24 @@ import opacity_angular_distribution
 import initialize_components
 import units
 import initialize_components
+import observer_projection as op
 
 def T_eff_calc(Lum,dOmega,r_ph):
-  return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
+    return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
 
 def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_model,**kwargs):
 
 # initialize global time
-    time_min = 36000.      #
-    time_max = 100000.   #
+    time_min = 300.       #
+    time_max = 2000000.   #
     n_time = 200
-    time = np.linspace(time_min,time_max,n_time)
+#    time = np.linspace(time_min,time_max,n_time)
+    time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+
+
+    print('')
+    print('I have initialized the time')
+    print(time.shape)
 
     n_ang = len(ang_dist)
 
@@ -67,8 +74,15 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         r_ph_dyn = np.full((n_ang,n_time),units.small)
         L_bol_dyn = np.full((n_ang,n_time),units.small)
 
+    g = open('test.txt','w')
+    for i  in range(n_time):
+      g.write('%20s %20s %20s\n' %(time[i],r_ph_dyn[0][i],L_bol_dyn[0][i]))
+    g.close()
 
-    if(wind_flag == True):
+    if (wind_flag == True):
+
+        print('')
+        print('I am doing the wind')
 
         mass_dist_law_w  = kwargs['mass_dist_law_wind']
         m_ej_w           = kwargs['m_ej_wind']
@@ -90,9 +104,10 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         low_lat_op_w     = kwargs['low_lat_op_wind']    
 
         M,V,O = initialize_components.InitializeComponent(mass_dist_law_w,vel_dist_law_w,kappa_dist_law_w)
-
+        print('initialization of the components')
 
         ET = thermalization.Thermalization(therm_model)
+        print('initialization of the thermalization models')
 
         r_ph_wind, L_bol_wind = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_w,time,step_angle_mass=step_angle_mass_w,high_lat_flag = high_lat_flag_w,vel_dist_law=vel_dist_law_w,central_vel = central_vel_w,min_vel= min_vel_w,max_vel=max_vel_w,step_angle_vel=step_angle_vel_w,high_lat_vel=high_lat_vel_w,low_lat_vel=low_lat_vel_w,kappa_dist_law= kappa_dist_law_w,central_op=central_op_w,min_op=min_op_w,max_op=max_op_w,step_angle_op=step_angle_op_w,high_lat_op=high_lat_op_w,low_lat_op=low_lat_op_w)
 
@@ -144,26 +159,43 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         r_ph_sec = np.full((n_ang,n_time),units.small)
         L_bol_sec = np.full((n_ang,n_time),units.small)
 
+    print('I am before choosing r_ph')
+
     r_ph_tot = np.maximum(np.maximum(r_ph_dyn,r_ph_wind),r_ph_sec)
+
+    print('size L_bol_dyn',L_bol_dyn.shape)
+    print('size L_bol_sec',L_bol_sec.shape)
+    print('size L_bol_wind',L_bol_wind.shape)
+
     L_bol_tot = L_bol_dyn + L_bol_wind + L_bol_sec
+
+    g = open('test3.txt','w')
+    for i  in range(n_time):
+      g.write('%20s %20s %20s\n' %(time[i],r_ph_tot[0][i],L_bol_tot[0][i]))
+    g.close()
+
+#    exit(-1)
   
     tmp = []
     for k in range(n_ang):
         tmp.append(np.array([T_eff_calc(L,omega_dist[k],R) for L,R in zip(L_bol_tot[k,:],r_ph_tot[k,:])]))
         T_eff_tot = np.asarray(tmp)
     
-    return r_ph_tot,L_bol_tot,T_eff_tot 
-
+    return time,r_ph_tot,L_bol_tot,T_eff_tot 
 
 if __name__=="__main__":
     AD = angular_distribution.AngularDistribution("uniform")
     ang_dist, omega_dist = AD(12)
 
+#initialize the observer location
+    FF = op.ObserverProjection(12)
+    flux_factor = FF([15.],1.)
+
     dyn_flag = False
     wind_flag = True
     sec_flag = False
 
-    r_ph_tot,L_bol_tot,T_eff_tot = lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,'GK','BKWM',
+    time,r_ph_tot,L_bol_tot,T_eff_tot = lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,'GK','BKWM',
 # mass dynamic ejecta
         mass_dist_law_dyn='sin2',
         m_ej_dyn=0.005,
@@ -227,6 +259,3 @@ if __name__=="__main__":
         step_angle_op_sec =None,
         high_lat_op_sec   =None,
         low_lat_op_sec    =None)
-
-    print r_ph_tot
-
