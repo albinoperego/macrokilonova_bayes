@@ -44,7 +44,7 @@ def bol_lum(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,EPSNUC,me
   eps=EPSNUC(alpha,t,t0eps,sigma0,eps0,ET,mej,omega,v_rms,cnst_eff,cnst_a_eps_nuc=a_eps_nuc,cnst_b_eps_nuc=b_eps_nuc,cnst_t_eps_nuc=t_eps_nuc,opacity=kappa)
   return m_em*eps
 
-def expansion_angular_distribution(MM,VV,OO,ET,EPSNUC,model_name,angular_distribution,omega_distribution,m_tot,time,v_min,n_v,vscale,**kwargs):
+def expansion_angular_distribution(MM,VV,OO,ET,EPSNUC,model_name,angular_distribution,omega_distribution,m_tot,time,v_min,n_v,vscale,eps0,sigma0,alpha,t0eps,cnst_eff,a_eps_nuc,b_eps_nuc,t_eps_nuc,**kwargs):
 
     M = expansion_model_single_spherical.ExpansionModelSingleSpherical(model_name)
     m_ej_dist,v_rms_dist,kappa_dist = FillComponent(MM,VV,OO,m_tot,angular_distribution,**kwargs)   
@@ -73,14 +73,6 @@ def expansion_angular_distribution(MM,VV,OO,ET,EPSNUC,model_name,angular_distrib
 
 #        e_th = np.array([ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=0.333) for t in time])
 
-        eps0 = 1.2e+19
-        sigma0 = 0.11
-        alpha = 1.3
-        t0eps = 1.3
-        cnst_eff = 0.3333
-        a_eps_nuc = 0.5
-        b_eps_nuc = 2.5
-        t_eps_nuc = 1.
 #        eps_nuc = np.array([calc_eps_nuc(kappa,t,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc) for t in time])
 
         L_bol.append(np.array([bol_lum(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,EPSNUC,m_ej,Omega,v_rms,kappa,cnst_eff,mr) for t,mr in zip(time,m_rad)]))

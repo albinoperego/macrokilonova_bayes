@@ -13,7 +13,7 @@ import nuclear_heat
 def T_eff_calc(Lum,dOmega,r_ph):
     return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
 
-def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_model,time_min,time_max,n_time,tscale,v_min,n_v,vscale,**kwargs):
+def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_model,time_min,time_max,n_time,tscale,v_min,n_v,vscale,eps_ye_dep,eps0,sigma0,alpha,t0eps,cnst_eff,a_eps_nuc,b_eps_nuc,t_eps_nuc,**kwargs):
 
 # initialize global time
     if (tscale == 'linear'):
@@ -23,8 +23,6 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
     else:
         print('Error! Wrong option for the time scale')
         exit(-1)
-
-    eps_ye_dep = True
 
     n_ang = len(ang_dist)
 
@@ -56,7 +54,7 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         M,V,O = initialize_components.InitializeComponent(mass_dist_law_d,vel_dist_law_d,kappa_dist_law_d)
         ET = thermalization.Thermalization(therm_model)
         EPSNUC = nuclear_heat.NuclearHeat(eps_ye_dep)
-        r_ph_dyn, L_bol_dyn = initialize_components.expansion_angular_distribution(M,V,O,ET,EPSNUC,exp_model,ang_dist,omega_dist,m_ej_d,time,v_min,n_v,vscale,
+        r_ph_dyn, L_bol_dyn = initialize_components.expansion_angular_distribution(M,V,O,ET,EPSNUC,exp_model,ang_dist,omega_dist,m_ej_d,time,v_min,n_v,vscale,eps0,sigma0,alpha,t0eps,cnst_eff,a_eps_nuc,b_eps_nuc,t_eps_nuc,
           step_angle_mass = step_angle_mass_d,
           high_lat_flag  = high_lat_flag_d,
           vel_dist_law   = vel_dist_law_d,
@@ -113,7 +111,7 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         EPSNUC = nuclear_heat.NuclearHeat(eps_ye_dep)
 
 
-        r_ph_wind, L_bol_wind = initialize_components.expansion_angular_distribution(M,V,O,ET,EPSNUC,exp_model,ang_dist,omega_dist,m_ej_w,time,v_min,n_v,vscale,step_angle_mass=step_angle_mass_w,high_lat_flag = high_lat_flag_w,vel_dist_law=vel_dist_law_w,central_vel = central_vel_w,min_vel= min_vel_w,max_vel=max_vel_w,step_angle_vel=step_angle_vel_w,high_lat_vel=high_lat_vel_w,low_lat_vel=low_lat_vel_w,kappa_dist_law= kappa_dist_law_w,central_op=central_op_w,min_op=min_op_w,max_op=max_op_w,step_angle_op=step_angle_op_w,high_lat_op=high_lat_op_w,low_lat_op=low_lat_op_w)
+        r_ph_wind, L_bol_wind = initialize_components.expansion_angular_distribution(M,V,O,ET,EPSNUC,exp_model,ang_dist,omega_dist,m_ej_w,time,v_min,n_v,vscale,eps0,sigma0,alpha,t0eps,cnst_eff,a_eps_nuc,b_eps_nuc,t_eps_nuc,step_angle_mass=step_angle_mass_w,high_lat_flag = high_lat_flag_w,vel_dist_law=vel_dist_law_w,central_vel = central_vel_w,min_vel= min_vel_w,max_vel=max_vel_w,step_angle_vel=step_angle_vel_w,high_lat_vel=high_lat_vel_w,low_lat_vel=low_lat_vel_w,kappa_dist_law= kappa_dist_law_w,central_op=central_op_w,min_op=min_op_w,max_op=max_op_w,step_angle_op=step_angle_op_w,high_lat_op=high_lat_op_w,low_lat_op=low_lat_op_w)
 
     else:
         r_ph_wind = np.full((n_ang,n_time),units.small)
@@ -146,7 +144,7 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         M,V,O = initialize_components.InitializeComponent(mass_dist_law_s,vel_dist_law_s,kappa_dist_law_s)
         ET = thermalization.Thermalization(therm_model)
         EPSNUC = nuclear_heat.NuclearHeat(eps_ye_dep)
-        r_ph_sec, L_bol_sec = initialize_components.expansion_angular_distribution(M,V,O,ET,EPSNUC,exp_model,ang_dist,omega_dist,m_ej_s,time,v_min,n_v,vscale,
+        r_ph_sec, L_bol_sec = initialize_components.expansion_angular_distribution(M,V,O,ET,EPSNUC,exp_model,ang_dist,omega_dist,m_ej_s,time,v_min,n_v,vscale,eps0,sigma0,alpha,t0eps,cnst_eff,a_eps_nuc,b_eps_nuc,t_eps_nuc,
           step_angle_mass = step_angle_mass_s,
           high_lat_flag  = high_lat_flag_s,
           vel_dist_law   = vel_dist_law_s,

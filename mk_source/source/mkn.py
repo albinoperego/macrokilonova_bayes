@@ -47,8 +47,19 @@ v_min  = 1.e-6
 n_v    = 200
 vscale = 'linear'
 
+# nuclear heating values
+eps_ye_dep = True
+eps0 = 1.2e+19
+sigma0 = 0.11
+alpha = 1.3
+t0eps = 1.3
+cnst_eff = 0.3333
+a_eps_nuc = 0.5
+b_eps_nuc = 2.5
+t_eps_nuc = 1.
+
 # compute the lightcurve
-time,r_ph_tot,L_bol_tot,T_eff_tot = lc.lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,'GK','BKWM',time_min,time_max,n_time,tscale,v_min,n_v,vscale,
+time,r_ph_tot,L_bol_tot,T_eff_tot = lc.lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,'GK','BKWM',time_min,time_max,n_time,tscale,v_min,n_v,vscale,eps_ye_dep,eps0,sigma0,alpha,t0eps,cnst_eff,a_eps_nuc,b_eps_nuc,t_eps_nuc,
 # mass dynamic ejecta
         mass_dist_law_dyn   ='sin2',
         m_ej_dyn            =0.005,
@@ -128,9 +139,6 @@ for ilambda in residuals.keys():
 print('')
 print('logL')
 print(logL)
-
-for ilambda in mag.keys():
-    print(ilambda,mag[ilambda]['name'])
 
 write_output = True
 if (write_output):
