@@ -40,11 +40,11 @@ def r_ph_calc(vel,t):
 #def heat_rate(eps_nuc,alpha,eps_th,t,t0,sigma0):
 #  return eps_nuc*(0.5 - 1./np.pi * np.arctan((t-t0)/sigma0))**alpha * (eps_th/0.5)
 
-def bol_lum(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,mej,omega,v_rms,kappa,cnst_eff,m_em):
-  eps=nuclear_heat.heat_rate(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,mej,omega,v_rms,kappa,cnst_eff)
+def bol_lum(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,EPSNUC,mej,omega,v_rms,kappa,cnst_eff,m_em):
+  eps=EPSNUC(alpha,t,t0eps,sigma0,eps0,ET,mej,omega,v_rms,cnst_eff,cnst_a_eps_nuc=a_eps_nuc,cnst_b_eps_nuc=b_eps_nuc,cnst_t_eps_nuc=t_eps_nuc,opacity=kappa)
   return m_em*eps
 
-def expansion_angular_distribution(MM,VV,OO,ET,model_name,angular_distribution,omega_distribution,m_tot,time,v_min,n_v,vscale,**kwargs):
+def expansion_angular_distribution(MM,VV,OO,ET,EPSNUC,model_name,angular_distribution,omega_distribution,m_tot,time,v_min,n_v,vscale,**kwargs):
 
     M = expansion_model_single_spherical.ExpansionModelSingleSpherical(model_name)
     m_ej_dist,v_rms_dist,kappa_dist = FillComponent(MM,VV,OO,m_tot,angular_distribution,**kwargs)   
@@ -83,7 +83,7 @@ def expansion_angular_distribution(MM,VV,OO,ET,model_name,angular_distribution,o
         t_eps_nuc = 1.
 #        eps_nuc = np.array([calc_eps_nuc(kappa,t,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc) for t in time])
 
-        L_bol.append(np.array([bol_lum(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,m_ej,Omega,v_rms,kappa,cnst_eff,mr) for t,mr in zip(time,m_rad)]))
+        L_bol.append(np.array([bol_lum(alpha,t,t0eps,sigma0,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc,ET,EPSNUC,m_ej,Omega,v_rms,kappa,cnst_eff,mr) for t,mr in zip(time,m_rad)]))
 
     return np.asarray(r_ph),np.asarray(L_bol)
 
