@@ -2,8 +2,11 @@ import numpy as np
 
 class AngularDistribution(object):
 
-    def __init__(self,angular_law):
+    def __init__(self,angular_law,n_slices):
 
+        if n_slices % 2 == 1:
+            print('Error: n_slices must be an even number!')
+            exit(-1)
         if angular_law=="uniform":
             self.angular_distribution = uniform_ang
         elif angular_law=="cos_uniform":

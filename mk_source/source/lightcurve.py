@@ -12,96 +12,97 @@ import observer_projection as op
 def T_eff_calc(Lum,dOmega,r_ph):
     return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
 
-def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_model,**kwargs):
+def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_model,time_min,time_max,n_time,tscale,v_min,n_v,vscale,**kwargs):
 
 # initialize global time
-    time_min = 300.       #
-    time_max = 2000000.   #
-    n_time = 200
-#    time = np.linspace(time_min,time_max,n_time)
-    time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+    if (tscale == 'linear'):
+        time = np.linspace(time_min,time_max,num=n_time)
+    elif (tscale == 'log'):
+        time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+    else:
+        print('Error! Wrong option for the time scale')
+        exit(-1)
 
-
-    print('')
-    print('I have initialized the time')
-    print(time.shape)
 
     n_ang = len(ang_dist)
 
     if(dyn_flag == True):
 
-        mass_dist_law_d  = kwargs['mass_dist_law_dyn']
-        m_ej_d           = kwargs['m_ej_dyn']
-        step_angle_mass_d  = kwargs['step_angle_mass_dyn']
-        high_lat_flag_d  = kwargs['high_lat_flag_dyn']
-        vel_dist_law_d   = kwargs['vel_dist_law_dyn']
-        central_vel_d    = kwargs['central_vel_dyn'] 
-        min_vel_d        = kwargs['min_vel_dyn']      
-        max_vel_d        = kwargs['max_vel_dyn']      
-        step_angle_vel_d   = kwargs['step_angle_vel_dyn'] 
-        high_lat_vel_d   = kwargs['high_lat_vel_dyn'] 
-        low_lat_vel_d    = kwargs['low_lat_vel_dyn']  
-        kappa_dist_law_d = kwargs['kappa_dist_law_dyn']
-        central_op_d     = kwargs['central_op_dyn']    
-        min_op_d         = kwargs['min_op_dyn']        
-        max_op_d         = kwargs['max_op_dyn']        
-        step_angle_op_d    = kwargs['step_angle_op_dyn']   
-        high_lat_op_d    = kwargs['high_lat_op_dyn']  
-        low_lat_op_d     = kwargs['low_lat_op_dyn']    
+        print('')
+        print('I am doing the dynamic ejecta')
+
+        mass_dist_law_d   = kwargs['mass_dist_law_dyn']
+        m_ej_d            = kwargs['m_ej_dyn']
+        step_angle_mass_d = kwargs['step_angle_mass_dyn']
+        high_lat_flag_d   = kwargs['high_lat_flag_dyn']
+        vel_dist_law_d    = kwargs['vel_dist_law_dyn']
+        central_vel_d     = kwargs['central_vel_dyn'] 
+        min_vel_d         = kwargs['min_vel_dyn']      
+        max_vel_d         = kwargs['max_vel_dyn']      
+        step_angle_vel_d  = kwargs['step_angle_vel_dyn'] 
+        high_lat_vel_d    = kwargs['high_lat_vel_dyn'] 
+        low_lat_vel_d     = kwargs['low_lat_vel_dyn']  
+        kappa_dist_law_d  = kwargs['kappa_dist_law_dyn']
+        central_op_d      = kwargs['central_op_dyn']    
+        min_op_d          = kwargs['min_op_dyn']        
+        max_op_d          = kwargs['max_op_dyn']        
+        step_angle_op_d   = kwargs['step_angle_op_dyn']   
+        high_lat_op_d     = kwargs['high_lat_op_dyn']  
+        low_lat_op_d      = kwargs['low_lat_op_dyn']    
 
 
         M,V,O = initialize_components.InitializeComponent(mass_dist_law_d,vel_dist_law_d,kappa_dist_law_d)
         ET = thermalization.Thermalization(therm_model)
-        r_ph_dyn, L_bol_dyn = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_d,time,
+        r_ph_dyn, L_bol_dyn = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_d,time,v_min,n_v,vscale,
           step_angle_mass = step_angle_mass_d,
-          high_lat_flag = high_lat_flag_d,
-          vel_dist_law  = vel_dist_law_d,
-          central_vel   = central_vel_d,
-          min_vel       = min_vel_d,
-          max_vel       = max_vel_d,
-          step_angle_vel  = step_angle_vel_d,
-          high_lat_vel  = high_lat_vel_d,
-          low_lat_vel   = low_lat_vel_d,
-          kappa_dist_law= kappa_dist_law_d,
-          central_op    = central_op_d,
-          min_op        = min_op_d,
-          max_op        = max_op_d,
-          step_angle_op   = step_angle_op_d, 
-          high_lat_op   = high_lat_op_d,
-          low_lat_op    = low_lat_op_d)
+          high_lat_flag  = high_lat_flag_d,
+          vel_dist_law   = vel_dist_law_d,
+          central_vel    = central_vel_d,
+          min_vel        = min_vel_d,
+          max_vel        = max_vel_d,
+          step_angle_vel = step_angle_vel_d,
+          high_lat_vel   = high_lat_vel_d,
+          low_lat_vel    = low_lat_vel_d,
+          kappa_dist_law = kappa_dist_law_d,
+          central_op     = central_op_d,
+          min_op         = min_op_d,
+          max_op         = max_op_d,
+          step_angle_op  = step_angle_op_d, 
+          high_lat_op    = high_lat_op_d,
+          low_lat_op     = low_lat_op_d)
 
     else:
         r_ph_dyn = np.full((n_ang,n_time),units.small)
         L_bol_dyn = np.full((n_ang,n_time),units.small)
 
-    g = open('test.txt','w')
-    for i  in range(n_time):
-      g.write('%20s %20s %20s\n' %(time[i],r_ph_dyn[0][i],L_bol_dyn[0][i]))
-    g.close()
+#    g = open('test.txt','w')
+#    for i  in range(n_time):
+#      g.write('%20s %20s %20s\n' %(time[i],r_ph_dyn[0][i],L_bol_dyn[0][i]))
+#    g.close()
 
     if (wind_flag == True):
 
         print('')
         print('I am doing the wind')
 
-        mass_dist_law_w  = kwargs['mass_dist_law_wind']
-        m_ej_w           = kwargs['m_ej_wind']
-        step_angle_mass_w  = kwargs['step_angle_mass_wind']
-        high_lat_flag_w  = kwargs['high_lat_flag_wind']
-        vel_dist_law_w   = kwargs['vel_dist_law_wind']
-        central_vel_w    = kwargs['central_vel_wind'] 
-        min_vel_w        = kwargs['min_vel_wind']      
-        max_vel_w        = kwargs['max_vel_wind']      
-        step_angle_vel_w   = kwargs['step_angle_vel_wind'] 
-        high_lat_vel_w   = kwargs['high_lat_vel_wind'] 
-        low_lat_vel_w    = kwargs['low_lat_vel_wind']  
-        kappa_dist_law_w = kwargs['kappa_dist_law_wind']
-        central_op_w     = kwargs['central_op_wind']    
-        min_op_w         = kwargs['min_op_wind']        
-        max_op_w         = kwargs['max_op_wind']        
-        step_angle_op_w    = kwargs['step_angle_op_wind']   
-        high_lat_op_w    = kwargs['high_lat_op_wind']  
-        low_lat_op_w     = kwargs['low_lat_op_wind']    
+        mass_dist_law_w   = kwargs['mass_dist_law_wind']
+        m_ej_w            = kwargs['m_ej_wind']
+        step_angle_mass_w = kwargs['step_angle_mass_wind']
+        high_lat_flag_w   = kwargs['high_lat_flag_wind']
+        vel_dist_law_w    = kwargs['vel_dist_law_wind']
+        central_vel_w     = kwargs['central_vel_wind'] 
+        min_vel_w         = kwargs['min_vel_wind']      
+        max_vel_w         = kwargs['max_vel_wind']      
+        step_angle_vel_w  = kwargs['step_angle_vel_wind'] 
+        high_lat_vel_w    = kwargs['high_lat_vel_wind'] 
+        low_lat_vel_w     = kwargs['low_lat_vel_wind']  
+        kappa_dist_law_w  = kwargs['kappa_dist_law_wind']
+        central_op_w      = kwargs['central_op_wind']    
+        min_op_w          = kwargs['min_op_wind']        
+        max_op_w          = kwargs['max_op_wind']        
+        step_angle_op_w   = kwargs['step_angle_op_wind']   
+        high_lat_op_w     = kwargs['high_lat_op_wind']  
+        low_lat_op_w      = kwargs['low_lat_op_wind']    
 
         M,V,O = initialize_components.InitializeComponent(mass_dist_law_w,vel_dist_law_w,kappa_dist_law_w)
         print('initialization of the components')
@@ -109,79 +110,79 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         ET = thermalization.Thermalization(therm_model)
         print('initialization of the thermalization models')
 
-        r_ph_wind, L_bol_wind = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_w,time,step_angle_mass=step_angle_mass_w,high_lat_flag = high_lat_flag_w,vel_dist_law=vel_dist_law_w,central_vel = central_vel_w,min_vel= min_vel_w,max_vel=max_vel_w,step_angle_vel=step_angle_vel_w,high_lat_vel=high_lat_vel_w,low_lat_vel=low_lat_vel_w,kappa_dist_law= kappa_dist_law_w,central_op=central_op_w,min_op=min_op_w,max_op=max_op_w,step_angle_op=step_angle_op_w,high_lat_op=high_lat_op_w,low_lat_op=low_lat_op_w)
+        r_ph_wind, L_bol_wind = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_w,time,v_min,n_v,vscale,step_angle_mass=step_angle_mass_w,high_lat_flag = high_lat_flag_w,vel_dist_law=vel_dist_law_w,central_vel = central_vel_w,min_vel= min_vel_w,max_vel=max_vel_w,step_angle_vel=step_angle_vel_w,high_lat_vel=high_lat_vel_w,low_lat_vel=low_lat_vel_w,kappa_dist_law= kappa_dist_law_w,central_op=central_op_w,min_op=min_op_w,max_op=max_op_w,step_angle_op=step_angle_op_w,high_lat_op=high_lat_op_w,low_lat_op=low_lat_op_w)
 
     else:
         r_ph_wind = np.full((n_ang,n_time),units.small)
         L_bol_wind = np.full((n_ang,n_time),units.small)
 
     if(sec_flag == True):
-        mass_dist_law_s  = kwargs['mass_dist_law_sec']
-        m_ej_s           = kwargs['m_ej_sec']
-        step_angle_mass_s  = kwargs['step_angle_mass_sec']
-        high_lat_flag_s  = kwargs['high_lat_flag_sec']
-        vel_dist_law_s   = kwargs['vel_dist_law_sec']
-        central_vel_s    = kwargs['central_vel_sec'] 
-        min_vel_s        = kwargs['min_vel_sec']      
-        max_vel_s        = kwargs['max_vel_sec']      
-        step_angle_vel_s   = kwargs['step_angle_vel_sec'] 
-        high_lat_vel_s   = kwargs['high_lat_vel_sec'] 
-        low_lat_vel_s    = kwargs['low_lat_vel_sec']  
-        kappa_dist_law_s = kwargs['kappa_dist_law_sec']
-        central_op_s     = kwargs['central_op_sec']    
-        min_op_s         = kwargs['min_op_sec']        
-        max_op_s         = kwargs['max_op_sec']        
-        step_angle_op_s    = kwargs['step_angle_op_sec']   
-        high_lat_op_s    = kwargs['high_lat_op_sec']  
-        low_lat_op_s     = kwargs['low_lat_op_sec']    
+
+        print('')
+        print('I am doing the secular/viscous ejecta')
+
+        mass_dist_law_s   = kwargs['mass_dist_law_sec']
+        m_ej_s            = kwargs['m_ej_sec']
+        step_angle_mass_s = kwargs['step_angle_mass_sec']
+        high_lat_flag_s   = kwargs['high_lat_flag_sec']
+        vel_dist_law_s    = kwargs['vel_dist_law_sec']
+        central_vel_s     = kwargs['central_vel_sec'] 
+        min_vel_s         = kwargs['min_vel_sec']      
+        max_vel_s         = kwargs['max_vel_sec']      
+        step_angle_vel_s  = kwargs['step_angle_vel_sec'] 
+        high_lat_vel_s    = kwargs['high_lat_vel_sec'] 
+        low_lat_vel_s     = kwargs['low_lat_vel_sec']  
+        kappa_dist_law_s  = kwargs['kappa_dist_law_sec']
+        central_op_s      = kwargs['central_op_sec']    
+        min_op_s          = kwargs['min_op_sec']        
+        max_op_s          = kwargs['max_op_sec']        
+        step_angle_op_s   = kwargs['step_angle_op_sec']   
+        high_lat_op_s     = kwargs['high_lat_op_sec']  
+        low_lat_op_s      = kwargs['low_lat_op_sec']    
 
         M,V,O = initialize_components.InitializeComponent(mass_dist_law_s,vel_dist_law_s,kappa_dist_law_s)
         ET = thermalization.Thermalization(therm_model)
-        r_ph_sec, L_bol_sec = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_s,time,
+        r_ph_sec, L_bol_sec = initialize_components.expansion_angular_distribution(M,V,O,ET,exp_model,ang_dist,omega_dist,m_ej_s,time,v_min,n_v,vscale,
           step_angle_mass = step_angle_mass_s,
-          high_lat_flag = high_lat_flag_s,
-          vel_dist_law  = vel_dist_law_s,
-          central_vel   = central_vel_s,
-          min_vel       = min_vel_s, 
-          max_vel       = max_vel_s,     
-          step_angle_vel  = step_angle_vel_s,
-          high_lat_vel  = high_lat_vel_s,
-          low_lat_vel   = low_lat_vel_s,
-          kappa_dist_law= kappa_dist_law_s,
-          central_op    = central_op_s,
-          min_op        = min_op_s,
-          max_op        = max_op_s,
-          step_angle_op   = step_angle_op_s, 
-          high_lat_op   = high_lat_op_s,
-          low_lat_op    = low_lat_op_s)
+          high_lat_flag  = high_lat_flag_s,
+          vel_dist_law   = vel_dist_law_s,
+          central_vel    = central_vel_s,
+          min_vel        = min_vel_s, 
+          max_vel        = max_vel_s,     
+          step_angle_vel = step_angle_vel_s,
+          high_lat_vel   = high_lat_vel_s,
+          low_lat_vel    = low_lat_vel_s,
+          kappa_dist_law = kappa_dist_law_s,
+          central_op     = central_op_s,
+          min_op         = min_op_s,
+          max_op         = max_op_s,
+          step_angle_op  = step_angle_op_s, 
+          high_lat_op    = high_lat_op_s,
+          low_lat_op     = low_lat_op_s)
 
     else:
         r_ph_sec = np.full((n_ang,n_time),units.small)
         L_bol_sec = np.full((n_ang,n_time),units.small)
 
-    print('I am before choosing r_ph')
-
     r_ph_tot = np.maximum(np.maximum(r_ph_dyn,r_ph_wind),r_ph_sec)
-
-    print('size L_bol_dyn',L_bol_dyn.shape)
-    print('size L_bol_sec',L_bol_sec.shape)
-    print('size L_bol_wind',L_bol_wind.shape)
-
     L_bol_tot = L_bol_dyn + L_bol_wind + L_bol_sec
 
-    g = open('test3.txt','w')
-    for i  in range(n_time):
-      g.write('%20s %20s %20s\n' %(time[i],r_ph_tot[0][i],L_bol_tot[0][i]))
-    g.close()
+#    g = open('test3.txt','w')
+#    for i  in range(n_time):
+#      g.write('%20s %20s %20s\n' %(time[i],r_ph_tot[0][i],L_bol_tot[0][i]))
+#    g.close()
 
-#    exit(-1)
-  
     tmp = []
     for k in range(n_ang):
         tmp.append(np.array([T_eff_calc(L,omega_dist[k],R) for L,R in zip(L_bol_tot[k,:],r_ph_tot[k,:])]))
         T_eff_tot = np.asarray(tmp)
     
     return time,r_ph_tot,L_bol_tot,T_eff_tot 
+
+
+
+##############################3
+
 
 if __name__=="__main__":
     AD = angular_distribution.AngularDistribution("uniform")

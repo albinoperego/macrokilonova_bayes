@@ -25,10 +25,10 @@ def t_diff_v(kappa,v,m_v,omega):
 def t_fs_v(kappa,v,m_v,omega):
   return np.sqrt(1.5*kappa*m_v/(omega*v*v*units.c*units.c))  #[s]
 
-def GK_expansion_model(Omega,m_ej,v_rms,v_min,n_v,vscale,kappa):
-#    n_v = 200
+def GK_expansion_model(Omega,m_ej,v_rms,v_min,n_v,vscale,kappa,**kwargs):
+
     v_max  = 3.*v_rms
-    if (vscale == 'lin'):
+    if (vscale == 'linear'):
         vel    = np.linspace(v_min,v_max,n_v)
     elif (vscale == 'log'):
         vel    = np.logspace(np.log10(v_min),np.log10(v_max),n_v)

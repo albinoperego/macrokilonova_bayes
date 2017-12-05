@@ -70,7 +70,6 @@ def m_filter(lam,T,rad,dist,ff):
 def calc_fnu(lam,temp,rad,dist,ff):
   ff1 = ff[:len(ff)/2]
   ff2 = ff[len(ff)/2:]
-  print('lam',lam)
   tmp1 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad,ff1,temp)])
   tmp2 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
   return np.sum(tmp1+tmp2)/dist**2
@@ -86,8 +85,6 @@ def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D):
         if (dic_filt[ilambda]["active"]==1):
             mag_model[ilambda] = np.array([m_filter(dic_filt[ilambda]["lambda"],T,R,D,ff) for T,R in zip(ordered_T,ordered_R)])
 
-    print('mag_model')
-    print(mag_model)
     return mag_model 
 
 def calc_residuals(data,model):
@@ -98,10 +95,6 @@ def calc_residuals(data,model):
         fmag = interpolate.interp1d(model[0],model[ilambda])
         res[ilambda] = np.array([(fmag(t)-m)/sm   for t,m,sm in zip(data[ilambda]['time'],data[ilambda]['mag'],data[ilambda]['sigma'])])
       
-    print('') 
-    print('residuals') 
-    print(res)
- 
     return res
 
 
@@ -113,5 +106,3 @@ if __name__=="__main__":
     FT2 = Filters("measures") 
     dic_filt,lambda_vec,mag = FT2()
 
-##    misure = [Filter(n,l,w) for n,l,w in zip(names,freqs,widths)]
-##    logL = -0.5*np.sum([m.residuals(modello)**2 for m in misure])
