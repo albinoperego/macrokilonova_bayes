@@ -562,7 +562,7 @@ class MacroKilonovaModel(cpnest.model.Model):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-        print logL
+
         return logL
             
     def log_prior(self, x):
