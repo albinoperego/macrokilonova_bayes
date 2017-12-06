@@ -14,6 +14,7 @@ class Filters(object):
         else:
             print("Wrong usage for filters.")
             exit(0)
+        
         self.dic_filt = None
         self.lambda_vec = None
         self.measures = None

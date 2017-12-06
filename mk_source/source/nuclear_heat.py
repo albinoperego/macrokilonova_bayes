@@ -13,18 +13,17 @@ class NuclearHeat(object):
         return self.heat_rate(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_eff,**kwargs)
 
 def calc_eps_nuc(kappa,time,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc):
-  if (kappa < 1.):
-    tmp=eps0 * yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time)
-  elif (kappa > 10.):
-    tmp=eps0
-  else:
-    tmp=0.5*eps0*(1 + yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time))
-  return tmp 
+    if (kappa < 1.):
+        return eps0 * yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time)
+    elif (kappa > 10.):
+        return eps0
+    else:
+        return 0.5*eps0*(1 + yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time))
 
 def yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time):
-  time_day=time*units.sec2day
-  tmp = min(max(4*time_day-4.,-20),20)   # t_eps_nuc still missing!
-  return a_eps_nuc + b_eps_nuc/(1.+np.exp(tmp))
+    time_day=time*units.sec2day
+    tmp = min(max(4*time_day-4.,-20),20)   # t_eps_nuc still missing!
+    return a_eps_nuc + b_eps_nuc/(1.+np.exp(tmp))
 
 def heat_rate_w_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_eff, **kwargs):
     a_eps_nuc = kwargs['cnst_a_eps_nuc']

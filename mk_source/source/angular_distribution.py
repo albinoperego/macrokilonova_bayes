@@ -1,8 +1,12 @@
 import numpy as np
 
 class AngularDistribution(object):
-
-    def __init__(self,angular_law,n_slices):
+    """
+    angular distribution class
+    accepts uniform in the angle
+    and uniform in the cosine of the angle
+    """
+    def __init__(self, angular_law, n_slices):
 
         if n_slices % 2 == 1:
             print('Error: n_slices must be an even number!')

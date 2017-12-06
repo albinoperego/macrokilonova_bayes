@@ -10,20 +10,20 @@ class ExpansionModelSingleSpherical(object):
             print('No other expansion model presently implemented\n')
             exit(-1)
         
-    def __call__(self,omega,m_ej,v_rms,v_min,n_v,vscale,kappa, **kwargs):
+    def __call__(self, omega, m_ej, v_rms, v_min, n_v, vscale, kappa, **kwargs):
         return self.expansion_model_single_spherical(omega,m_ej,v_rms,v_min,n_v,vscale,kappa, **kwargs)
 
 def mass_gt_v(v,mej,v_exp):
-  return mej*units.Msun*(1.0+func_vel(v/v_exp))  #[g]
+    return mej*units.Msun*(1.0+func_vel(v/v_exp))  #[g]
 
 def func_vel(x):
-  return 35.*x**7/112.-105.*x**5/80.+35.*x**3/16.-35.*x/16.
+    return 35.*x**7/112.-105.*x**5/80.+35.*x**3/16.-35.*x/16.
 
 def t_diff_v(kappa,v,m_v,omega):
-  return np.sqrt(kappa*m_v/(omega*v*units.c*units.c))  #[s]
+    return np.sqrt(kappa*m_v/(omega*v*units.c*units.c))  #[s]
 
 def t_fs_v(kappa,v,m_v,omega):
-  return np.sqrt(1.5*kappa*m_v/(omega*v*v*units.c*units.c))  #[s]
+    return np.sqrt(1.5*kappa*m_v/(omega*v*v*units.c*units.c))  #[s]
 
 def GK_expansion_model(Omega,m_ej,v_rms,v_min,n_v,vscale,kappa,**kwargs):
 
