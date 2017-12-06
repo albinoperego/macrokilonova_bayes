@@ -92,7 +92,7 @@ def calc_residuals(data,model):
     for ilambda in data.keys():
         if ilambda == 0: 
             continue
-        fmag = interpolate.interp1d(model[0],model[ilambda])
+        fmag = interpolate.interp1d(model[0],model[ilambda], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
         res[ilambda] = np.array([(fmag(t)-m)/sm   for t,m,sm in zip(data[ilambda]['time'],data[ilambda]['mag'],data[ilambda]['sigma'])])
       
     return res

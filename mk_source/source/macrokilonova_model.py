@@ -26,12 +26,12 @@ model_parameters = ['m_ej_dyn',
 
 model_bounds = {'m_ej_dyn':[0.0,0.1],
                 'central_op_dyn':[0.0,1.0],
-                'central_vel_dyn':[0.0,1.0],
+                'central_vel_dyn':[0.01,1.0],
                 'm_ej_wind':[0.0,0.1],
-                'central_vel_wind':[0.0,1.0],
+                'central_vel_wind':[0.01,1.0],
                 'central_op_wind':[0.0,0.1],
                 'm_ej_sec':[0.0,0.1],
-                'central_vel_sec':[0.0,1.0],
+                'central_vel_sec':[0.01,1.0],
                 'central_op_sec':[0.0,1.0]}
 
 

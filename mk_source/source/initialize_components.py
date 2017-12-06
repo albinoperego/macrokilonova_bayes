@@ -56,11 +56,11 @@ def expansion_angular_distribution(MM,VV,OO,ET,EPSNUC,model_name,angular_distrib
 
         vel,m_vel,t_diff,t_fs = M(Omega,m_ej,v_rms,v_min,n_v,vscale,kappa)
 
-        f_vel_t_diff = interpolate.interp1d(t_diff[::-1],vel[::-1])
-        f_vel_t_fs   = interpolate.interp1d(t_fs[::-1],vel[::-1])
+        f_vel_t_diff = interpolate.interp1d(t_diff[::-1],vel[::-1], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
+        f_vel_t_fs   = interpolate.interp1d(t_fs[::-1],vel[::-1], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
 
-        f_m_vel_t_diff = interpolate.interp1d(t_diff[::-1],m_vel[::-1])
-        f_m_vel_t_fs   = interpolate.interp1d(t_fs[::-1],m_vel[::-1])
+        f_m_vel_t_diff = interpolate.interp1d(t_diff[::-1],m_vel[::-1], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
+        f_m_vel_t_fs   = interpolate.interp1d(t_fs[::-1],m_vel[::-1], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
         
         v_diff  = np.array([f_vel_t_diff(t) for t in time])
         v_fs    = np.array([f_vel_t_fs(t) for t in time])
