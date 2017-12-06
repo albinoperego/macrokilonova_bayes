@@ -1,41 +1,24 @@
 import numpy as np
+from scipy.interpolate import InterpolatedUnivariateSpline
 
 class ObserverProjection(object):
 
-    def __init__(self,n_rays):
+    def __init__(self, n_rays, data_location = 'output_12_rays'):
+        
+        self.n_rays = n_rays
+        self.data_location = data_location
+        self.flux_interpolant = self.read_flux_factors(self.n_rays)
 
-        if n_rays==12:
-            self.read_flux_factors = read_flux_factors_12rays
-        elif n_rays==24:
-            self.read_flux_factors = read_flux_factors_24rays
-        else:
-            print("Error in the number of rays for the flux factor")
-            exit(-1)
+    def __call__(self,angle):
+        return np.array([f(angle) for f in self.flux_interpolant])
 
-    def __call__(self,angle,delta):
-        return self.read_flux_factors(angle,delta)
-
-
-def read_flux_factors_12rays(angle,delta_angle):
-    if ( angle < 0. or angle > 90.):
-        print('Error, the observer angles must be between 0 and 90')
-        exit(0)
-    flux_factor1=np.loadtxt('./output_12_rays/flux_obs_ang_'+str(int(np.floor(angle)))+'.0_nrays_12.dat',unpack=True,usecols=([4]))
-    flux_factor2=np.loadtxt('./output_12_rays/flux_obs_ang_'+str(int(np.floor(angle+delta_angle)))+'.0_nrays_12.dat',unpack=True,usecols=([4]))
-    alpha = (angle - float(np.floor(angle)))/delta_angle
-    return (1.-alpha)*flux_factor1 + alpha*flux_factor2 
-
-def read_flux_factors_24rays(angle,delta_angle):
-    if ( angle < 0. or angle > 90.):
-        print('Error, the observer angles must be between 0 and 90')
-        exit(0)
-    flux_factor1=np.loadtxt('./output_24_rays/flux_obs_ang_'+str(int(np.floor(angle)))+'.0_nrays_24.dat',unpack=True,usecols=([4]))
-    flux_factor2=np.loadtxt('./output_24_rays/flux_obs_ang_'+str(int(np.floor(angle+delta_angle)))+'.0_nrays_24.dat',unpack=True,usecols=([4]))
-    alpha = (angle - float(np.floor(angle)))/delta_angle
-    return (1.-alpha)*flux_factor1 + alpha*flux_factor2 
-
+    def read_flux_factors(self, nrays):
+        view_angles = np.linspace(0.0,90.0,91)
+        flux_factors = np.array([np.loadtxt(self.data_location+'/ff_ray_%d.dat'%i,unpack=True,usecols=([1])) for i in range(nrays)])
+        flux_interpolant = [InterpolatedUnivariateSpline(view_angles,f) for f in flux_factors]
+        return flux_interpolant
 
 if __name__=="__main__":
     M = ObserverProjection(12)
-    ff = M(26.,1.)
+    ff = M(31.0)
     print(ff)
