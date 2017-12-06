@@ -28,9 +28,6 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
 
     if(dyn_flag == True):
 
-        print('')
-        print('I am doing the dynamic ejecta')
-
         mass_dist_law_d   = kwargs['mass_dist_law_dyn']
         m_ej_d            = kwargs['m_ej_dyn']
         step_angle_mass_d = kwargs['step_angle_mass_dyn']
@@ -83,9 +80,6 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
 
     if (wind_flag == True):
 
-        print('')
-        print('I am doing the wind')
-
         mass_dist_law_w   = kwargs['mass_dist_law_wind']
         m_ej_w            = kwargs['m_ej_wind']
         step_angle_mass_w = kwargs['step_angle_mass_wind']
@@ -118,9 +112,6 @@ def lightcurve(dyn_flag,wind_flag,sec_flag,ang_dist,omega_dist,exp_model,therm_m
         L_bol_wind = np.full((n_ang,n_time),units.small)
 
     if(sec_flag == True):
-
-        print('')
-        print('I am doing the secular/viscous ejecta')
 
         mass_dist_law_s   = kwargs['mass_dist_law_sec']
         m_ej_s            = kwargs['m_ej_sec']
