@@ -34,12 +34,12 @@ class MacroKilonovaModel(cpnest.model.Model):
                  wind_flag = True,
                  sec_flag  = True,
                  # values to initialize the global time
-                 time_min = 3600.,      # one hour
-                 time_max = 2000000.,   # 30 days
+                 time_min = 36000.,     # 10 hours
+                 time_max = 1550000,    # 18 days
                  n_time   = 200,
                  tscale   = 'linear',
                  # values to initialize the ray velocity
-                 v_min  = 1.e-6, # <-- play with this to stabilise the code
+                 v_min  = 1.e-8, # <-- play with this to stabilise the code
                  n_v    = 200,
                  vscale = 'linear',
                  # nuclear heating values
