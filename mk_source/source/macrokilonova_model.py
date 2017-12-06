@@ -148,7 +148,8 @@ class MacroKilonovaModel(cpnest.model.Model):
                             'm_ej_sec',
                             'eps0',
                             'a_eps_nuc',
-                            'b_eps_nuc']
+                            'b_eps_nuc',
+                            'distance']
 
         model_bounds = {'view_angle':[0.0,90.0],
                         'm_ej_dyn':[1e-4,1e-2],
@@ -156,7 +157,8 @@ class MacroKilonovaModel(cpnest.model.Model):
                         'm_ej_sec':[1e-4,1e-1],
                         'eps0':[2e18,2e19],
                         'a_eps_nuc':[0.4,0.8],
-                        'b_eps_nuc':[1.0,3.0]}
+                        'b_eps_nuc':[1.0,3.0],
+                        'distance':[30,50]}
 
         # check for mass distribution choice and add relevant parameters
         if mass_dist_law_dyn=="step":
@@ -550,7 +552,7 @@ class MacroKilonovaModel(cpnest.model.Model):
                                                           high_lat_op_sec     = self.high_lat_op_sec,
                                                           low_lat_op_sec      = self.low_lat_op_sec)
         # compute the magnitudes from a certain distance
-        D = 40.e+6*units.pc2cm
+        D = x['distance']*1e6*units.pc2cm
         model_mag = ft.calc_magnitudes(self.flux_factor,time,r_ph_tot,T_eff_tot,self.lambda_vec,self.dic_filt,D)
 
         # compute the residuals
@@ -572,6 +574,7 @@ class MacroKilonovaModel(cpnest.model.Model):
                 if x['min_vel_sec'] > x['max_vel_sec']: return  -np.inf
             if not(self.vel_dist_law_wind=="step" or self.vel_dist_law_wind=="uniform"):
                 if x['min_vel_wind'] > x['max_vel_wind']: return  -np.inf
+            logP += -0.5*(x['distance']-40.0)**2/16.0
             return logP
         else:
             return -np.inf
