@@ -14,19 +14,20 @@ from expansion_model_single_spherical import ExpansionModelSingleSpherical
 class Shell(object):
 
     def __init__(self,
-                 name,          # name of the shell (dynamical, wind, secular)
-                 mass_dist,     # mass distribution (step, uniform, continuos)
+                 name,          # name of the shell     (dynamical, wind, secular)
+                 mass_dist,     # mass distribution     (step, uniform, continuos)
                  vel_dist,      # velocity distribution (step, uniform, continuos)
-                 op_dist,       # opacity distribution (step, uniform, continuos)
-                 therm_model,   # thermal model (BKWM, cnst)
-                 eps_ye_dep):   # nuclear heating model (Ye depedence True, False)
+                 op_dist,       # opacity distribution  (step, uniform, continuos)
+                 therm_model,   # thermal model         (BKWM, cnst)
+                 eps_ye_dep,    # nuclear heating model (Ye depedence True, False)
+                 **kwargs):
 
-        self.name = name
-        self.ET = thermalization.Thermalization(therm_model)
-        self.EPSNUC = nuclear_heat.NuclearHeat(eps_ye_dep)
-        self.mass_dist = mass_angular_distribution.MassAngularDistribution(mass_dist)
-        self.vel_dist = velocity_angular_distribution.VelocityAngularDistribution(vel_dist)
-        self.op_dist = opacity_angular_distribution.OpacityAngularDistribution(op_dist)
+        self.name            = name
+        self.ET              = thermalization.Thermalization(therm_model)
+        self.EPSNUC          = nuclear_heat.NuclearHeat(eps_ye_dep)
+        self.mass_dist       = mass_angular_distribution.MassAngularDistribution(mass_dist)
+        self.vel_dist        = velocity_angular_distribution.VelocityAngularDistribution(vel_dist)
+        self.op_dist         = opacity_angular_distribution.OpacityAngularDistribution(op_dist)
         self.expansion_model = ExpansionModelSingleSpherical('GK')
     
     def update(self, m_tot, angular_distribution, **kwargs):
@@ -61,27 +62,30 @@ class Shell(object):
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
             vel,m_vel,t_diff,t_fs = self.expansion_model(omega,m_ej,v_rms,v_min,n_v,vscale,kappa)
-            v_diff  = np.interp(time, t_diff[::-1],vel[::-1])
-            v_fs    = np.interp(time, t_fs[::-1],vel[::-1])
-            mv_diff = np.interp(time, t_diff[::-1],m_vel[::-1])
-            mv_fs   = np.interp(time, t_fs[::-1],m_vel[::-1])
+            v_diff  = np.interp(time, t_diff[::-1], vel[::-1])
+            v_fs    = np.interp(time, t_fs[::-1], vel[::-1])
+            mv_diff = np.interp(time, t_diff[::-1], m_vel[::-1])
+            mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
         
-            r_ph.append(self.r_ph_calc(v_fs,time))
+            r_ph.append(self.r_ph_calc(v_fs, time))
 
-    #        e_th = np.array([ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=0.333) for t in time])
-
-    #        eps_nuc = np.array([calc_eps_nuc(kappa,t,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc) for t in time])
-
-            L_bol.append(self.bolometric_luminosity(m_rad,time,
-                                                    t0eps,sigma0,eps0,
-                                                    a_eps_nuc,b_eps_nuc,
+            L_bol.append(self.bolometric_luminosity(m_rad,
+                                                    time,
+                                                    t0eps,
+                                                    sigma0,
+                                                    eps0,
+                                                    a_eps_nuc,
+                                                    b_eps_nuc,
                                                     t_eps_nuc,
                                                     m_ej,
-                                                    omega,v_rms,kappa,
-                                                    cnst_eff,alpha))
+                                                    omega,
+                                                    v_rms,
+                                                    kappa,
+                                                    cnst_eff,
+                                                    alpha))
 
-        return np.asarray(r_ph),np.asarray(L_bol)
+        return np.array(r_ph),np.array(L_bol)
 
     def bolometric_luminosity(self, m_rad, time,
                               t0eps,sigma0,eps0,
