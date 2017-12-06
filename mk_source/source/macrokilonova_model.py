@@ -14,26 +14,165 @@ import numpy as np
 import observer_projection as op
 import units
 
-model_parameters = ['m_ej_dyn',
-                    'central_vel_dyn',
-                    'central_op_dyn',
+"""
+the various allowed cases for mass distribution are:
+
+- step
+- uniform
+- some continuous function
+
+the various allowed cases for velocity distribution are:
+
+- step
+- uniform
+- some continuos function
+
+the various allowed cases for the opacity distribution are:
+
+- step
+- uniform
+- some continuos function
+
+the following parameters are always present:
+view_angle
+m_ej_dyn
+m_ej_wind
+m_ej_sec
+eps0
+a_eps_nuc
+b_eps_nuc
+"""
+
+model_parameters = ['view_angle',
+                    'm_ej_dyn',
                     'm_ej_wind',
-                    'central_vel_wind',
-                    'central_op_wind',
                     'm_ej_sec',
-                    'central_vel_sec',
-                    'central_op_sec']
+                    'eps0',
+                    'a_eps_nuc',
+                    'b_eps_nuc']
 
-model_bounds = {'m_ej_dyn':[0.0,0.1],
-                'central_op_dyn':[0.0,1.0],
-                'central_vel_dyn':[0.01,1.0],
-                'm_ej_wind':[0.0,0.1],
-                'central_vel_wind':[0.01,1.0],
-                'central_op_wind':[0.0,0.1],
-                'm_ej_sec':[0.0,0.1],
-                'central_vel_sec':[0.01,1.0],
-                'central_op_sec':[0.0,1.0]}
+model_bounds = {'view_angle':[0.0,90.0],
+                'm_ej_dyn':[1e-4,1e-2],
+                'm_ej_wind':[1e-4,1e-2],
+                'm_ej_sec':[1e-4,1e-1],
+                'eps0':[2e18,2e19],
+                'a_eps_nuc':[0.4,0.8],
+                'b_eps_nuc':[1.0,3.0]}
 
+# check for mass distribution choice and add relevant parameters
+if mass_dist_law_dyn=="step":
+    model_parameters.append('step_angle_mass_dyn')
+    model_bounds['step_angle_mass_dyn'] = [20.0,80.0]
+
+if mass_dist_law_wind=="step":
+    model_parameters.append('step_angle_mass_wind')
+    model_bounds['step_angle_mass_dyn'] = [20.0,80.0]
+
+if mass_dist_law_sec=="step":
+    model_parameters.append('step_angle_mass_sec')
+    model_bounds['step_angle_mass_dyn'] = [20.0,80.0]
+
+# check for velocity distribution choice and add relevant parameters
+
+# dynamical ejecta velocity law
+if vel_dist_law_dyn=="step":
+    model_parameters.append('step_angle_vel_dyn')
+    model_bounds['step_angle_vel_dyn'] = [20.0,80.0]
+    model_parameters.append('high_lat_vel_dyn')
+    model_bounds['high_lat_vel_dyn'] = [1e-1,7e-1]
+    model_parameters.append('low_lat_vel_dyn')
+    model_bounds['low_lat_vel_dyn'] = [1e-1,7e-1]
+elif vel_dist_law_dyn=="uniform":
+    model_parameters.append('central_vel_dyn')
+    model_bounds['central_vel_dyn'] = [1e-1,7e-1]
+else:
+    model_parameters.append('min_vel_dyn')
+    model_bounds['min_vel_dyn'] = [1e-1,7e-1]
+    model_parameters.append('max_vel_dyn')
+    model_bounds['max_vel_dyn'] = [1e-1,7e-1] # max_vel_dyn > min_vel_dyn
+# wind ejecta velocity law
+if vel_dist_law_wind=="step":
+    model_parameters.append('step_angle_vel_wind')
+    model_bounds['step_angle_vel_wind'] = [20.0,80.0]
+    model_parameters.append('high_lat_vel_wind')
+    model_bounds['high_lat_vel_wind'] = [5e-2,1.5e-1]
+    model_parameters.append('low_lat_vel_wind')
+    model_bounds['low_lat_vel_wind'] = [5e-2,1.5e-1]
+elif vel_dist_law_wind=="uniform":
+    model_parameters.append('central_vel_wind')
+    model_bounds['central_vel_wind'] = [5e-2,1.5e-1]
+else:
+    model_parameters.append('min_vel_wind')
+    model_bounds['min_vel_wind'] = [5e-2,1.5e-1]
+    model_parameters.append('max_vel_wind')
+    model_bounds['max_vel_wind'] = [5e-2,1.5e-1] # max_vel_wind > min_vel_wind
+# secular ejecta velocity law
+if vel_dist_law_sec=="step":
+    model_parameters.append('step_angle_vel_sec')
+    model_bounds['step_angle_vel_sec'] = [20.0,80.0]
+    model_parameters.append('high_lat_vel_sec')
+    model_bounds['high_lat_vel_sec'] = [1e-2,1.5e-1]
+    model_parameters.append('low_lat_vel_sec')
+    model_bounds['low_lat_vel_sec'] = [1e-2,1.5e-1]
+elif vel_dist_law_sec=="uniform":
+    model_parameters.append('central_vel_sec')
+    model_bounds['central_vel_sec'] = [1e-2,1.5e-1]
+else:
+    model_parameters.append('min_vel_sec')
+    model_bounds['min_vel_sec'] = [1e-2,1.5e-1]
+    model_parameters.append('max_vel_sec')
+    model_bounds['max_vel_sec'] = [1e-2,1.5e-1] # max_vel_sec > min_vel_sec
+
+# check for opacity distribution choice and add relevant parameters
+
+# dynamical ejecta opacity law
+if op_dist_law_dyn=="step":
+    model_parameters.append('step_angle_op_dyn')
+    model_bounds['step_angle_op_dyn'] = [20.0,80.0]
+    model_parameters.append('high_lat_op_dyn')
+    model_bounds['high_lat_op_dyn'] = [1e-1,1.0]
+    model_parameters.append('low_lat_op_dyn')
+    model_bounds['low_lat_op_dyn'] = [1.0,50.0]
+elif op_dist_law_dyn=="uniform":
+    model_parameters.append('central_op_dyn')
+    model_bounds['central_op_dyn'] = [1e-1,50.0]
+else:
+    model_parameters.append('min_op_dyn')
+    model_bounds['min_op_dyn'] = [1e-1,1.0]
+    model_parameters.append('max_op_dyn')
+    model_bounds['max_op_dyn'] = [1.0,50.0] # max_op_dyn > min_op_dyn
+# wind ejecta opacity law
+if op_dist_law_wind=="step":
+    model_parameters.append('step_angle_op_wind')
+    model_bounds['step_angle_op_wind'] = [20.0,80.0]
+    model_parameters.append('high_lat_op_wind')
+    model_bounds['high_lat_op_wind'] = [1e-1,5.0]
+    model_parameters.append('low_lat_op_wind')
+    model_bounds['low_lat_op_wind'] = [1.0,50.0]
+elif op_dist_law_wind=="uniform":
+    model_parameters.append('central_op_wind')
+    model_bounds['central_op_wind'] = [1e-1,5.0]
+else:
+    model_parameters.append('min_op_wind')
+    model_bounds['min_op_wind'] = [1e-1,1.0]
+    model_parameters.append('max_op_wind')
+    model_bounds['max_op_wind'] = [1.0,5.0] # max_op_wind > min_op_wind
+# secular ejecta opacity law
+if op_dist_law_sec=="step":
+    model_parameters.append('step_angle_op_sec')
+    model_bounds['step_angle_op_sec'] = [20.0,80.0]
+    model_parameters.append('high_lat_op_sec')
+    model_bounds['high_lat_op_sec'] = [1e-1,10.0]
+    model_parameters.append('low_lat_op_sec')
+    model_bounds['low_lat_op_sec'] = [1e-1,10.0]
+elif op_dist_law_sec=="uniform":
+    model_parameters.append('central_op_sec')
+    model_bounds['central_op_sec'] = [1e-1,10.0]
+else:
+    model_parameters.append('min_op_sec')
+    model_bounds['min_op_sec'] = [1e-1,1.0]
+    model_parameters.append('max_op_sec')
+    model_bounds['max_op_sec'] = [1.0,10.0] # max_op_sec > min_op_sec
 
 class MacroKilonovaModel(cpnest.model.Model):
     """
@@ -52,7 +191,7 @@ class MacroKilonovaModel(cpnest.model.Model):
                  n_slices=12,
                  dist_slices = "uniform",
                  # observer location
-                 view_angle = 15.,
+                 view_angle = 15., # <-- p
                  view_angle_delta = 1.,
                  # set which components must be activated
                  dyn_flag  = True,
@@ -64,18 +203,18 @@ class MacroKilonovaModel(cpnest.model.Model):
                  n_time   = 200,
                  tscale   = 'linear',
                  # values to initialize the ray velocity
-                 v_min  = 1.e-6,
+                 v_min  = 1.e-6, # <-- play with this to stabilise the code
                  n_v    = 200,
                  vscale = 'linear',
                  # nuclear heating values
                  eps_ye_dep = True,
-                 eps0 = 1.2e+19,
+                 eps0 = 1.2e+19, # <-- p
                  sigma0 = 0.11,
                  alpha = 1.3,
                  t0eps = 1.3,
                  cnst_eff = 0.3333,
-                 a_eps_nuc = 0.5,
-                 b_eps_nuc = 2.5,
+                 a_eps_nuc = 0.5, # <-- p
+                 b_eps_nuc = 2.5, # <-- p
                  t_eps_nuc = 1.,
                  # mass dynamic ejecta
                  mass_dist_law_dyn   ='sin2',
@@ -90,20 +229,18 @@ class MacroKilonovaModel(cpnest.model.Model):
                  low_lat_vel_dyn     =None,
                  # opacity dynamic ejecta
                  kappa_dist_law_dyn  ='step',
-                 central_op_dyn      =None,
-                 min_op_dyn          =None,
-                 max_op_dyn          =None,
-                 step_angle_op_dyn   =math.radians(45.),
-                 high_lat_op_dyn     =0.1,
-                 low_lat_op_dyn      =10.,
+                 central_op_dyn      =None, # <-- p used only for continous distribution
+                 min_op_dyn          =None, # <-- p used only for continous distribution
+                 max_op_dyn          =None, # <-- p used only for continous distribution
+                 step_angle_op_dyn   =math.radians(45.), # <-- p
+                 high_lat_op_dyn     =0.1, # <-- p used with step distribution
+                 low_lat_op_dyn      =10., # <-- p used with step distribution
                  # mass wind ejecta
                  mass_dist_law_wind  ='step',
-                 m_ej_wind           =0.01,
-                 step_angle_mass_wind=math.radians(60.),
+                 step_angle_mass_wind=math.radians(60.), # <-- p
                  high_lat_flag_wind  =1,
                  # velocity wind ejecta
                  vel_dist_law_wind   ='uniform',
-                 central_vel_wind    =0.05,
                  min_vel_wind        =None,
                  max_vel_wind        =None,
                  step_angle_vel_wind =None,
@@ -111,20 +248,18 @@ class MacroKilonovaModel(cpnest.model.Model):
                  low_lat_vel_wind    =None,
                  # opacity wind ejecta
                  kappa_dist_law_wind ='step',
-                 central_op_wind     =None,
-                 min_op_wind         =None,
-                 max_op_wind         =None,
-                 step_angle_op_wind  =math.radians(45.),
-                 high_lat_op_wind    =0.1,
-                 low_lat_op_wind     =1.0,
+                 central_op_wind     =None, # <-- p used only for continous distribution
+                 min_op_wind         =None, # <-- p used only for continous distribution
+                 max_op_wind         =None, # <-- p used only for continous distribution
+                 step_angle_op_wind  =math.radians(45.), # <-- p
+                 high_lat_op_wind    =0.1, # <-- p used with step distribution
+                 low_lat_op_wind     =1.0, # <-- p used with step distribution
                  # mass secular ejecta
                  mass_dist_law_sec   ='sin2',
-                 m_ej_sec            =0.02,
                  step_angle_mass_sec =None,
                  high_lat_flag_sec   =None,
                  # velocity secular ejecta
                  vel_dist_law_sec    ='uniform',
-                 central_vel_sec     =0.02,
                  min_vel_sec         =None,
                  max_vel_sec         =None,
                  step_angle_vel_sec  =None,
@@ -132,7 +267,6 @@ class MacroKilonovaModel(cpnest.model.Model):
                  low_lat_vel_sec     =None,
                  # opacity secular ejecta
                  kappa_dist_law_sec  ='uniform',
-                 central_op_sec      =5.0,
                  min_op_sec          =None,
                  max_op_sec          =None,
                  step_angle_op_sec   =None,
@@ -185,14 +319,14 @@ class MacroKilonovaModel(cpnest.model.Model):
 
         # nuclear heating values
         self.eps_ye_dep = eps_ye_dep
-        self.eps0 = eps0
-        self.sigma0 = sigma0
-        self.alpha = alpha
-        self.t0eps = t0eps
-        self.cnst_eff = cnst_eff
-        self.a_eps_nuc = a_eps_nuc
-        self.b_eps_nuc = b_eps_nuc
-        self.t_eps_nuc = t_eps_nuc
+        self.eps0       = eps0
+        self.sigma0     = sigma0
+        self.alpha      = alpha
+        self.t0eps      = t0eps
+        self.cnst_eff   = cnst_eff
+        self.a_eps_nuc  = a_eps_nuc
+        self.b_eps_nuc  = b_eps_nuc
+        self.t_eps_nuc  = t_eps_nuc
         
         # mass dynamic ejecta
         self.mass_dist_law_dyn   = mass_dist_law_dyn
@@ -378,12 +512,12 @@ if __name__=='__main__':
 
     if opts.full_run:
         model = MacroKilonovaModel()
-        work=cpnest.CPNest(model,
-                           verbose=3,
-                           Poolsize=opts.poolsize,
-                           Nthreads=opts.threads,
-                           Nlive=opts.nlive,
-                           maxmcmc=opts.maxmcmc,
-                           output=opts.out_dir)
+        work  = cpnest.CPNest(model,
+                            verbose=3,
+                            Poolsize=opts.poolsize,
+                            Nthreads=opts.threads,
+                            Nlive=opts.nlive,
+                            maxmcmc=opts.maxmcmc,
+                            output=opts.out_dir)
         work.run()
 
