@@ -463,7 +463,7 @@ class MacroKilonovaModel(cpnest.model.Model):
             self.min_op_sec = x['min_op_sec']
             self.max_op_sec = x['max_op_sec'] # max_op_sec > min_op_sec
         
-        self.flux_factor = self.FF(x['view_angle'],self.view_angle_delta)
+        self.flux_factor = self.FF(x['view_angle'])
         # compute the lightcurve
         time,r_ph_tot,L_bol_tot,T_eff_tot = lc.lightcurve(self.dyn_flag,
                                                           self.wind_flag,

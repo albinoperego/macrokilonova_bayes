@@ -183,7 +183,7 @@ if __name__=="__main__":
 
 #initialize the observer location
     FF = op.ObserverProjection(12)
-    flux_factor = FF([15.],1.)
+    flux_factor = FF(15.)
 
     dyn_flag = False
     wind_flag = True
