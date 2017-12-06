@@ -14,9 +14,14 @@ class Filters(object):
         else:
             print("Wrong usage for filters.")
             exit(0)
+        self.dic_filt = None
+        self.lambda_vec = None
+        self.measures = None
 
     def __call__(self):
-        return self.read_filters()
+        if (self.dic_filt is None) and (self.lambda_vec is None) and (self.measures is None):
+            self.dic_filt, self.lambda_vec, self.measures = self.read_filters()
+        return self.dic_filt, self.lambda_vec, self.measures
 
 def read_filter_measures():
 
