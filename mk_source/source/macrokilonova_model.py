@@ -562,7 +562,7 @@ class MacroKilonovaModel(cpnest.model.Model):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-
+            
         return logL
             
     def log_prior(self, x):
@@ -584,7 +584,7 @@ if __name__=='__main__':
     parser.add_option('-o','--out-dir',default=None,type='string',metavar='DIR',help='Directory for output: defaults to gw150914/')
     parser.add_option('-t','--threads',default=None,type='int',metavar='N',help='Number of threads (default = 1/core)')
     parser.add_option('-f','--full-run',default=1,type='int',metavar='full_run',help='perform a full PE run')
-    parser.add_option('--nlive',default=1024,type='int',metavar='n',help='Live points')
+    parser.add_option('--nlive',default=100,type='int',metavar='n',help='Live points')
     parser.add_option('--maxmcmc',default=10,type='int',metavar='m',help='max MCMC points')
     parser.add_option('--poolsize',default=16,type='int',metavar='k',help='numer of points in the ensemble sampler pool')
     (opts,args)=parser.parse_args()
