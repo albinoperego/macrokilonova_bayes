@@ -35,9 +35,9 @@ def GK_expansion_model(Omega,m_ej,v_rms,v_min,n_v,vscale,kappa,**kwargs):
     else:
         print('Wrong scale for expansion velocity')
         exit(0)
-    m_vel  = np.array([mass_gt_v(v,m_ej,v_max) for v in vel])
-    t_diff = np.array([t_diff_v(kappa,v,m,Omega) for v,m in zip(vel,m_vel)])
-    t_fs   = np.array([t_fs_v(kappa,v,m,Omega) for v,m in zip(vel,m_vel)])
+    m_vel  = mass_gt_v(vel,m_ej,v_max)
+    t_diff = t_diff_v(kappa,vel,m_vel,Omega)
+    t_fs   = t_fs_v(kappa,vel,m_vel,Omega)
     return vel,m_vel,t_diff,t_fs
 
 
@@ -49,8 +49,13 @@ if __name__=="__main__":
     m_ej = 0.1
     v_rms = 0.2
     v_min = 1.e-6
+    n_v = 100
     kappa = 10.
-    x1,x2,x3,x4 = M(Omega,m_ej,v_rms,v_min,kappa)
+    vscale = 'linear'
+    x1,x2,x3,x4 = M(Omega,m_ej,v_rms,v_min,n_v,vscale,kappa)
+    from pylab import *
+    plot(x1,x2)
+    show()
     print(x1)
     print(x2)
     print(x3)
