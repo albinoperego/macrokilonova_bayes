@@ -19,25 +19,26 @@ class Ejecta(object):
 
     def __init__(self, n_shells, names, params, *args, **kwargs):
         assert len(names) == n_shells
+        self.ncomponents = n_shells
         self.components = [Shell(n, params[n], **kwargs) for n in names]
     
     def lightcurve(self,
-                                       angular_distribution,
-                                       omega_distribution,
-                                       m_tot,
-                                       time,
-                                       v_min,
-                                       n_v,
-                                       vscale,
-                                       eps0,
-                                       sigma0,
-                                       alpha,
-                                       t0eps,
-                                       cnst_eff,
-                                       a_eps_nuc,
-                                       b_eps_nuc,
-                                       t_eps_nuc,
-                                       **kwargs):
+                   angular_distribution,
+                   omega_distribution,
+                   m_tot,
+                   time,
+                   v_min,
+                   n_v,
+                   vscale,
+                   eps0,
+                   sigma0,
+                   alpha,
+                   t0eps,
+                   cnst_eff,
+                   a_eps_nuc,
+                   b_eps_nuc,
+                   t_eps_nuc,
+                   **kwargs):
         physical_radius = []
         self.bolometric_luminosity = []
         for c in self.components:
@@ -59,7 +60,6 @@ class Ejecta(object):
                                                      **kwargs)
             physical_radius.append(r)
             self.bolometric_luminosity.append(Lb)
-        r_ph_tot = np.maximum(np.maximum(r_ph_dyn,r_ph_wind),r_ph_sec)
         
         self.physical_radius = physical_radius[0]
         for k in np.arange(1,len(physical_radius)): self.physical_radius = np.maximum(self.physical_radius,r[k])
@@ -71,13 +71,56 @@ class Ejecta(object):
 
         tmp = []
         for k in range(len(angular_distribution)):
-            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.bolometric_luminosity[k,:],self.physical_radius[k,:])]))
+            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.total_bolometric_luminosity[k,:],self.physical_radius[k,:])]))
             self.T_eff_tot = np.asarray(tmp)
-        return time, self.physical_radius, self.bolometric_luminosity, self.T_eff_tot
+        return time, np.array(self.physical_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
 
 if __name__=="__main__":
     params = {}
     params['wind'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
     params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
     E = Ejecta(2, params.keys(), params)
-    print E.components
+    angular_distribution = [(0,1),(1,2),(2,3.1415)]
+    omega_distribution = [0.01,0.2,0.5]
+    time_min = 36000.      #
+    time_max = 172800.   #
+    n_time = 200
+    m_tot = 0.1
+    v_min = 1e-7
+    n_v = 100
+    vscale = 'linear'
+    eps0 = 1e19
+    sigma0 = 1.0
+    alpha = 0.1
+    t0eps = 1.0
+    cnst_eff = 1.0
+    a_eps_nuc = 1.0
+    b_eps_nuc = 1.0
+    t_eps_nuc = 1.0
+    time = np.linspace(time_min,time_max,n_time)
+    time, r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
+                               omega_distribution,
+                               m_tot,
+                               time,
+                               v_min,
+                               n_v,
+                               vscale,
+                               eps0,
+                               sigma0,
+                               alpha,
+                               t0eps,
+                               cnst_eff,
+                               a_eps_nuc,
+                               b_eps_nuc,
+                               t_eps_nuc,
+                               low_lat_vel=0.2,
+                               high_lat_vel=0.001,
+                               step_angle_vel=1.0,
+                               low_lat_op=0.2,
+                               high_lat_op=0.001,
+                               step_angle_op=1.0)
+    import matplotlib.pyplot as plt
+    print np.shape(r_ph), np.shape(L_bol)
+    for j in range(E.ncomponents):
+        for k in range(L_bol.shape[1]): plt.plot(time, L_bol[j, 0, :],'.')
+    plt.show()
