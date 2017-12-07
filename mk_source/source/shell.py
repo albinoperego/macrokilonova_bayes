@@ -55,7 +55,6 @@ class Shell(object):
                                        **kwargs):
 
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
-
         r_ph = []
         L_bol = []
     
@@ -67,11 +66,11 @@ class Shell(object):
             mv_diff = np.interp(time, t_diff[::-1], m_vel[::-1])
             mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
-        
+
             r_ph.append(self.r_ph_calc(v_fs, time))
 
-            L_bol.append(self.bolometric_luminosity(m_rad,
-                                                    time,
+            L_bol.append([self.bolometric_luminosity(m,
+                                                    t,
                                                     t0eps,
                                                     sigma0,
                                                     eps0,
@@ -83,7 +82,7 @@ class Shell(object):
                                                     v_rms,
                                                     kappa,
                                                     cnst_eff,
-                                                    alpha))
+                                                    alpha) for t,m in zip(time,m_rad)])
 
         return np.array(r_ph),np.array(L_bol)
 
@@ -95,7 +94,7 @@ class Shell(object):
                               cnst_eff,alpha):
         
         eps = self.EPSNUC(alpha,time,t0eps,sigma0,
-                          eps0,self.ET,self.ejected_mass,omega,v_rms,
+                          eps0,self.ET,m_ej,omega,v_rms,
                           cnst_eff,
                           cnst_a_eps_nuc=a_eps_nuc,
                           cnst_b_eps_nuc=b_eps_nuc,
@@ -149,4 +148,6 @@ if __name__=="__main__":
                                                    low_lat_op=0.2,
                                                    high_lat_op=0.001,
                                                    step_angle_op=1.0)
-    print r_ph
+    import matplotlib.pyplot as plt
+    plt.plot(r_ph, L_bol,'.')
+    plt.show()

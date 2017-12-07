@@ -18,6 +18,7 @@ class Thermalization(object):
         a = [[2.01,0.81,0.56,0.27],[4.52,1.90,1.31,0.55],[8.16,3.20,2.19,0.95]]
         b = [[0.28,0.19,0.17,0.10],[0.62,0.28,0.21,0.13],[1.19,0.45,0.31,0.15]]
         d = [[1.12,0.86,0.74,0.60],[1.39,1.21,1.13,0.90],[1.52,1.39,1.32,1.13]]
+        # define the interpolation functions
         self.fa = interpolate.interp2d(x, y, a, kind='linear')
         self.fb = interpolate.interp2d(x, y, b, kind='linear')
         self.fd = interpolate.interp2d(x, y, d, kind='linear')
@@ -26,14 +27,12 @@ class Thermalization(object):
         return self.therm_efficiency(self, **kwargs)
 
     def therm_efficiency_params(self, m,omega,v):
-        # define the interpolation functions
         m_iso = 4.*np.pi/omega * m
-
         # assign the values of the mass and velocity
         xnew=np.log10(m_iso)   #mass     [Msun]
         ynew=v                 #velocity [c]
         # compute the parameters by linear interpolation in the table
-        return [self.fa(xnew,ynew),self.fb(xnew,ynew),self.fd(xnew,ynew)]
+        return (self.fa(xnew,ynew),self.fb(xnew,ynew),self.fd(xnew,ynew))
 
 def BKWM_therm_efficiency(cls, **kwargs):
     t = kwargs['time_sec']   # s
