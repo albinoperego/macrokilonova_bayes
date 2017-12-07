@@ -9,6 +9,9 @@ import units
 import initialize_components
 import observer_projection as op
 import nuclear_heat
+import filters as ft
+import observer_projection as op
+
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
 from shell import Shell
 
@@ -39,10 +42,11 @@ class Ejecta(object):
                    b_eps_nuc,
                    t_eps_nuc,
                    **kwargs):
+        
         physical_radius = []
         self.bolometric_luminosity = []
         for c in self.components:
-            r, Lb = c.expansion_angular_distribution(angular_distribution,
+            t, r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
                                                      omega_distribution,
                                                      m_tot,
                                                      time,
@@ -60,7 +64,7 @@ class Ejecta(object):
                                                      **kwargs)
             physical_radius.append(r)
             self.bolometric_luminosity.append(Lb)
-        
+            self.time = time
         self.physical_radius = physical_radius[0]
         for k in np.arange(1,len(physical_radius)): self.physical_radius = np.maximum(self.physical_radius,r[k])
 
@@ -73,7 +77,7 @@ class Ejecta(object):
         for k in range(len(angular_distribution)):
             tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.total_bolometric_luminosity[k,:],self.physical_radius[k,:])]))
             self.T_eff_tot = np.asarray(tmp)
-        return time, np.array(self.physical_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
+        return self.time, np.array(self.physical_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
 
 if __name__=="__main__":
     params = {}

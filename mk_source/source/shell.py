@@ -11,6 +11,9 @@ import observer_projection as op
 import nuclear_heat
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
 
+def T_eff_calc(Lum,dOmega,r_ph):
+    return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
+
 class Shell(object):
     """
     Ejecta shell class
@@ -57,9 +60,10 @@ class Shell(object):
                                        **kwargs):
 
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
-        r_ph = []
-        L_bol = []
-    
+        self.physical_radius = []
+        self.Lbol = []
+        self.time = time
+        
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
             vel,m_vel,t_diff,t_fs = self.expansion_model(omega,m_ej,v_rms,v_min,n_v,vscale,kappa)
@@ -69,9 +73,9 @@ class Shell(object):
             mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
 
-            r_ph.append(self.r_ph_calc(v_fs, time))
+            self.physical_radius.append(self.r_ph_calc(v_fs, time))
 
-            L_bol.append([self.bolometric_luminosity(m,
+            self.Lbol.append([self.bolometric_luminosity(m,
                                                     t,
                                                     t0eps,
                                                     sigma0,
@@ -85,8 +89,14 @@ class Shell(object):
                                                     kappa,
                                                     cnst_eff,
                                                     alpha) for t,m in zip(time,m_rad)])
+        self.physical_radius = np.array(self.physical_radius)
+        self.Lbol = np.array(self.Lbol)
+        tmp = []
 
-        return np.array(r_ph),np.array(L_bol)
+        for k in range(len(angular_distribution)):
+            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.Lbol[k,:],self.physical_radius[k,:])]))
+            self.Teff = np.asarray(tmp)
+        return self.time, self.physical_radius, self.Lbol, self.Teff
 
     def bolometric_luminosity(self, m_rad, time,
                               t0eps,sigma0,eps0,
@@ -130,7 +140,7 @@ if __name__=="__main__":
     b_eps_nuc = 1.0
     t_eps_nuc = 1.0
     time = np.linspace(time_min,time_max,n_time)
-    r_ph, L_bol = S.expansion_angular_distribution(angular_distribution,
+    t, r_ph, L_bol, Teff = S.expansion_angular_distribution(angular_distribution,
                                                    omega_distribution,
                                                    m_tot,
                                                    time,
