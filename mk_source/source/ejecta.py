@@ -46,7 +46,7 @@ class Ejecta(object):
         photospheric_radius = []
         self.bolometric_luminosity = []
         for c in self.components:
-            t, r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
+            r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
                                                      omega_distribution,
                                                      m_tot,
                                                      time,
@@ -64,7 +64,6 @@ class Ejecta(object):
                                                      **kwargs)
             photospheric_radius.append(r)
             self.bolometric_luminosity.append(Lb)
-            self.time = time
         self.photospheric_radius = photospheric_radius[0]
         for k in np.arange(1,len(photospheric_radius)): self.photospheric_radius = np.maximum(self.photospheric_radius,r[k])
 
@@ -77,7 +76,7 @@ class Ejecta(object):
         for k in range(len(angular_distribution)):
             tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.total_bolometric_luminosity[k,:],self.photospheric_radius[k,:])]))
             self.T_eff_tot = np.asarray(tmp)
-        return self.time, np.array(self.photospheric_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
+        return np.array(self.photospheric_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
 
 if __name__=="__main__":
     params = {}
@@ -102,7 +101,7 @@ if __name__=="__main__":
     b_eps_nuc = 1.0
     t_eps_nuc = 1.0
     time = np.linspace(time_min,time_max,n_time)
-    time, r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
+    r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
                                omega_distribution,
                                m_tot,
                                time,

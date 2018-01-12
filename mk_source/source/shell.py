@@ -62,7 +62,6 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-        self.time = time
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
@@ -96,7 +95,7 @@ class Shell(object):
         for k in range(len(angular_distribution)):
             tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.Lbol[k,:],self.physical_radius[k,:])]))
             self.Teff = np.asarray(tmp)
-        return self.time, self.physical_radius, self.Lbol, self.Teff
+        return self.physical_radius, self.Lbol, self.Teff
 
     def bolometric_luminosity(self, m_rad, time,
                               t0eps,sigma0,eps0,

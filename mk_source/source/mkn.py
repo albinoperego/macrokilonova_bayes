@@ -41,6 +41,7 @@ E = ej.Ejecta(2, params.keys(), params)
 time_min = 36000.      #
 time_max = 172800.   #
 n_time = 200
+tscale   = 'linear'
 m_tot = 0.1
 v_min = 1e-7
 n_v = 100
@@ -53,8 +54,18 @@ cnst_eff = 1.0
 a_eps_nuc = 1.0
 b_eps_nuc = 1.0
 t_eps_nuc = 1.0
-time = np.linspace(time_min,time_max,n_time)
-time, r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
+
+# initialize global time
+if (tscale == 'linear'):
+    time = np.linspace(time_min,time_max,num=n_time)
+elif (tscale == 'log'):
+    time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+else:
+    print('Error! Wrong option for the time scale')
+    exit(-1)
+#time = np.linspace(time_min,time_max,n_time)
+
+r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            m_tot,
                            time,
