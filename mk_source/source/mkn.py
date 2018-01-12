@@ -55,7 +55,7 @@ params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step',
 E = ej.Ejecta(2, params.keys(), params)
 m_tot = 0.1
 
-glob_model_params = {'v_min':1.e-7, 
+glob_params = {'v_min':1.e-7, 
                      'n_v':100, 
                      'vscale':'linear',
                      'sigma0':1.0,
@@ -63,41 +63,17 @@ glob_model_params = {'v_min':1.e-7,
                      't0eps':1.0,
                      'cnst_eff':1.0}
 
-#v_min = 1e-7
-#n_v = 100
-#vscale = 'linear'
-
-glob_params = {'eps0':1.e19, 
+glob_vars = {'eps0':1.e19, 
                'a_eps_nuc':1.0,
                'b_eps_nuc':1.0,
                't_eps_nuc':1.0}
-
-#eps0 = 1e19
-#sigma0 = 1.0
-#alpha = 0.1
-#t0eps = 1.0
-#cnst_eff = 1.0
-#a_eps_nuc = 1.0
-#b_eps_nuc = 1.0
-#t_eps_nuc = 1.0
 
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            m_tot,
                            time,
+                           glob_vars,
                            glob_params,
-                           glob_model_params,
-#                           v_min,
-#                           n_v,                                   
-#                           vscale,
-#                           eps0,
-#                           sigma0,
-#                           alpha,
-#                           t0eps,
-#                           cnst_eff,
-#                           a_eps_nuc,
-#                           b_eps_nuc,
-#                           t_eps_nuc,
                            low_lat_vel=0.2,
                            high_lat_vel=0.001,
                            step_angle_vel=1.0,

@@ -30,8 +30,8 @@ class Ejecta(object):
                    omega_distribution,
                    m_tot,
                    time,
+                   glob_vars,
                    glob_params,
-                   glob_model_params,
                    **kwargs):
 
         photospheric_radii = []
@@ -41,8 +41,8 @@ class Ejecta(object):
                                                      omega_distribution,
                                                      m_tot,
                                                      time,
+                                                     glob_vars,
                                                      glob_params,
-                                                     glob_model_params,
                                                      **kwargs)
 
             photospheric_radii.append(r)

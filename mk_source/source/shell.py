@@ -46,24 +46,24 @@ class Shell(object):
                                        omega_distribution,
                                        m_tot,
                                        time,
+                                       glob_vars,
                                        glob_params,
-                                       glob_model_params,
                                        **kwargs):
                                        
 # assign the global model variables
-        v_min    = glob_model_params['v_min']
-        n_v      = glob_model_params['n_v']
-        vscale   = glob_model_params['vscale']
-        sigma0   = glob_model_params['sigma0']
-        alpha    = glob_model_params['alpha']
-        t0eps    = glob_model_params['t0eps']
-        cnst_eff = glob_model_params['cnst_eff']
+        v_min    = glob_params['v_min']
+        n_v      = glob_params['n_v']
+        vscale   = glob_params['vscale']
+        sigma0   = glob_params['sigma0']
+        alpha    = glob_params['alpha']
+        t0eps    = glob_params['t0eps']
+        cnst_eff = glob_params['cnst_eff']
 
 # assign the global variables
-        eps0      = glob_params['eps0']
-        a_eps_nuc = glob_params['a_eps_nuc']
-        b_eps_nuc = glob_params['b_eps_nuc']
-        t_eps_nuc = glob_params['t_eps_nuc']
+        eps0      = glob_vars['eps0']
+        a_eps_nuc = glob_vars['a_eps_nuc']
+        b_eps_nuc = glob_vars['b_eps_nuc']
+        t_eps_nuc = glob_vars['t_eps_nuc']
 
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
         self.physical_radius = []
