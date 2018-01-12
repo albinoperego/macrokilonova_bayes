@@ -124,7 +124,7 @@ if __name__=="__main__":
     S = Shell('wind', params)
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     omega_distribution = [0.01,0.2,0.5]
-    time_min = 36000.      #
+    time_min = 36000.    #
     time_max = 172800.   #
     n_time = 200
     m_tot = 0.1

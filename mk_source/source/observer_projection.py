@@ -3,10 +3,14 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 class ObserverProjection(object):
 
-    def __init__(self, n_rays, data_location = 'output_12_rays'):
+    def __init__(self, n_slices, dist_slices):
         
-        self.n_rays = n_rays
-        self.data_location = data_location
+        self.n_rays = n_slices
+        if (dist_slices == "uniform"):
+            self.data_location = "output_"+str(self.n_rays)+"_rays"
+        else:
+            self.data_location = "output_cos_"+str(self.n_rays)+"_rays"
+
         self.flux_interpolant = self.read_flux_factors(self.n_rays)
 
     def __call__(self,angle):

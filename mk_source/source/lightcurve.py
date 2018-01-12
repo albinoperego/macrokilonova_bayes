@@ -182,7 +182,7 @@ if __name__=="__main__":
     ang_dist, omega_dist = AD(12)
 
 #initialize the observer location
-    FF = op.ObserverProjection(12)
+    FF = op.ObserverProjection(12,"uniform")
     flux_factor = FF(15.)
 
     dyn_flag = False
