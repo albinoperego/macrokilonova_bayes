@@ -46,18 +46,24 @@ class Shell(object):
                                        omega_distribution,
                                        m_tot,
                                        time,
-                                       v_min,
-                                       n_v,
-                                       vscale,
-                                       eps0,
-                                       sigma0,
-                                       alpha,
-                                       t0eps,
-                                       cnst_eff,
-                                       a_eps_nuc,
-                                       b_eps_nuc,
-                                       t_eps_nuc,
+                                       glob_params,
+                                       glob_model_params,
                                        **kwargs):
+                                       
+# assign the global model variables
+        v_min    = glob_model_params['v_min']
+        n_v      = glob_model_params['n_v']
+        vscale   = glob_model_params['vscale']
+        sigma0   = glob_model_params['sigma0']
+        alpha    = glob_model_params['alpha']
+        t0eps    = glob_model_params['t0eps']
+        cnst_eff = glob_model_params['cnst_eff']
+
+# assign the global variables
+        eps0      = glob_params['eps0']
+        a_eps_nuc = glob_params['a_eps_nuc']
+        b_eps_nuc = glob_params['b_eps_nuc']
+        t_eps_nuc = glob_params['t_eps_nuc']
 
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
         self.physical_radius = []

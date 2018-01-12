@@ -25,36 +25,17 @@ print('I have initialized the filters')
 
 #initialize the observer location
 view_angle = 15.
-#view_angle_delta = 1.
 FF = op.ObserverProjection(n_slices,dist_slices)
 flux_factor = FF(view_angle)#,view_angle_delta)
 
 print('')
 print('I have initialized the observer location')
 
-params = {}
-params['wind'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-E = ej.Ejecta(2, params.keys(), params)
-#angular_distribution = [(0,1),(1,2),(2,3.1415)]
-#omega_distribution = [0.01,0.2,0.5]
+#initialize the time
 time_min = 36000.      #
 time_max = 172800.   #
 n_time = 200
 tscale   = 'linear'
-m_tot = 0.1
-v_min = 1e-7
-n_v = 100
-vscale = 'linear'
-eps0 = 1e19
-sigma0 = 1.0
-alpha = 0.1
-t0eps = 1.0
-cnst_eff = 1.0
-a_eps_nuc = 1.0
-b_eps_nuc = 1.0
-t_eps_nuc = 1.0
-
 # initialize global time
 if (tscale == 'linear'):
     time = np.linspace(time_min,time_max,num=n_time)
@@ -63,35 +44,66 @@ elif (tscale == 'log'):
 else:
     print('Error! Wrong option for the time scale')
     exit(-1)
-#time = np.linspace(time_min,time_max,n_time)
+
+print('')
+print('I have initialized the global time')
+
+params = {}
+params['wind'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+
+E = ej.Ejecta(2, params.keys(), params)
+m_tot = 0.1
+
+glob_model_params = {'v_min':1.e-7, 
+                     'n_v':100, 
+                     'vscale':'linear',
+                     'sigma0':1.0,
+                     'alpha':0.1,
+                     't0eps':1.0,
+                     'cnst_eff':1.0}
+
+#v_min = 1e-7
+#n_v = 100
+#vscale = 'linear'
+
+glob_params = {'eps0':1.e19, 
+               'a_eps_nuc':1.0,
+               'b_eps_nuc':1.0,
+               't_eps_nuc':1.0}
+
+#eps0 = 1e19
+#sigma0 = 1.0
+#alpha = 0.1
+#t0eps = 1.0
+#cnst_eff = 1.0
+#a_eps_nuc = 1.0
+#b_eps_nuc = 1.0
+#t_eps_nuc = 1.0
 
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            m_tot,
                            time,
-                           v_min,
-                           n_v,
-                           vscale,
-                           eps0,
-                           sigma0,
-                           alpha,
-                           t0eps,
-                           cnst_eff,
-                           a_eps_nuc,
-                           b_eps_nuc,
-                           t_eps_nuc,
+                           glob_params,
+                           glob_model_params,
+#                           v_min,
+#                           n_v,                                   
+#                           vscale,
+#                           eps0,
+#                           sigma0,
+#                           alpha,
+#                           t0eps,
+#                           cnst_eff,
+#                           a_eps_nuc,
+#                           b_eps_nuc,
+#                           t_eps_nuc,
                            low_lat_vel=0.2,
                            high_lat_vel=0.001,
                            step_angle_vel=1.0,
                            low_lat_op=0.2,
                            high_lat_op=0.001,
                            step_angle_op=1.0)
-
-#print('time',np.shape(time))
-#print('r',np.shape(r_ph))
-#print('L',np.shape(L_bol))
-#print('T',np.shape(Teff))
-#exit()
 
 # compute the magnitudes from a certain distance
 D = 40.e+6*units.pc2cm

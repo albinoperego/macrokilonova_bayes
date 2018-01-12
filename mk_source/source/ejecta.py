@@ -30,19 +30,10 @@ class Ejecta(object):
                    omega_distribution,
                    m_tot,
                    time,
-                   v_min,
-                   n_v,
-                   vscale,
-                   eps0,
-                   sigma0,
-                   alpha,
-                   t0eps,
-                   cnst_eff,
-                   a_eps_nuc,
-                   b_eps_nuc,
-                   t_eps_nuc,
+                   glob_params,
+                   glob_model_params,
                    **kwargs):
-        
+
         photospheric_radii = []
         bolometric_luminosities = []
         for c in self.components:
@@ -50,17 +41,8 @@ class Ejecta(object):
                                                      omega_distribution,
                                                      m_tot,
                                                      time,
-                                                     v_min,
-                                                     n_v,
-                                                     vscale,
-                                                     eps0,
-                                                     sigma0,
-                                                     alpha,
-                                                     t0eps,
-                                                     cnst_eff,
-                                                     a_eps_nuc,
-                                                     b_eps_nuc,
-                                                     t_eps_nuc,
+                                                     glob_params,
+                                                     glob_model_params,
                                                      **kwargs)
 
             photospheric_radii.append(r)
@@ -71,9 +53,6 @@ class Ejecta(object):
         self.photospheric_radius = np.zeros(np.shape(r))
         for i in range(len(self.components)):
             self.photospheric_radius = np.maximum(self.photospheric_radius,photospheric_radii[i])
-
-#        self.photospheric_radius = photospheric_radius[0]
-#        for k in np.arange(1,len(photospheric_radius)): self.photospheric_radius = np.maximum(self.photospheric_radius,r[k])
 
 # define the total bolometric luminosity as the sum of the different single luminosities
         self.bolometric_luminosity = None
