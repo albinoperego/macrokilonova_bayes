@@ -43,7 +43,7 @@ class Ejecta(object):
                    t_eps_nuc,
                    **kwargs):
         
-        physical_radius = []
+        photospheric_radius = []
         self.bolometric_luminosity = []
         for c in self.components:
             t, r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
@@ -62,11 +62,11 @@ class Ejecta(object):
                                                      b_eps_nuc,
                                                      t_eps_nuc,
                                                      **kwargs)
-            physical_radius.append(r)
+            photospheric_radius.append(r)
             self.bolometric_luminosity.append(Lb)
             self.time = time
-        self.physical_radius = physical_radius[0]
-        for k in np.arange(1,len(physical_radius)): self.physical_radius = np.maximum(self.physical_radius,r[k])
+        self.photospheric_radius = photospheric_radius[0]
+        for k in np.arange(1,len(photospheric_radius)): self.photospheric_radius = np.maximum(self.photospheric_radius,r[k])
 
         self.total_bolometric_luminosity = None
         for b in self.bolometric_luminosity:
@@ -75,9 +75,9 @@ class Ejecta(object):
 
         tmp = []
         for k in range(len(angular_distribution)):
-            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.total_bolometric_luminosity[k,:],self.physical_radius[k,:])]))
+            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.total_bolometric_luminosity[k,:],self.photospheric_radius[k,:])]))
             self.T_eff_tot = np.asarray(tmp)
-        return self.time, np.array(self.physical_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
+        return self.time, np.array(self.photospheric_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
 
 if __name__=="__main__":
     params = {}
