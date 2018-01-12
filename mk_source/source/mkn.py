@@ -65,7 +65,7 @@ else:
     exit(-1)
 #time = np.linspace(time_min,time_max,n_time)
 
-r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
+r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            m_tot,
                            time,
@@ -87,15 +87,15 @@ r_ph, L_bol, Teff = E.lightcurve(angular_distribution,
                            high_lat_op=0.001,
                            step_angle_op=1.0)
 
-print('time',np.shape(time))
-print('r',np.shape(r_ph))
-print('L',np.shape(L_bol))
-print('T',np.shape(Teff))
-exit()
+#print('time',np.shape(time))
+#print('r',np.shape(r_ph))
+#print('L',np.shape(L_bol))
+#print('T',np.shape(Teff))
+#exit()
 
 # compute the magnitudes from a certain distance
 D = 40.e+6*units.pc2cm
-model_mag = ft.calc_magnitudes(flux_factor,time,r_ph_tot,T_eff_tot,lambda_vec,dic_filt,D)
+model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D)
 
 # compute the residuals
 residuals = ft.calc_residuals(mag,model_mag)
@@ -128,11 +128,11 @@ if (write_output):
 
     g.close()
 
-import matplotlib.pyplot as plt
-print np.shape(r_ph), np.shape(L_bol)
-for j in range(E.ncomponents):
-    for k in range(L_bol.shape[1]): plt.plot(time, L_bol[j, 0, :],'.')
-plt.show()
+#import matplotlib.pyplot as plt
+#print np.shape(r_ph), np.shape(L_bol)
+#for j in range(E.ncomponents):
+#    for k in range(L_bol.shape[1]): plt.plot(time, L_bol[j, 0, :],'.')
+#plt.show()
 
 ## set which components must be activated
 #dyn_flag  = True

@@ -43,8 +43,8 @@ class Ejecta(object):
                    t_eps_nuc,
                    **kwargs):
         
-        photospheric_radius = []
-        self.bolometric_luminosity = []
+        photospheric_radii = []
+        bolometric_luminosities = []
         for c in self.components:
             r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
                                                      omega_distribution,
@@ -62,21 +62,31 @@ class Ejecta(object):
                                                      b_eps_nuc,
                                                      t_eps_nuc,
                                                      **kwargs)
-            photospheric_radius.append(r)
-            self.bolometric_luminosity.append(Lb)
-        self.photospheric_radius = photospheric_radius[0]
-        for k in np.arange(1,len(photospheric_radius)): self.photospheric_radius = np.maximum(self.photospheric_radius,r[k])
 
-        self.total_bolometric_luminosity = None
-        for b in self.bolometric_luminosity:
-            if self.total_bolometric_luminosity is None: self.total_bolometric_luminosity = b
-            else: self.total_bolometric_luminosity += b
+            photospheric_radii.append(r)
+            bolometric_luminosities.append(Lb)
 
-        tmp = []
+# select the photospheric radius as trhe maximum between the different single
+# photospheric radii
+        self.photospheric_radius = np.zeros(np.shape(r))
+        for i in range(len(self.components)):
+            self.photospheric_radius = np.maximum(self.photospheric_radius,photospheric_radii[i])
+
+#        self.photospheric_radius = photospheric_radius[0]
+#        for k in np.arange(1,len(photospheric_radius)): self.photospheric_radius = np.maximum(self.photospheric_radius,r[k])
+
+# define the total bolometric luminosity as the sum of the different single luminosities
+        self.bolometric_luminosity = None
+        for b in bolometric_luminosities:
+            if self.bolometric_luminosity is None: self.bolometric_luminosity = b
+            else: self.bolometric_luminosity += b
+
+# compute the effective BB temperature based on the photospheric radius and luminosity
+        self.T_eff = []
         for k in range(len(angular_distribution)):
-            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.total_bolometric_luminosity[k,:],self.photospheric_radius[k,:])]))
-            self.T_eff_tot = np.asarray(tmp)
-        return np.array(self.photospheric_radius), np.array(self.bolometric_luminosity), self.T_eff_tot
+            self.T_eff.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.bolometric_luminosity[k,:],self.photospheric_radius[k,:])]))
+
+        return np.array(self.photospheric_radius), np.array(self.bolometric_luminosity), np.asarray(self.T_eff)
 
 if __name__=="__main__":
     params = {}
