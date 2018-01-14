@@ -35,7 +35,7 @@ class Shell(object):
         self.op_dist         = opacity_angular_distribution.OpacityAngularDistribution(params['op_dist'])
         self.expansion_model = ExpansionModelSingleSpherical('GK')
     
-    def update(self, m_tot, angular_distribution, **kwargs):
+    def update(self, m_tot, angular_distribution,**kwargs):
         x = self.mass_dist(m_tot,angular_distribution,**kwargs)
         y = self.vel_dist(angular_distribution,**kwargs)
         z = self.op_dist(angular_distribution,**kwargs)
@@ -44,8 +44,8 @@ class Shell(object):
     def expansion_angular_distribution(self,
                                        angular_distribution,
                                        omega_distribution,
-                                       m_tot,
                                        time,
+                                       shell_vars,
                                        glob_vars,
                                        glob_params,
                                        **kwargs):
@@ -65,7 +65,12 @@ class Shell(object):
         b_eps_nuc = glob_vars['b_eps_nuc']
         t_eps_nuc = glob_vars['t_eps_nuc']
 
-        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
+        if (shell_vars['m_ej'] == None):
+            m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
+        elif (shell_vars['xi_disk'] == None):
+            m_tot = np.float(shell_vars['m_ej'])
+
+        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
         

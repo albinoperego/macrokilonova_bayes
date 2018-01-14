@@ -49,37 +49,50 @@ print('')
 print('I have initialized the global time')
 
 params = {}
-params['wind'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['wind']    = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
 params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
 
 E = ej.Ejecta(2, params.keys(), params)
-m_tot = 0.1
+
+shell_vars={}
+shell_vars['wind'] = {'xi_disk':1.0,
+                      'm_ej':None,
+                      'low_lat_vel':0.2,
+                      'high_lat_vel':0.001,
+                      'step_angle_vel':1.0,
+                      'low_lat_op':0.2,
+                      'high_lat_op':0.001,
+                      'step_angle_op':1.0}
+
+shell_vars['secular'] = {'xi_disk':None,
+                         'm_ej':0.1,
+                         'low_lat_vel':0.2,
+                         'high_lat_vel':0.001,
+                         'step_angle_vel':1.0,
+                         'low_lat_op':0.2,
+                         'high_lat_op':0.001,
+                         'step_angle_op':1.0}
 
 glob_params = {'v_min':1.e-7, 
-                     'n_v':100, 
-                     'vscale':'linear',
-                     'sigma0':1.0,
-                     'alpha':0.1,
-                     't0eps':1.0,
-                     'cnst_eff':1.0}
+               'n_v':100, 
+               'vscale':'linear',
+               'sigma0':1.0,
+               'alpha':0.1,
+               't0eps':1.0,
+               'cnst_eff':1.0}
 
-glob_vars = {'eps0':1.e19, 
-               'a_eps_nuc':1.0,
-               'b_eps_nuc':1.0,
-               't_eps_nuc':1.0}
+glob_vars = {'m_disk':0.1,
+             'eps0':1.e19, 
+             'a_eps_nuc':1.0,
+             'b_eps_nuc':1.0,
+             't_eps_nuc':1.0}
 
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
-                           m_tot,
                            time,
+                           shell_vars,
                            glob_vars,
-                           glob_params,
-                           low_lat_vel=0.2,
-                           high_lat_vel=0.001,
-                           step_angle_vel=1.0,
-                           low_lat_op=0.2,
-                           high_lat_op=0.001,
-                           step_angle_op=1.0)
+                           glob_params)
 
 # compute the magnitudes from a certain distance
 D = 40.e+6*units.pc2cm

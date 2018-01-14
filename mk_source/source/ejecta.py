@@ -28,8 +28,8 @@ class Ejecta(object):
     def lightcurve(self,
                    angular_distribution,
                    omega_distribution,
-                   m_tot,
                    time,
+                   shell_vars,
                    glob_vars,
                    glob_params,
                    **kwargs):
@@ -37,10 +37,11 @@ class Ejecta(object):
         photospheric_radii = []
         bolometric_luminosities = []
         for c in self.components:
+            print(c.name)
             r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
                                                      omega_distribution,
-                                                     m_tot,
                                                      time,
+                                                     shell_vars[c.name],
                                                      glob_vars,
                                                      glob_params,
                                                      **kwargs)
