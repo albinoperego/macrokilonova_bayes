@@ -8,8 +8,8 @@ import math
 import ejecta as ej
 
 # initialize the angular distribution
-n_slices = 30
-dist_slices = "cos_uniform"
+n_slices = 12
+dist_slices = "uniform"
 AD = ad.AngularDistribution(dist_slices,n_slices)
 angular_distribution, omega_distribution = AD(n_slices/2)
 
@@ -32,8 +32,8 @@ print('')
 print('I have initialized the observer location')
 
 #initialize the time
-time_min = 36000.      #
-time_max = 172800.   #
+time_min = 3600.      #
+time_max = 2000000.   #
 n_time = 200
 tscale   = 'linear'
 # initialize global time
@@ -49,42 +49,59 @@ print('')
 print('I have initialized the global time')
 
 params = {}
-params['wind']    = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['dynamics']    = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['wind']    = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['secular'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM', 'eps_ye_dep':True}
 
-E = ej.Ejecta(2, params.keys(), params)
+E = ej.Ejecta(3, params.keys(), params)
 
 shell_vars={}
-shell_vars['wind'] = {'xi_disk':1.0,
-                      'm_ej':None,
-                      'low_lat_vel':0.2,
-                      'high_lat_vel':0.001,
-                      'step_angle_vel':1.0,
-                      'low_lat_op':0.2,
-                      'high_lat_op':0.001,
-                      'step_angle_op':1.0}
 
-shell_vars['secular'] = {'xi_disk':None,
-                         'm_ej':0.1,
-                         'low_lat_vel':0.2,
-                         'high_lat_vel':0.001,
-                         'step_angle_vel':1.0,
-                         'low_lat_op':0.2,
-                         'high_lat_op':0.001,
-                         'step_angle_op':1.0}
+shell_vars['dynamics'] = {'xi_disk':None,
+                      'm_ej':0.005,
+                      'central_vel':0.2,
+                      'low_lat_vel':None,
+                      'high_lat_vel':None,
+                      'step_angle_vel':None,
+                      'low_lat_op':10.,
+                      'high_lat_op':0.1,
+                      'step_angle_op':math.radians(45.)}
+
+shell_vars['wind'] = {'xi_disk':0.1,
+                      'm_ej':None,
+                      'step_angle_mass':math.radians(60.),
+                      'high_lat_flag':True,
+                      'central_vel':0.05,
+                      'low_lat_vel':None,
+                      'high_lat_vel':None,
+                      'step_angle_vel':None,
+                      'low_lat_op':1.0,
+                      'high_lat_op':0.1,
+                      'step_angle_op':math.radians(45.)}
+
+shell_vars['secular'] = {'xi_disk':0.2,
+                         'm_ej':None,
+                         'central_vel':0.02,
+                         'low_lat_vel':None,
+                         'high_lat_vel':None,
+                         'step_angle_vel':None,
+                         'central_op':5.0,
+                         'low_lat_op':None,
+                         'high_lat_op':None,
+                         'step_angle_op':None}
 
 glob_params = {'v_min':1.e-7, 
                'n_v':100, 
                'vscale':'linear',
-               'sigma0':1.0,
-               'alpha':0.1,
-               't0eps':1.0,
-               'cnst_eff':1.0}
+               'sigma0':0.11,
+               'alpha':1.3,
+               't0eps':1.3,
+               'cnst_eff':0.3333}
 
 glob_vars = {'m_disk':0.1,
-             'eps0':1.e19, 
-             'a_eps_nuc':1.0,
-             'b_eps_nuc':1.0,
+             'eps0':1.2e19, 
+             'a_eps_nuc':0.5,
+             'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
 
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
