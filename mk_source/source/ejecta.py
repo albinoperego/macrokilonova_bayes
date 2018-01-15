@@ -83,7 +83,8 @@ if __name__=="__main__":
     params = {}
     params['wind'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
     params['secular'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-    E = Ejecta(2, params.keys(), params)
+    params['dynamical'] = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+    E = Ejecta(3, params.keys(), params)
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     omega_distribution = [0.01,0.2,0.5]
     time_min = 36000.      #
@@ -126,5 +127,6 @@ if __name__=="__main__":
     import matplotlib.pyplot as plt
     print np.shape(r_ph), np.shape(L_bol)
     for j in range(E.ncomponents):
-        for k in range(L_bol.shape[1]): plt.plot(time, L_bol[j, 0, :],'.')
+        for k in range(L_bol.shape[1]): plt.plot(time, L_bol[j, 0, :],'.', label=E.components[j].name)
+    plt.legend()
     plt.show()
