@@ -298,7 +298,7 @@ class MacroKilonovaModel(cpnest.model.Model):
         #initialize the observer location
         self.view_angle = view_angle
         self.view_angle_delta = view_angle_delta
-        self.FF = op.ObserverProjection(self.n_slices)
+        self.FF = op.ObserverProjection(self.n_slices,self.dist_slices)
 
         print('')
         print('I have initialized the observer location')

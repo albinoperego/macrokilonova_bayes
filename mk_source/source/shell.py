@@ -35,7 +35,7 @@ class Shell(object):
         self.op_dist         = opacity_angular_distribution.OpacityAngularDistribution(params['op_dist'])
         self.expansion_model = ExpansionModelSingleSpherical('GK')
     
-    def update(self, m_tot, angular_distribution, **kwargs):
+    def update(self, m_tot, angular_distribution,**kwargs):
         x = self.mass_dist(m_tot,angular_distribution,**kwargs)
         y = self.vel_dist(angular_distribution,**kwargs)
         z = self.op_dist(angular_distribution,**kwargs)
@@ -44,25 +44,35 @@ class Shell(object):
     def expansion_angular_distribution(self,
                                        angular_distribution,
                                        omega_distribution,
-                                       m_tot,
                                        time,
-                                       v_min,
-                                       n_v,
-                                       vscale,
-                                       eps0,
-                                       sigma0,
-                                       alpha,
-                                       t0eps,
-                                       cnst_eff,
-                                       a_eps_nuc,
-                                       b_eps_nuc,
-                                       t_eps_nuc,
+                                       shell_vars,
+                                       glob_vars,
+                                       glob_params,
                                        **kwargs):
+                                       
+# assign the global model variables
+        v_min    = glob_params['v_min']
+        n_v      = glob_params['n_v']
+        vscale   = glob_params['vscale']
+        sigma0   = glob_params['sigma0']
+        alpha    = glob_params['alpha']
+        t0eps    = glob_params['t0eps']
+        cnst_eff = glob_params['cnst_eff']
 
-        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**kwargs)
+# assign the global variables
+        eps0      = glob_vars['eps0']
+        a_eps_nuc = glob_vars['a_eps_nuc']
+        b_eps_nuc = glob_vars['b_eps_nuc']
+        t_eps_nuc = glob_vars['t_eps_nuc']
+
+        if (shell_vars['m_ej'] == None):
+            m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
+        elif (shell_vars['xi_disk'] == None):
+            m_tot = np.float(shell_vars['m_ej'])
+
+        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-        self.time = time
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
@@ -96,7 +106,7 @@ class Shell(object):
         for k in range(len(angular_distribution)):
             tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.Lbol[k,:],self.physical_radius[k,:])]))
             self.Teff = np.asarray(tmp)
-        return self.time, self.physical_radius, self.Lbol, self.Teff
+        return self.physical_radius, self.Lbol, self.Teff
 
     def bolometric_luminosity(self, m_rad, time,
                               t0eps,sigma0,eps0,
@@ -124,7 +134,7 @@ if __name__=="__main__":
     S = Shell('wind', params)
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     omega_distribution = [0.01,0.2,0.5]
-    time_min = 36000.      #
+    time_min = 36000.    #
     time_max = 172800.   #
     n_time = 200
     m_tot = 0.1
