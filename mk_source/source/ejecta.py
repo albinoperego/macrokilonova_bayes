@@ -37,7 +37,7 @@ class Ejecta(object):
         photospheric_radii = []
         bolometric_luminosities = []
         for c in self.components:
-            print(c.name)
+            
             r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
                                                      omega_distribution,
                                                      time,

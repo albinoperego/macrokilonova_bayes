@@ -130,47 +130,34 @@ class Shell(object):
 #####################
 
 if __name__=="__main__":
-    params = {'mass_dist':'uniform', 'vel_dist':'step', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-    S = Shell('wind', params)
-    angular_distribution = [(0,1),(1,2),(2,3.1415)]
-    omega_distribution = [0.01,0.2,0.5]
-    time_min = 36000.    #
-    time_max = 172800.   #
-    n_time = 200
-    m_tot = 0.1
-    v_min = 1e-7
-    n_v = 100
-    vscale = 'linear'
-    eps0 = 1e19
-    sigma0 = 1.0
-    alpha = 0.1
-    t0eps = 1.0
-    cnst_eff = 1.0
-    a_eps_nuc = 1.0
-    b_eps_nuc = 1.0
-    t_eps_nuc = 1.0
-    time = np.linspace(time_min,time_max,n_time)
-    t, r_ph, L_bol, Teff = S.expansion_angular_distribution(angular_distribution,
-                                                   omega_distribution,
-                                                   m_tot,
-                                                   time,
-                                                   v_min,
-                                                   n_v,
-                                                   vscale,
-                                                   eps0,
-                                                   sigma0,
-                                                   alpha,
-                                                   t0eps,
-                                                   cnst_eff,
-                                                   a_eps_nuc,
-                                                   b_eps_nuc,
-                                                   t_eps_nuc,
-                                                   low_lat_vel=0.2,
-                                                   high_lat_vel=0.001,
-                                                   step_angle_vel=1.0,
-                                                   low_lat_op=0.2,
-                                                   high_lat_op=0.001,
-                                                   step_angle_op=1.0)
+    glob_params = {'v_min':1.e-7,
+               'n_v':100,
+               'vscale':'linear',
+               'sigma0':0.11,
+               'alpha':1.3,
+               't0eps':1.3,
+               'cnst_eff':0.3333}
+
+    glob_vars = {'m_disk':0.1,
+             'eps0':1.2e19,
+             'a_eps_nuc':0.5,
+             'b_eps_nuc':2.5,
+             't_eps_nuc':1.0}
+    params = {}
+    params['dynamics']    = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+    shell_vars={}
+
+    shell_vars['dynamics'] = {'xi_disk':None,
+                          'm_ej':0.005,
+                          'central_vel':0.2,
+                          'low_lat_vel':None,
+                          'high_lat_vel':None,
+                          'step_angle_vel':None,
+                          'low_lat_op':10.,
+                          'high_lat_op':0.1,
+                          'step_angle_op':np.radians(45.)}
+    s = Shell('dynamics',params['dynamics'])
+    print s
     import matplotlib.pyplot as plt
     print np.shape(r_ph), np.shape(L_bol)
     for k in range(r_ph.shape[0]): plt.plot(r_ph[k, :], L_bol[k, :],'.')

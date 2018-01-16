@@ -13,6 +13,7 @@ import lightcurve as lc
 import numpy as np
 import observer_projection as op
 import units
+import ejecta as ej
 
 class MacroKilonovaModel(cpnest.model.Model):
     """
@@ -23,537 +24,180 @@ class MacroKilonovaModel(cpnest.model.Model):
     bounds = []
 
     def __init__(self,
-                 # angular distribution
-                 n_slices=12,
+                 # dictionary of global parameters defining basic properties of the ejecta
+                 glob_params,
+                 # dictionary of global parameters defining basic properties of the ejecta to be sampled
+                 glob_vars,
+                 # dictionary of ejecta parameters defining its composition and geometry
+                 ejecta_params,
+                 # dictionary of shell parameters defining basic properties of the shell
+                 shell_params,
+                 n_slices = 12,
                  dist_slices = "uniform",
-                 # observer location
-                 view_angle = 15., # <-- p
-                 view_angle_delta = 1.,
-                 # set which components must be activated
-                 dyn_flag  = True,
-                 wind_flag = True,
-                 sec_flag  = True,
-                 # values to initialize the global time
-                 time_min = 36000.,     # 10 hours
-                 time_max = 1550000,    # 18 days
-                 n_time   = 200,
-                 tscale   = 'linear',
-                 # values to initialize the ray velocity
-                 v_min  = 1.e-8, # <-- play with this to stabilise the code
-                 n_v    = 200,
-                 vscale = 'linear',
-                 # nuclear heating values
-                 eps_ye_dep = True,
-                 eps0 = 1.2e+19, # <-- p
-                 sigma0 = 0.11,
-                 alpha = 1.3,
-                 t0eps = 1.3,
-                 cnst_eff = 0.3333,
-                 a_eps_nuc = 0.5, # <-- p
-                 b_eps_nuc = 2.5, # <-- p
-                 t_eps_nuc = 1.,
-                 # mass dynamic ejecta
-                 mass_dist_law_dyn   ='sin2',
-                 step_angle_mass_dyn =None,
-                 high_lat_flag_dyn   =None,
-                 # velocity dynamic ejecta
-                 vel_dist_law_dyn    ='uniform',
-                 min_vel_dyn         =None,
-                 max_vel_dyn         =None,
-                 step_angle_vel_dyn  =None,
-                 high_lat_vel_dyn    =None,
-                 low_lat_vel_dyn     =None,
-                 # opacity dynamic ejecta
-                 kappa_dist_law_dyn  ='step',
-                 central_op_dyn      =None, # <-- p used only for continous distribution
-                 min_op_dyn          =None, # <-- p used only for continous distribution
-                 max_op_dyn          =None, # <-- p used only for continous distribution
-                 step_angle_op_dyn   =None, # <-- p
-                 high_lat_op_dyn     =None, # <-- p used with step distribution
-                 low_lat_op_dyn      =None, # <-- p used with step distribution
-                 # mass wind ejecta
-                 mass_dist_law_wind  ='step',
-                 step_angle_mass_wind=None, # <-- p
-                 high_lat_flag_wind  =1,
-                 # velocity wind ejecta
-                 vel_dist_law_wind   ='uniform',
-                 min_vel_wind        =None,
-                 max_vel_wind        =None,
-                 step_angle_vel_wind =None,
-                 high_lat_vel_wind   =None,
-                 low_lat_vel_wind    =None,
-                 # opacity wind ejecta
-                 kappa_dist_law_wind ='step',
-                 central_op_wind     =None, # <-- p used only for continous distribution
-                 min_op_wind         =None, # <-- p used only for continous distribution
-                 max_op_wind         =None, # <-- p used only for continous distribution
-                 step_angle_op_wind  =None, # <-- p
-                 high_lat_op_wind    =None, # <-- p used with step distribution
-                 low_lat_op_wind     =None, # <-- p used with step distribution
-                 # mass secular ejecta
-                 mass_dist_law_sec   ='sin2',
-                 step_angle_mass_sec =None,
-                 high_lat_flag_sec   =None,
-                 # velocity secular ejecta
-                 vel_dist_law_sec    ='uniform',
-                 min_vel_sec         =None,
-                 max_vel_sec         =None,
-                 step_angle_vel_sec  =None,
-                 high_lat_vel_sec    =None,
-                 low_lat_vel_sec     =None,
-                 # opacity secular ejecta
-                 kappa_dist_law_sec  ='uniform',
-                 central_op_sec      =None,
-                 min_op_sec          =None,
-                 max_op_sec          =None,
-                 step_angle_op_sec   =None,
-                 high_lat_op_sec     =None,
-                 low_lat_op_sec      =None,
                  **kwargs):
 
         super(MacroKilonovaModel,self).__init__(**kwargs)
-    
-        """
-        the various allowed cases for mass distribution are:
+        #initialize the time
+        self.time_min = 3600.      #
+        self.time_max = 2000000.   #
+        self.n_time = 50
+        self.tscale   = 'linear'
+        # initialize global time
+        if (self.tscale == 'linear'):
+            self.time = np.linspace(self.time_min,self.time_max,num=self.n_time)
+        elif (tscale == 'log'):
+            self.time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+        else:
+            print('Error! Wrong option for the time scale')
+            exit(-1)
+        
+        
+        # number and distribution of slices for the angular integrals
+        self.n_slices = n_slices
+        self.dist_slices = dist_slices
+        # initialize the angular distribution
+        print "Initialising angular distribution"
+        self.AD = ad.AngularDistribution(self.dist_slices,self.n_slices)
+        self.ang_dist, self.omega_dist = self.AD(self.n_slices/2)
 
-        - step
-        - uniform
-        - some continuous function
+        
+        # initialize the filters
+        print "Initialising filters"
+        self.FT = ft.Filters("measures")
+        self.dic_filt,self.lambda_vec,self.mag = self.FT()
+        
+        # initialise the view angle
+        print "Initialising observer projection"
+        self.FF = op.ObserverProjection(self.n_slices,self.dist_slices)
+        
+        # register the geometry of the ejecta and create an Ejecta object
+        self.glob_params  = glob_params
+        self.glob_vars  = glob_vars
+        self.ejecta_params = ejecta_params
+        self.shell_params = shell_params
+        self.ejecta = ej.Ejecta(len(self.ejecta_params), self.ejecta_params.keys(), self.ejecta_params)
+        
+        # set of global variables
 
-        the various allowed cases for velocity distribution are:
-
-        - step
-        - uniform
-        - some continuos function
-
-        the various allowed cases for the opacity distribution are:
-
-        - step
-        - uniform
-        - some continuos function
-
-        the following parameters are always present:
-        view_angle
-        m_ej_dyn
-        m_ej_wind
-        m_ej_sec
-        eps0
-        a_eps_nuc
-        b_eps_nuc
-        """
-
-        model_parameters = ['view_angle',
-                            'm_ej_dyn',
-                            'm_ej_wind',
-                            'm_ej_sec',
-                            'eps0',
-                            'a_eps_nuc',
-                            'b_eps_nuc',
-                            'distance']
-
+        model_parameters = self.glob_vars.keys()
+        model_parameters.append('distance')
+        model_parameters.append('view_angle')
         model_bounds = {'view_angle':[0.0,90.0],
-                        'm_ej_dyn':[1e-4,1e-2],
-                        'm_ej_wind':[1e-4,1e-2],
-                        'm_ej_sec':[1e-4,1e-1],
+                        'm_disk':[1e-4,1e-2],
                         'eps0':[2e18,2e19],
                         'a_eps_nuc':[0.4,0.8],
                         'b_eps_nuc':[1.0,3.0],
+                        't_eps_nuc':[0.5,1.5],
                         'distance':[30,50]}
 
-        # check for mass distribution choice and add relevant parameters
-        if mass_dist_law_dyn=="step":
-            model_parameters.append('step_angle_mass_dyn')
-            model_bounds['step_angle_mass_dyn'] = [20.0,80.0]
-
-        if mass_dist_law_wind=="step":
-            model_parameters.append('step_angle_mass_wind')
-            model_bounds['step_angle_mass_wind'] = [20.0,80.0]
-
-        if mass_dist_law_sec=="step":
-            model_parameters.append('step_angle_mass_sec')
-            model_bounds['step_angle_mass_sec'] = [20.0,80.0]
-
-        # check for velocity distribution choice and add relevant parameters
-
-        # dynamical ejecta velocity law
-        if vel_dist_law_dyn=="step":
-            model_parameters.append('step_angle_vel_dyn')
-            model_bounds['step_angle_vel_dyn'] = [20.0,80.0]
-            model_parameters.append('high_lat_vel_dyn')
-            model_bounds['high_lat_vel_dyn'] = [1e-1,7e-1]
-            model_parameters.append('low_lat_vel_dyn')
-            model_bounds['low_lat_vel_dyn'] = [1e-1,7e-1]
-        elif vel_dist_law_dyn=="uniform":
-            model_parameters.append('central_vel_dyn')
-            model_bounds['central_vel_dyn'] = [1e-1,7e-1]
-        else:
-            model_parameters.append('min_vel_dyn')
-            model_bounds['min_vel_dyn'] = [1e-1,7e-1]
-            model_parameters.append('max_vel_dyn')
-            model_bounds['max_vel_dyn'] = [1e-1,7e-1] # max_vel_dyn > min_vel_dyn
-        # wind ejecta velocity law
-        if vel_dist_law_wind=="step":
-            model_parameters.append('step_angle_vel_wind')
-            model_bounds['step_angle_vel_wind'] = [20.0,80.0]
-            model_parameters.append('high_lat_vel_wind')
-            model_bounds['high_lat_vel_wind'] = [5e-2,1.5e-1]
-            model_parameters.append('low_lat_vel_wind')
-            model_bounds['low_lat_vel_wind'] = [5e-2,1.5e-1]
-        elif vel_dist_law_wind=="uniform":
-            model_parameters.append('central_vel_wind')
-            model_bounds['central_vel_wind'] = [5e-2,1.5e-1]
-        else:
-            model_parameters.append('min_vel_wind')
-            model_bounds['min_vel_wind'] = [5e-2,1.5e-1]
-            model_parameters.append('max_vel_wind')
-            model_bounds['max_vel_wind'] = [5e-2,1.5e-1] # max_vel_wind > min_vel_wind
-        # secular ejecta velocity law
-        if vel_dist_law_sec=="step":
-            model_parameters.append('step_angle_vel_sec')
-            model_bounds['step_angle_vel_sec'] = [20.0,80.0]
-            model_parameters.append('high_lat_vel_sec')
-            model_bounds['high_lat_vel_sec'] = [1e-2,1.5e-1]
-            model_parameters.append('low_lat_vel_sec')
-            model_bounds['low_lat_vel_sec'] = [1e-2,1.5e-1]
-        elif vel_dist_law_sec=="uniform":
-            model_parameters.append('central_vel_sec')
-            model_bounds['central_vel_sec'] = [1e-2,1.5e-1]
-        else:
-            model_parameters.append('min_vel_sec')
-            model_bounds['min_vel_sec'] = [1e-2,1.5e-1]
-            model_parameters.append('max_vel_sec')
-            model_bounds['max_vel_sec'] = [1e-2,1.5e-1] # max_vel_sec > min_vel_sec
-
-        # check for opacity distribution choice and add relevant parameters
-
-        # dynamical ejecta opacity law
-        if kappa_dist_law_dyn=="step":
-            model_parameters.append('step_angle_op_dyn')
-            model_bounds['step_angle_op_dyn'] = [20.0,80.0]
-            model_parameters.append('high_lat_op_dyn')
-            model_bounds['high_lat_op_dyn'] = [1e-1,1.0]
-            model_parameters.append('low_lat_op_dyn')
-            model_bounds['low_lat_op_dyn'] = [1.0,50.0]
-        elif kappa_dist_law_dyn=="uniform":
-            model_parameters.append('central_op_dyn')
-            model_bounds['central_op_dyn'] = [1e-1,50.0]
-        else:
-            model_parameters.append('min_op_dyn')
-            model_bounds['min_op_dyn'] = [1e-1,1.0]
-            model_parameters.append('max_op_dyn')
-            model_bounds['max_op_dyn'] = [1.0,50.0] # max_op_dyn > min_op_dyn
-        # wind ejecta opacity law
-        if kappa_dist_law_wind=="step":
-            model_parameters.append('step_angle_op_wind')
-            model_bounds['step_angle_op_wind'] = [20.0,80.0]
-            model_parameters.append('high_lat_op_wind')
-            model_bounds['high_lat_op_wind'] = [1e-1,5.0]
-            model_parameters.append('low_lat_op_wind')
-            model_bounds['low_lat_op_wind'] = [1.0,50.0]
-        elif kappa_dist_law_wind=="uniform":
-            model_parameters.append('central_op_wind')
-            model_bounds['central_op_wind'] = [1e-1,5.0]
-        else:
-            model_parameters.append('min_op_wind')
-            model_bounds['min_op_wind'] = [1e-1,1.0]
-            model_parameters.append('max_op_wind')
-            model_bounds['max_op_wind'] = [1.0,5.0] # max_op_wind > min_op_wind
-        # secular ejecta opacity law
-        if kappa_dist_law_sec=="step":
-            model_parameters.append('step_angle_op_sec')
-            model_bounds['step_angle_op_sec'] = [20.0,80.0]
-            model_parameters.append('high_lat_op_sec')
-            model_bounds['high_lat_op_sec'] = [1e-1,10.0]
-            model_parameters.append('low_lat_op_sec')
-            model_bounds['low_lat_op_sec'] = [1e-1,10.0]
-        elif kappa_dist_law_sec=="uniform":
-            model_parameters.append('central_op_sec')
-            model_bounds['central_op_sec'] = [1e-1,10.0]
-        else:
-            model_parameters.append('min_op_sec')
-            model_bounds['min_op_sec'] = [1e-1,1.0]
-            model_parameters.append('max_op_sec')
-            model_bounds['max_op_sec'] = [1.0,10.0] # max_op_sec > min_op_sec
+#        for shell, p in self.ejecta_params.iteritems():
+#            print "initialising",shell,"component"
+#            # check for mass distribution choice and add relevant parameter
+#
+#            if p['mass_dist'] =="step":
+#                model_parameters.append('step_angle_mass_%s'%shell)
+#                model_bounds['step_angle_mass_%s'%shell] = [20.0,80.0]
+#
+#            # check for velocity distribution choice and add relevant parameters
+#            if p['vel_dist'] =="step":
+#                model_parameters.append('step_angle_vel_%s'%shell)
+#                model_bounds['step_angle_vel_%s'%shell] = [20.0,80.0]
+#                model_parameters.append('high_lat_vel_%s'%shell)
+#                model_bounds['high_lat_vel_%s'%shell] = [1e-1,7e-1]
+#                model_parameters.append('low_lat_vel_%s'%shell)
+#                model_bounds['low_lat_vel_%s'%shell] = [1e-1,7e-1]
+#            elif p['vel_dist'] =="uniform":
+#                model_parameters.append('central_vel_%s'%shell)
+#                model_bounds['central_vel_%s'%shell] = [1e-1,7e-1]
+#            else:
+#                model_parameters.append('min_vel_%s'%shell)
+#                model_bounds['min_vel_%s'%shell] = [1e-1,7e-1]
+#                model_parameters.append('max_vel_%s'%shell)
+#                model_bounds['max_vel_%s'%shell] = [1e-1,7e-1] # max_vel_dyn > min_vel_dyn
+#
+#            # check for opacity distribution choice and add relevant parameters
+#            if p['op_dist']=="step":
+#                model_parameters.append('step_angle_op_%s'%shell)
+#                model_bounds['step_angle_op_%s'%shell] = [20.0,80.0]
+#                model_parameters.append('high_lat_op_%s'%shell)
+#                model_bounds['high_lat_op_%s'%shell] = [1e-1,1.0]
+#                model_parameters.append('low_lat_op_%s'%shell)
+#                model_bounds['low_lat_op_%s'%shell] = [1.0,50.0]
+#            elif p['op_dist']=="uniform":
+#                model_parameters.append('central_op_%s'%shell)
+#                model_bounds['central_op_%s'%shell] = [1e-1,50.0]
+#            else:
+#                model_parameters.append('min_op_%s'%shell)
+#                model_bounds['min_op_%s'%shell] = [1e-1,1.0]
+#                model_parameters.append('max_op_%s'%shell)
+#                model_bounds['max_op_%s'%shell] = [1.0,50.0] # max_op_dyn > min_op_dyn
+        # now add the single shell parameters
+        for s in self.shell_params:
+            for item in self.shell_params[s]:
+                v = self.shell_params[s][item]
+                if type(v) is float:
+                    model_parameters.append(item+'_%s'%s)
+                    model_bounds[item+'_%s'%s] = [v-0.5*v,v+0.5*v]
 
         for n in model_parameters:
             self.names.append(n)
             self.bounds.append(model_bounds[n])
-
-        self.n_slices = n_slices
-        self.dist_slices = dist_slices
-        # initialize the angular distribution
-        self.AD = ad.AngularDistribution(dist_slices,n_slices)
-        self.ang_dist, self.omega_dist = self.AD(self.n_slices/2)
-
-        print('')
-        print('I have initialized the angles')
-
-        # initialize the filters
-        self.FT = ft.Filters("measures")
-        self.dic_filt,self.lambda_vec,self.mag = self.FT()
-
-        print('')
-        print('I have initialized the filters')
-
-        #initialize the observer location
-        self.view_angle = view_angle
-        self.view_angle_delta = view_angle_delta
-        self.FF = op.ObserverProjection(self.n_slices,self.dist_slices)
-
-        print('')
-        print('I have initialized the observer location')
-
-        # set which components must be activated
-        self.dyn_flag  = dyn_flag
-        self.wind_flag = wind_flag
-        self.sec_flag  = sec_flag
-
-        # values to initialize the global time
-        self.time_min = time_min      # one hour
-        self.time_max = time_max   # 30 days
-        self.n_time   = n_time
-        self.tscale   = 'linear'
-
-        # values to initialize the ray velocity
-        self.v_min  = v_min
-        self.n_v    = n_v
-        self.vscale = 'linear'
-
-        # nuclear heating values
-        self.eps_ye_dep = eps_ye_dep
-        self.eps0       = eps0
-        self.sigma0     = sigma0
-        self.alpha      = alpha
-        self.t0eps      = t0eps
-        self.cnst_eff   = cnst_eff
-        self.a_eps_nuc  = a_eps_nuc
-        self.b_eps_nuc  = b_eps_nuc
-        self.t_eps_nuc  = t_eps_nuc
-        
-        # mass dynamic ejecta
-        self.mass_dist_law_dyn   = mass_dist_law_dyn
-        self.step_angle_mass_dyn = step_angle_mass_dyn
-        self.high_lat_flag_dyn   = high_lat_flag_dyn
-        
-        # velocity dynamic ejecta
-        self.vel_dist_law_dyn    = vel_dist_law_dyn
-        self.min_vel_dyn         = min_vel_dyn
-        self.max_vel_dyn         = max_vel_dyn
-        self.step_angle_vel_dyn  = step_angle_vel_dyn
-        self.high_lat_vel_dyn    = high_lat_vel_dyn
-        self.low_lat_vel_dyn     = low_lat_vel_dyn
-        
-        # opacity dynamic ejecta
-        self.kappa_dist_law_dyn  = kappa_dist_law_dyn
-        self.central_op_dyn      = central_op_dyn
-        self.min_op_dyn          = min_op_dyn
-        self.max_op_dyn          = max_op_dyn
-        self.step_angle_op_dyn   = step_angle_op_dyn
-        self.high_lat_op_dyn     = high_lat_op_dyn
-        self.low_lat_op_dyn      = low_lat_op_dyn
-        
-        # mass wind ejecta
-        self.mass_dist_law_wind  = mass_dist_law_wind
-        self.step_angle_mass_wind= step_angle_mass_wind
-        self.high_lat_flag_wind  = high_lat_flag_wind
-        # velocity wind ejecta
-        self.vel_dist_law_wind   = vel_dist_law_wind
-        self.min_vel_wind        = min_vel_wind
-        self.max_vel_wind        = max_vel_wind
-        self.step_angle_vel_wind = step_angle_vel_wind
-        self.high_lat_vel_wind   = high_lat_vel_wind
-        self.low_lat_vel_wind    = low_lat_vel_wind
-        # opacity wind ejecta
-        self.kappa_dist_law_wind = kappa_dist_law_wind
-        self.central_op_wind     = central_op_wind
-        self.min_op_wind         = min_op_wind
-        self.max_op_wind         = max_op_wind
-        self.step_angle_op_wind  = step_angle_op_wind
-        self.high_lat_op_wind    = high_lat_op_wind
-        self.low_lat_op_wind     = low_lat_op_wind
-        # mass secular ejecta
-        self.mass_dist_law_sec   = mass_dist_law_sec
-        self.step_angle_mass_sec = step_angle_mass_sec
-        self.high_lat_flag_sec   = high_lat_flag_sec
-        # velocity secular ejecta
-        self.vel_dist_law_sec    = vel_dist_law_sec
-        self.min_vel_sec         = min_vel_sec
-        self.max_vel_sec         = max_vel_sec
-        self.step_angle_vel_sec  = step_angle_vel_sec
-        self.high_lat_vel_sec    = high_lat_vel_sec
-        self.low_lat_vel_sec     = low_lat_vel_sec
-        # opacity secular ejecta
-        self.kappa_dist_law_sec  = kappa_dist_law_sec
-        self.central_op_sec      = central_op_sec
-        self.min_op_sec          = min_op_sec
-        self.max_op_sec          = max_op_sec
-        self.step_angle_op_sec   = step_angle_op_sec
-        self.high_lat_op_sec     = high_lat_op_sec
-        self.low_lat_op_sec      = low_lat_op_sec
-    
+#        print self.names
+#        exit()
     def log_likelihood(self,x):
-        
-        # check for mass distribution choice and get relevant parameters
-        if self.mass_dist_law_dyn=="step": self.step_angle_mass_dyn = x['step_angle_mass_dyn']
-        if self.mass_dist_law_wind=="step": self.step_angle_mass_wind = x['step_angle_mass_wind']
-        if self.mass_dist_law_sec=="step": self.step_angle_mass_sec = x['step_angle_mass_sec']
+        # populate the relevant parameters
+        # ================================
+        # set of global variables
+        for item in self.glob_vars.keys():
+            self.glob_vars[item] = x[item]
 
-        # check for velocity distribution choice and add relevant parameters
+#        for shell, p in self.ejecta_params.iteritems():
+#            # check for mass distribution choice and add relevant parameter
+#            if p['mass_dist'] =="step":
+#                self.ejecta_params[shell]['step_angle_mass'] = x['step_angle_mass_%s'%shell]
+#
+#            # check for velocity distribution choice and add relevant parameters
+#            if p['vel_dist'] =="step":
+#                self.ejecta_params[shell]['step_angle_vel'] = x['step_angle_vel_%s'%shell]
+#                self.ejecta_params[shell]['high_lat_vel'] = x['high_lat_vel_%s'%shell]
+#                self.ejecta_params[shell]['low_lat_vel'] = x['low_lat_vel_%s'%shell]
+#            elif p['vel_dist'] =="uniform":
+#                self.ejecta_params[shell]['central_vel'] = x['central_vel_%s'%shell]
+#            else:
+#                self.ejecta_params[shell]['min_vel'] = x['min_vel_%s'%shell]
+#                self.ejecta_params[shell]['max_vel'] = x['max_vel_%s'%shell]
+#
+#            # check for opacity distribution choice and add relevant parameters
+#            if p['op_dist']=="step":
+#                self.ejecta_params[shell]['step_angle_op'] = x['step_angle_op_%s'%shell]
+#                self.ejecta_params[shell]['high_lat_op'] = x['high_lat_op_%s'%shell]
+#                self.ejecta_params[shell]['low_lat_op'] = x['low_lat_op_%s'%shell]
+#
+#            elif p['op_dist']=="uniform":
+#                self.ejecta_params[shell]['central_op'] = x['central_op_%s'%shell]
+#            else:
+#                self.ejecta_params[shell]['min_op'] = x['min_op_%s'%shell]
+#                self.ejecta_params[shell]['max_op'] = x['max_op_%s'%shell]
 
-        # dynamical ejecta velocity law
-        if self.vel_dist_law_dyn=="step":
-            self.step_angle_vel_dyn = x['step_angle_vel_dyn']
-            self.high_lat_vel_dyn   = x['high_lat_vel_dyn']
-            self.low_lat_vel_dyn   = x['low_lat_vel_dyn']
-        elif self.vel_dist_law_dyn=="uniform":
-            self.central_vel_dyn = x['central_vel_dyn']
-        else:
-            self.min_vel_dyn = x['min_vel_dyn']
-            self.max_vel_dyn = x['max_vel_dyn'] # max_vel_dyn > min_vel_dyn
-        # wind ejecta velocity law
-        if self.vel_dist_law_wind=="step":
-            self.step_angle_vel_wind = x['step_angle_vel_wind']
-            self.high_lat_vel_wind = x['high_lat_vel_wind']
-            self.low_lat_vel_wind  = x['low_lat_vel_wind']
-        elif self.vel_dist_law_wind=="uniform":
-            self.central_vel_wind = x['central_vel_wind']
-        else:
-            self.min_vel_wind = x['min_vel_wind']
-            self.max_vel_wind = x['max_vel_wind']  # max_vel_wind > min_vel_wind
-        # secular ejecta velocity law
-        if self.vel_dist_law_sec=="step":
-            self.step_angle_vel_sec= x['step_angle_vel_sec']
-            self.high_lat_vel_sec  = x['high_lat_vel_sec']
-            self.low_lat_vel_sec  = x['low_lat_vel_sec']
-        elif self.vel_dist_law_sec=="uniform":
-            self.central_vel_sec = x['central_vel_sec']
-        else:
-            self.min_vel_sec = x['min_vel_sec']
-            self.max_vel_sec = x['max_vel_sec'] # max_vel_sec > min_vel_sec
+        # now add the single shell parameters
+        for s in self.shell_params:
+            for item in self.shell_params[s]:
+                v = self.shell_params[s][item]
+                if type(v) is float:
+                    self.shell_params[s][item] = x[item+'_%s'%s]
+        # ================================
 
-        # check for opacity distribution choice and get relevant parameters
-        # dynamical ejecta opacity law
-        if self.kappa_dist_law_dyn=="step":
-            self.step_angle_op_dyn = x['step_angle_op_dyn']
-            self.high_lat_op_dyn   = x['high_lat_op_dyn']
-            self.low_lat_op_dyn   = x['low_lat_op_dyn']
-        elif self.kappa_dist_law_dyn=="uniform":
-            self.central_op_dyn = x['central_op_dyn']
-        else:
-            self.min_op_dyn = x['min_op_dyn']
-            self.max_op_dyn = x['max_op_dyn'] # max_op_dyn > min_op_dyn
-        # wind ejecta opacity law
-        if self.kappa_dist_law_wind=="step":
-            self.step_angle_op_wind = x['step_angle_op_wind']
-            self.high_lat_op_wind = x['high_lat_op_wind']
-            self.low_lat_op_wind  = x['low_lat_op_wind']
-        elif self.kappa_dist_law_wind=="uniform":
-            self.central_op_wind = x['central_op_wind']
-        else:
-            self.min_op_wind = x['min_op_wind']
-            self.max_op_wind = x['max_op_wind']  # max_op_wind > min_op_wind
-        # secular ejecta opacity law
-        if self.kappa_dist_law_sec=="step":
-            self.step_angle_op_sec= x['step_angle_op_sec']
-            self.high_lat_op_sec  = x['high_lat_op_sec']
-            self.low_lat_op_sec  = x['low_lat_op_sec']
-        elif self.kappa_dist_law_sec=="uniform":
-            self.central_op_sec = x['central_op_sec']
-        else:
-            self.min_op_sec = x['min_op_sec']
-            self.max_op_sec = x['max_op_sec'] # max_op_sec > min_op_sec
-        
         self.flux_factor = self.FF(x['view_angle'])
-        # compute the lightcurve
-        time,r_ph_tot,L_bol_tot,T_eff_tot = lc.lightcurve(self.dyn_flag,
-                                                          self.wind_flag,
-                                                          self.sec_flag,
-                                                          self.ang_dist,
-                                                          self.omega_dist,
-                                                          'GK',
-                                                          'BKWM',
-                                                          self.time_min,
-                                                          self.time_max,
-                                                          self.n_time,
-                                                          self.tscale,
-                                                          self.v_min,
-                                                          self.n_v,
-                                                          self.vscale,
-                                                          self.eps_ye_dep,
-                                                          x['eps0'],
-                                                          self.sigma0,
-                                                          self.alpha,
-                                                          self.t0eps,
-                                                          self.cnst_eff,
-                                                          x['a_eps_nuc'],
-                                                          x['b_eps_nuc'],
-                                                          self.t_eps_nuc,
-                                                          # mass dynamic ejecta
-                                                          mass_dist_law_dyn   = self.mass_dist_law_dyn,
-                                                          m_ej_dyn            = x['m_ej_dyn'],
-                                                          step_angle_mass_dyn = self.step_angle_mass_dyn,
-                                                          high_lat_flag_dyn   = self.high_lat_flag_dyn,
-                                                          # velocity dynamic ejecta
-                                                          vel_dist_law_dyn    = self.vel_dist_law_dyn,
-                                                          central_vel_dyn     = self.central_vel_dyn,
-                                                          min_vel_dyn         = self.min_vel_dyn,
-                                                          max_vel_dyn         = self.max_vel_dyn,
-                                                          step_angle_vel_dyn  = self.step_angle_vel_dyn,
-                                                          high_lat_vel_dyn    = self.high_lat_vel_dyn,
-                                                          low_lat_vel_dyn     = self.low_lat_vel_dyn,
-                                                          # opacity dynamic ejecta
-                                                          kappa_dist_law_dyn  = self.kappa_dist_law_dyn,
-                                                          central_op_dyn      = self.central_op_dyn,
-                                                          min_op_dyn          = self.min_op_dyn,
-                                                          max_op_dyn          = self.max_op_dyn,
-                                                          step_angle_op_dyn   = self.step_angle_op_dyn,
-                                                          high_lat_op_dyn     = self.high_lat_op_dyn,
-                                                          low_lat_op_dyn      = self.low_lat_op_dyn,
-                                                          # mass wind ejecta
-                                                          mass_dist_law_wind  = self.mass_dist_law_wind,
-                                                          m_ej_wind           = x['m_ej_wind'],
-                                                          step_angle_mass_wind= self.step_angle_mass_wind,
-                                                          high_lat_flag_wind  = self.high_lat_flag_wind,
-                                                          # velocity wind ejecta
-                                                          vel_dist_law_wind   = self.vel_dist_law_wind,
-                                                          central_vel_wind    = self.central_vel_wind,
-                                                          min_vel_wind        = self.min_vel_wind,
-                                                          max_vel_wind        = self.max_vel_wind,
-                                                          step_angle_vel_wind = self.step_angle_vel_wind,
-                                                          high_lat_vel_wind   = self.high_lat_vel_wind,
-                                                          low_lat_vel_wind    = self.low_lat_vel_wind,
-                                                          # opacity wind ejecta
-                                                          kappa_dist_law_wind = self.kappa_dist_law_wind,
-                                                          central_op_wind     = self.central_op_wind,
-                                                          min_op_wind         = self.min_op_wind,
-                                                          max_op_wind         = self.max_op_wind,
-                                                          step_angle_op_wind  = self.step_angle_op_wind,
-                                                          high_lat_op_wind    = self.high_lat_op_wind,
-                                                          low_lat_op_wind     = self.low_lat_op_wind,
-                                                          # mass secular ejecta
-                                                          mass_dist_law_sec   = self.mass_dist_law_sec,
-                                                          m_ej_sec            = x['m_ej_sec'],
-                                                          step_angle_mass_sec = self.step_angle_mass_sec,
-                                                          high_lat_flag_sec   = self.high_lat_flag_sec,
-                                                          # velocity secular ejecta
-                                                          vel_dist_law_sec    = self.vel_dist_law_sec,
-                                                          central_vel_sec     = self.central_vel_sec,
-                                                          min_vel_sec         = self.min_vel_sec,
-                                                          max_vel_sec         = self.max_vel_sec,
-                                                          step_angle_vel_sec  = self.step_angle_vel_sec,
-                                                          high_lat_vel_sec    = self.high_lat_vel_sec,
-                                                          low_lat_vel_sec     = self.low_lat_vel_sec,
-                                                          # opacity secular ejecta
-                                                          kappa_dist_law_sec  = self.kappa_dist_law_sec,
-                                                          central_op_sec      = self.central_op_sec,
-                                                          min_op_sec          = self.min_op_sec,
-                                                          max_op_sec          = self.max_op_sec,
-                                                          step_angle_op_sec   = self.step_angle_op_sec,
-                                                          high_lat_op_sec     = self.high_lat_op_sec,
-                                                          low_lat_op_sec      = self.low_lat_op_sec)
+
+        r_ph, L_bol, T_eff = self.ejecta.lightcurve(self.ang_dist, self.omega_dist,
+                                                  self.time,
+                                                  self.shell_params,
+                                                  self.glob_vars,
+                                                  self.glob_params)
+
         # compute the magnitudes from a certain distance
         D = x['distance']*1e6*units.pc2cm
-        model_mag = ft.calc_magnitudes(self.flux_factor,time,r_ph_tot,T_eff_tot,self.lambda_vec,self.dic_filt,D)
+        model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D)
 
         # compute the residuals
         residuals = ft.calc_residuals(self.mag,model_mag)
@@ -562,18 +206,12 @@ class MacroKilonovaModel(cpnest.model.Model):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-            
+        
         return logL
             
     def log_prior(self, x):
         logP = 0.
         if np.isfinite(super(MacroKilonovaModel,self).log_prior(x)):
-            if not(self.vel_dist_law_dyn=="step" or self.vel_dist_law_dyn=="uniform"):
-                if x['min_vel_dyn'] > x['max_vel_dyn']: return  -np.inf
-            if not(self.vel_dist_law_sec=="step" or self.vel_dist_law_sec=="uniform"):
-                if x['min_vel_sec'] > x['max_vel_sec']: return  -np.inf
-            if not(self.vel_dist_law_wind=="step" or self.vel_dist_law_wind=="uniform"):
-                if x['min_vel_wind'] > x['max_vel_wind']: return  -np.inf
             logP += -0.5*(x['distance']-40.0)**2/16.0
             return logP
         else:
@@ -581,7 +219,7 @@ class MacroKilonovaModel(cpnest.model.Model):
 
 if __name__=='__main__':
     parser=OptionParser()
-    parser.add_option('-o','--out-dir',default=None,type='string',metavar='DIR',help='Directory for output: defaults to gw150914/')
+    parser.add_option('-o','--out-dir',default=None,type='string',metavar='DIR',help='Directory for output: defaults to test/')
     parser.add_option('-t','--threads',default=None,type='int',metavar='N',help='Number of threads (default = 1/core)')
     parser.add_option('-f','--full-run',default=1,type='int',metavar='full_run',help='perform a full PE run')
     parser.add_option('--nlive',default=100,type='int',metavar='n',help='Live points')
@@ -589,17 +227,76 @@ if __name__=='__main__':
     parser.add_option('--poolsize',default=16,type='int',metavar='k',help='numer of points in the ensemble sampler pool')
     (opts,args)=parser.parse_args()
 
+    # set of global parameters not to be fit
+    glob_params = {'v_min':1.e-7,
+                   'n_v':100,
+                   'vscale':'linear',
+                   'sigma0':0.11,
+                   'alpha':1.3,
+                   't0eps':1.3,
+                   'cnst_eff':0.3333}
+    
+    # set of global parameters to be fit
+    glob_vars = {'m_disk':0.1,
+                 'eps0':1.2e19,
+                 'a_eps_nuc':0.5,
+                 'b_eps_nuc':2.5,
+                 't_eps_nuc':1.0}
+    
+    # hardcoded ejecta geometric and thermal parameters
+    ejecta_params = {}
+    ejecta_params['dynamics']   = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+    ejecta_params['wind']       = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
+    ejecta_params['secular']    = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM', 'eps_ye_dep':True}
+
+    # set of shell parameters to be sampled on
+    shell_vars={}
+
+    shell_vars['dynamics'] = {'xi_disk':None,
+                              'm_ej':0.005,
+                              'central_vel':0.2,
+                              'low_lat_vel':None,
+                              'high_lat_vel':None,
+                              'step_angle_vel':None,
+                              'low_lat_op':10.,
+                              'high_lat_op':0.1,
+                              'step_angle_op':np.radians(45.)}
+
+    shell_vars['wind'] = {'xi_disk':0.1,
+                          'm_ej':None,
+                          'step_angle_mass':np.radians(60.),
+                          'high_lat_flag':True,
+                          'central_vel':0.05,
+                          'low_lat_vel':None,
+                          'high_lat_vel':None,
+                          'step_angle_vel':None,
+                          'low_lat_op':1.0,
+                          'high_lat_op':0.1,
+                          'step_angle_op':np.radians(45.)}
+
+    shell_vars['secular'] = {'xi_disk':0.2,
+                             'm_ej':None,
+                             'central_vel':0.02,
+                             'low_lat_vel':None,
+                             'high_lat_vel':None,
+                             'step_angle_vel':None,
+                             'central_op':5.0,
+                             'low_lat_op':None,
+                             'high_lat_op':None,
+                             'step_angle_op':None}
+
     if opts.out_dir is None:
         opts.out_dir='./test/'
 
     if opts.full_run:
-        model = MacroKilonovaModel()
+        model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, shell_vars)
         work  = cpnest.CPNest(model,
-                            verbose=3,
+                            verbose=2,
                             Poolsize=opts.poolsize,
                             Nthreads=opts.threads,
                             Nlive=opts.nlive,
                             maxmcmc=opts.maxmcmc,
                             output=opts.out_dir)
         work.run()
+
 
