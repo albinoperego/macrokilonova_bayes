@@ -143,8 +143,8 @@ class MacroKilonovaModel(cpnest.model.Model):
         for n in model_parameters:
             self.names.append(n)
             self.bounds.append(model_bounds[n])
-        print self.names
-        exit()
+#        print self.names
+#        exit()
     def log_likelihood(self,x):
         # populate the relevant parameters
         # ================================
