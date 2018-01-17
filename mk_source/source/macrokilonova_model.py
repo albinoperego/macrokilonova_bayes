@@ -135,15 +135,16 @@ class MacroKilonovaModel(cpnest.model.Model):
         for s in self.shell_params:
             for item in self.shell_params[s]:
                 v = self.shell_params[s][item]
-                if type(v) is float:
+
+                if type(v) is float or type(v) is np.float64:
                     model_parameters.append(item+'_%s'%s)
-                    model_bounds[item+'_%s'%s] = [v-0.5*v,v+0.5*v]
+                    model_bounds[item+'_%s'%s] = [v-0.75*v,v+0.75*v]
 
         for n in model_parameters:
             self.names.append(n)
             self.bounds.append(model_bounds[n])
-#        print self.names
-#        exit()
+        print self.names
+        exit()
     def log_likelihood(self,x):
         # populate the relevant parameters
         # ================================
@@ -206,7 +207,6 @@ class MacroKilonovaModel(cpnest.model.Model):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-        
         return logL
             
     def log_prior(self, x):
@@ -237,7 +237,7 @@ if __name__=='__main__':
                    'cnst_eff':0.3333}
     
     # set of global parameters to be fit
-    glob_vars = {'m_disk':0.1,
+    glob_vars = {'m_disk':0.3,
                  'eps0':1.2e19,
                  'a_eps_nuc':0.5,
                  'b_eps_nuc':2.5,
@@ -253,7 +253,7 @@ if __name__=='__main__':
     shell_vars={}
 
     shell_vars['dynamics'] = {'xi_disk':None,
-                              'm_ej':0.005,
+                              'm_ej':0.05,
                               'central_vel':0.2,
                               'low_lat_vel':None,
                               'high_lat_vel':None,
