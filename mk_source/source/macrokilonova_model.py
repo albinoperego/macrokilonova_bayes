@@ -79,16 +79,13 @@ class MacroKilonovaModel(cpnest.model.Model):
         
         # set of global variables
 
-        model_parameters = self.glob_vars.keys()
         model_parameters.append('distance')
         model_parameters.append('view_angle')
         model_bounds = {'view_angle':[0.0,90.0],
-                        'm_disk':[1e-4,1e-2],
-                        'eps0':[2e18,2e19],
-                        'a_eps_nuc':[0.4,0.8],
-                        'b_eps_nuc':[1.0,3.0],
-                        't_eps_nuc':[0.5,1.5],
-                        'distance':[30,50]}
+                        'distance':[20,60]}
+        for item in self.glob_vars.keys():
+            model_parameters.append(item)
+            model_bounds[item] = self.glob_vars[item]
 
 #        for shell, p in self.ejecta_params.iteritems():
 #            print "initialising",shell,"component"
@@ -136,15 +133,15 @@ class MacroKilonovaModel(cpnest.model.Model):
             for item in self.shell_params[s]:
                 v = self.shell_params[s][item]
 
-                if type(v) is float or type(v) is np.float64:
+                if type(v) is not None:
                     model_parameters.append(item+'_%s'%s)
-                    model_bounds[item+'_%s'%s] = [v-0.75*v,v+0.75*v]
+                    model_bounds[item+'_%s'%s] = v
 
         for n in model_parameters:
             self.names.append(n)
             self.bounds.append(model_bounds[n])
-#        print self.names
-#        exit()
+        print self.names, self.bounds
+        exit()
     def log_likelihood(self,x):
         # populate the relevant parameters
         # ================================
@@ -237,11 +234,11 @@ if __name__=='__main__':
                    'cnst_eff':0.3333}
     
     # set of global parameters to be fit
-    glob_vars = {'m_disk':0.3,
-                 'eps0':1.2e19,
-                 'a_eps_nuc':0.5,
-                 'b_eps_nuc':2.5,
-                 't_eps_nuc':1.0}
+    glob_vars = {'m_disk':[0.01, 1.0],
+                 'eps0':  [1e18, 1e19],
+                 'a_eps_nuc':[0.1, 2.0],
+                 'b_eps_nuc':[0.1, 5.0],
+                 't_eps_nuc':[0.1, 1.0]}
     
     # hardcoded ejecta geometric and thermal parameters
     ejecta_params = {}
@@ -253,34 +250,34 @@ if __name__=='__main__':
     shell_vars={}
 
     shell_vars['dynamics'] = {'xi_disk':None,
-                              'm_ej':0.05,
-                              'central_vel':0.2,
+                              'm_ej':[0.01, 1.0],
+                              'central_vel':[0.001, 1.0],
                               'low_lat_vel':None,
                               'high_lat_vel':None,
                               'step_angle_vel':None,
-                              'low_lat_op':10.,
-                              'high_lat_op':0.1,
-                              'step_angle_op':np.radians(45.)}
+                              'low_lat_op':[1.0,20.0],
+                              'high_lat_op':[0.1,1.0],
+                              'step_angle_op':[0.0,np.pi/2.0]}
 
-    shell_vars['wind'] = {'xi_disk':0.1,
+    shell_vars['wind'] = {'xi_disk':[0.0,1.0],
                           'm_ej':None,
-                          'step_angle_mass':np.radians(60.),
+                          'step_angle_mass':[0.0,np.pi/2.0],
                           'high_lat_flag':True,
-                          'central_vel':0.05,
+                          'central_vel':[0.001, 1.0],
                           'low_lat_vel':None,
                           'high_lat_vel':None,
                           'step_angle_vel':None,
-                          'low_lat_op':1.0,
-                          'high_lat_op':0.1,
-                          'step_angle_op':np.radians(45.)}
+                          'low_lat_op':[1.0,20.0],
+                          'high_lat_op':[0.1,1.0],
+                          'step_angle_op':[0.0,np.pi/2.0]}
 
-    shell_vars['secular'] = {'xi_disk':0.2,
+    shell_vars['secular'] = {'xi_disk':[0.0,1.0],
                              'm_ej':None,
-                             'central_vel':0.02,
+                             'central_vel':[0.001, 1.0],
                              'low_lat_vel':None,
                              'high_lat_vel':None,
                              'step_angle_vel':None,
-                             'central_op':5.0,
+                             'central_op':[0.1,20.0],
                              'low_lat_op':None,
                              'high_lat_op':None,
                              'step_angle_op':None}
