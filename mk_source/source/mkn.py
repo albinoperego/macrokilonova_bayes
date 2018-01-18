@@ -31,7 +31,7 @@ flux_factor = FF(view_angle)#,view_angle_delta)
 print('')
 print('I have initialized the observer location')
 
-#initialize the time
+    #initialize the time
 time_min = 3600.      #
 time_max = 2000000.   #
 n_time = 200

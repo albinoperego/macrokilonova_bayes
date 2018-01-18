@@ -229,7 +229,7 @@ if __name__=='__main__':
 
     # set of global parameters not to be fit
     glob_params = {'v_min':1.e-7,
-                   'n_v':100,
+                   'n_v':50,
                    'vscale':'linear',
                    'sigma0':0.11,
                    'alpha':1.3,
