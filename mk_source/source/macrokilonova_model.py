@@ -40,7 +40,7 @@ class MacroKilonovaModel(cpnest.model.Model):
         #initialize the time
         self.time_min = 3600.      #
         self.time_max = 2000000.   #
-        self.n_time = 50
+        self.n_time = 10
         self.tscale   = 'linear'
         # initialize global time
         if (self.tscale == 'linear'):
@@ -79,8 +79,7 @@ class MacroKilonovaModel(cpnest.model.Model):
         
         # set of global variables
 
-        model_parameters.append('distance')
-        model_parameters.append('view_angle')
+        model_parameters=['distance', 'view_angle']
         model_bounds = {'view_angle':[0.0,90.0],
                         'distance':[20,60]}
         for item in self.glob_vars.keys():
@@ -132,58 +131,30 @@ class MacroKilonovaModel(cpnest.model.Model):
         for s in self.shell_params:
             for item in self.shell_params[s]:
                 v = self.shell_params[s][item]
-
-                if type(v) is not None:
+                if v is not None and type(v) is not bool:
                     model_parameters.append(item+'_%s'%s)
                     model_bounds[item+'_%s'%s] = v
 
         for n in model_parameters:
             self.names.append(n)
             self.bounds.append(model_bounds[n])
-        print self.names, self.bounds
-        exit()
-    def log_likelihood(self,x):
+#        print self.names, self.bounds
+#        exit()
+
+    def fill_control_structures(self, x):
         # populate the relevant parameters
-        # ================================
         # set of global variables
         for item in self.glob_vars.keys():
             self.glob_vars[item] = x[item]
-
-#        for shell, p in self.ejecta_params.iteritems():
-#            # check for mass distribution choice and add relevant parameter
-#            if p['mass_dist'] =="step":
-#                self.ejecta_params[shell]['step_angle_mass'] = x['step_angle_mass_%s'%shell]
-#
-#            # check for velocity distribution choice and add relevant parameters
-#            if p['vel_dist'] =="step":
-#                self.ejecta_params[shell]['step_angle_vel'] = x['step_angle_vel_%s'%shell]
-#                self.ejecta_params[shell]['high_lat_vel'] = x['high_lat_vel_%s'%shell]
-#                self.ejecta_params[shell]['low_lat_vel'] = x['low_lat_vel_%s'%shell]
-#            elif p['vel_dist'] =="uniform":
-#                self.ejecta_params[shell]['central_vel'] = x['central_vel_%s'%shell]
-#            else:
-#                self.ejecta_params[shell]['min_vel'] = x['min_vel_%s'%shell]
-#                self.ejecta_params[shell]['max_vel'] = x['max_vel_%s'%shell]
-#
-#            # check for opacity distribution choice and add relevant parameters
-#            if p['op_dist']=="step":
-#                self.ejecta_params[shell]['step_angle_op'] = x['step_angle_op_%s'%shell]
-#                self.ejecta_params[shell]['high_lat_op'] = x['high_lat_op_%s'%shell]
-#                self.ejecta_params[shell]['low_lat_op'] = x['low_lat_op_%s'%shell]
-#
-#            elif p['op_dist']=="uniform":
-#                self.ejecta_params[shell]['central_op'] = x['central_op_%s'%shell]
-#            else:
-#                self.ejecta_params[shell]['min_op'] = x['min_op_%s'%shell]
-#                self.ejecta_params[shell]['max_op'] = x['max_op_%s'%shell]
 
         # now add the single shell parameters
         for s in self.shell_params:
             for item in self.shell_params[s]:
                 v = self.shell_params[s][item]
-                if type(v) is float:
+                if v is not None and type(v) is not bool:
                     self.shell_params[s][item] = x[item+'_%s'%s]
-        # ================================
+
+    def log_likelihood(self,x):
 
         self.flux_factor = self.FF(x['view_angle'])
 
@@ -209,6 +180,7 @@ class MacroKilonovaModel(cpnest.model.Model):
     def log_prior(self, x):
         logP = 0.
         if np.isfinite(super(MacroKilonovaModel,self).log_prior(x)):
+            self.fill_control_structures(x)
             logP += -0.5*(x['distance']-40.0)**2/16.0
             return logP
         else:
@@ -226,7 +198,7 @@ if __name__=='__main__':
 
     # set of global parameters not to be fit
     glob_params = {'v_min':1.e-7,
-                   'n_v':50,
+                   'n_v':10,
                    'vscale':'linear',
                    'sigma0':0.11,
                    'alpha':1.3,
