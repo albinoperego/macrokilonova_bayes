@@ -198,7 +198,7 @@ if __name__=='__main__':
 
     # set of global parameters not to be fit
     glob_params = {'v_min':1.e-7,
-                   'n_v':10,
+                   'n_v':2,
                    'vscale':'linear',
                    'sigma0':0.11,
                    'alpha':1.3,
@@ -206,7 +206,7 @@ if __name__=='__main__':
                    'cnst_eff':0.3333}
     
     # set of global parameters to be fit
-    glob_vars = {'m_disk':[0.01, 1.0],
+    glob_vars = {'m_disk':[0.0, 1.0],
                  'eps0':  [1e18, 1e19],
                  'a_eps_nuc':[0.1, 2.0],
                  'b_eps_nuc':[0.1, 5.0],

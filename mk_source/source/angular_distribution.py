@@ -35,11 +35,12 @@ def cos_uniform_ang(n):
     return a,o
                           
 if __name__=="__main__":
-    M = AngularDistribution("uniform")
+    N = 12
+    M = AngularDistribution("uniform", 12)
     a,o = M(10)
     print a
     print o,np.sum(o)
-    M = AngularDistribution("cos_uniform")
+    M = AngularDistribution("cos_uniform", 12)
     a,o = M(10)
     print a
     print o,np.sum(o)

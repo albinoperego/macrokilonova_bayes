@@ -48,7 +48,7 @@ class Ejecta(object):
 
             photospheric_radii.append(r)
             bolometric_luminosities.append(Lb)
-
+        
         # select the photospheric radius as the maximum between the different single
         # photospheric radii
         self.photospheric_radius = np.zeros(np.shape(r))
@@ -56,10 +56,7 @@ class Ejecta(object):
             self.photospheric_radius = np.maximum(self.photospheric_radius,photospheric_radii[i])
 
         # define the total bolometric luminosity as the sum of the different single luminosities
-        self.bolometric_luminosity = None
-        for b in bolometric_luminosities:
-            if self.bolometric_luminosity is None: self.bolometric_luminosity = b
-            else: self.bolometric_luminosity += b
+        self.bolometric_luminosity = np.sum(bolometric_luminosities, axis = 0)
 
         # compute the effective BB temperature based on the photospheric radius and luminosity
         self.T_eff = []
