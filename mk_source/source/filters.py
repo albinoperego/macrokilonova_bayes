@@ -74,8 +74,8 @@ def m_filter(lam,T,rad,dist,ff):
     return -2.5*np.log10(fnu)-48.6
 
 def calc_fnu(lam,temp,rad,dist,ff):
-  ff1 = ff[:len(ff)/2]
-  ff2 = ff[len(ff)/2:]
+  ff1 = ff[:len(ff)//2]
+  ff2 = ff[len(ff)//2:]
   tmp1 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad,ff1,temp)])
   tmp2 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
   return np.sum(tmp1+tmp2)/dist**2

@@ -1,4 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
+## usage: sbatch <script>
+#SBATCH --account=INF18_teongrav
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+##SBATCH --ntasks-per-node=1
+##SBATCH --cpus-per-task=68
+#SBATCH --partition=knl_usr_prod
+###SBATCH --partition=knl_usr_dbg
+#SBATCH --job-name=myjob
+#SBATCH --mail-user=walter.delpozzo@unipi.it
+#SBATCH --mail-type=ALL
+#SBATCH --time=24:00:00
+
 import numpy as np
 import math
 import cpnest.model
@@ -14,6 +27,10 @@ import numpy as np
 import observer_projection as op
 import units
 import ejecta as ej
+
+# Necessary to add cwd to path when script run
+# by SLURM (since it executes a copy)
+sys.path.append(os.getcwd())
 
 class MacroKilonovaModel(cpnest.model.Model):
     """
@@ -191,9 +208,9 @@ if __name__=='__main__':
     parser.add_option('-o','--out-dir',default=None,type='string',metavar='DIR',help='Directory for output: defaults to test/')
     parser.add_option('-t','--threads',default=None,type='int',metavar='N',help='Number of threads (default = 1/core)')
     parser.add_option('-f','--full-run',default=1,type='int',metavar='full_run',help='perform a full PE run')
-    parser.add_option('--nlive',default=100,type='int',metavar='n',help='Live points')
-    parser.add_option('--maxmcmc',default=10,type='int',metavar='m',help='max MCMC points')
-    parser.add_option('--poolsize',default=16,type='int',metavar='k',help='numer of points in the ensemble sampler pool')
+    parser.add_option('--nlive',default=1000,type='int',metavar='n',help='Live points')
+    parser.add_option('--maxmcmc',default=1000,type='int',metavar='m',help='max MCMC points')
+    parser.add_option('--poolsize',default=1000,type='int',metavar='k',help='number of points in the ensemble sampler pool')
     (opts,args)=parser.parse_args()
 
     # set of global parameters not to be fit
