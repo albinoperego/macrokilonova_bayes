@@ -112,7 +112,6 @@ if __name__=="__main__":
                                high_lat_op=0.001,
                                step_angle_op=1.0)
     import matplotlib.pyplot as plt
-    print np.shape(r_ph), np.shape(L_bol)
     for j in range(E.ncomponents):
         for k in range(L_bol.shape[1]): plt.plot(time, L_bol[j, 0, :],'.', label=E.components[j].name)
     plt.legend()

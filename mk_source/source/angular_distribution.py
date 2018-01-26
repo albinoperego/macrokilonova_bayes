@@ -24,7 +24,7 @@ class AngularDistribution(object):
 
 def uniform_ang(n):
     delta = np.pi/2./float(n)
-    a = np.array([ [delta*i,delta*(i+1)] for i in range(n)])
+    a = np.array([ [delta*i,delta*(i+1)] for i in range(int(n))])
     o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
     return a,o
 
@@ -38,9 +38,5 @@ if __name__=="__main__":
     N = 12
     M = AngularDistribution("uniform", 12)
     a,o = M(10)
-    print a
-    print o,np.sum(o)
     M = AngularDistribution("cos_uniform", 12)
     a,o = M(10)
-    print a
-    print o,np.sum(o)

@@ -103,4 +103,3 @@ if __name__=="__main__":
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     V = OpacityAngularDistribution("step")
     x = V(angular_distribution,low_lat_op=1.,high_lat_op=0.001,step_angle_op=1.0)
-    print x

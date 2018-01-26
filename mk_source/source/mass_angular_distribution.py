@@ -50,17 +50,17 @@ def step_mass_distribution(m_tot, angles_array, **kwargs):
 
     o = []
     if (high_lat_flag == 1):
-	for a in angles_array:
+        for a in angles_array:
             if np.sin(0.5*(a[1]+a[0])) < np.sin(step_angle):
-	        o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
+                o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
             else:
-	        o.append(np.maximum(m_tot * 1.e-4,1.e-5))
+                o.append(np.maximum(m_tot * 1.e-4,1.e-5))
     else:
-	for a in angles_array:
+         for a in angles_array:
             if np.sin(0.5*(a[1]+a[0])) > np.sin(step_angle):
-	        o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
+                o.append(m_tot * 0.5 / (1.-np.cos(step_angle)) * (np.cos(a[0])- np.cos(a[1])))
             else:
-	        o.append(np.maximum(m_tot * 1.e-4,1.e-5))
+                o.append(np.maximum(m_tot * 1.e-4,1.e-5))
 
     return np.array(o)
 
@@ -68,4 +68,3 @@ if __name__=="__main__":
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     M = MassAngularDistribution("step")
     x = M(1.0,angular_distribution, step_angle_mass=1.1,high_lat_flag=0)
-    print x,x.sum()

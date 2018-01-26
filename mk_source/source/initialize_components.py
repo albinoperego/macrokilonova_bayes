@@ -96,7 +96,6 @@ if __name__=="__main__":
 
     exit(-1)
 
-    print r_ph
 
 #    x,y,z = FillComponent(1.0,angular_distribution,low_lat_vel=0.2,high_lat_vel=0.001,step_angle_vel=1.0,low_lat_op=0.2,high_lat_op=0.001,step_angle_op=1.0)
 

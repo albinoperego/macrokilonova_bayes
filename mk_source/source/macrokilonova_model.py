@@ -56,18 +56,18 @@ class MacroKilonovaModel(cpnest.model.Model):
         self.n_slices = n_slices
         self.dist_slices = dist_slices
         # initialize the angular distribution
-        print "Initialising angular distribution"
+        print("Initialising angular distribution")
         self.AD = ad.AngularDistribution(self.dist_slices,self.n_slices)
         self.ang_dist, self.omega_dist = self.AD(self.n_slices/2)
 
         
         # initialize the filters
-        print "Initialising filters"
+        print("Initialising filters")
         self.FT = ft.Filters("measures")
         self.dic_filt,self.lambda_vec,self.mag = self.FT()
         
         # initialise the view angle
-        print "Initialising observer projection"
+        print("Initialising observer projection")
         self.FF = op.ObserverProjection(self.n_slices,self.dist_slices)
         
         # register the geometry of the ejecta and create an Ejecta object

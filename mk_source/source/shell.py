@@ -157,8 +157,6 @@ if __name__=="__main__":
                           'high_lat_op':0.1,
                           'step_angle_op':np.radians(45.)}
     s = Shell('dynamics',params['dynamics'])
-    print s
     import matplotlib.pyplot as plt
-    print np.shape(r_ph), np.shape(L_bol)
     for k in range(r_ph.shape[0]): plt.plot(r_ph[k, :], L_bol[k, :],'.')
     plt.show()

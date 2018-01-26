@@ -103,4 +103,3 @@ if __name__=="__main__":
     angular_distribution = [(0,1),(1,2),(2,3.1415)]
     V = VelocityAngularDistribution("step")
     x = V(angular_distribution,low_lat_vel=1.,high_lat_vel=0.001,step_angle_vel=1.0)
-    print x

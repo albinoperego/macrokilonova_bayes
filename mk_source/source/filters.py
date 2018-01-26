@@ -56,7 +56,7 @@ def read_filter_properties():
     dic_filt = filter_dictionary.filters
 
 # sort by wavelength
-    lambda_vec = copy.deepcopy(dic_filt.keys())
+    lambda_vec = copy.deepcopy(list(dic_filt.keys()))
     lambda_vec.sort()
 
     return dic_filt,lambda_vec
