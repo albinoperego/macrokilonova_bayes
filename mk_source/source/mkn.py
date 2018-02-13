@@ -6,10 +6,11 @@ import observer_projection as op
 import units
 import math
 import ejecta as ej
+import matplotlib.pyplot as plt
 
 # initialize the angular distribution
-n_slices = 12
-dist_slices = "uniform"
+n_slices = 30
+dist_slices = "cos_uniform"
 AD = ad.AngularDistribution(dist_slices,n_slices)
 angular_distribution, omega_distribution = AD(n_slices/2)
 
@@ -24,7 +25,7 @@ print('')
 print('I have initialized the filters')
 
 #initialize the observer location
-view_angle = 15.
+view_angle = 90.
 FF = op.ObserverProjection(n_slices,dist_slices)
 flux_factor = FF(view_angle)#,view_angle_delta)
 
@@ -34,8 +35,8 @@ print('I have initialized the observer location')
     #initialize the time
 time_min = 3600.      #
 time_max = 2000000.   #
-n_time = 200
-tscale   = 'linear'
+n_time = 2000
+tscale   = 'log'
 # initialize global time
 if (tscale == 'linear'):
     time = np.linspace(time_min,time_max,num=n_time)
@@ -58,30 +59,30 @@ E = ej.Ejecta(3, params.keys(), params)
 shell_vars={}
 
 shell_vars['dynamics'] = {'xi_disk':None,
-                      'm_ej':0.005,
-                      'central_vel':0.2,
+                      'm_ej':0.0004,
+                      'central_vel':0.33,
                       'low_lat_vel':None,
                       'high_lat_vel':None,
                       'step_angle_vel':None,
-                      'low_lat_op':10.,
-                      'high_lat_op':0.1,
+                      'low_lat_op':30.,
+                      'high_lat_op':10.0,
                       'step_angle_op':math.radians(45.)}
 
-shell_vars['wind'] = {'xi_disk':0.1,
+shell_vars['wind'] = {'xi_disk':0.02,
                       'm_ej':None,
                       'step_angle_mass':math.radians(60.),
                       'high_lat_flag':True,
-                      'central_vel':0.05,
+                      'central_vel':0.08,
                       'low_lat_vel':None,
                       'high_lat_vel':None,
                       'step_angle_vel':None,
-                      'low_lat_op':1.0,
-                      'high_lat_op':0.1,
-                      'step_angle_op':math.radians(45.)}
+                      'low_lat_op':0.5,
+                      'high_lat_op':5.0,
+                      'step_angle_op':math.radians(30.)}
 
 shell_vars['secular'] = {'xi_disk':0.2,
                          'm_ej':None,
-                         'central_vel':0.02,
+                         'central_vel':0.06,
                          'low_lat_vel':None,
                          'high_lat_vel':None,
                          'step_angle_vel':None,
@@ -91,15 +92,15 @@ shell_vars['secular'] = {'xi_disk':0.2,
                          'step_angle_op':None}
 
 glob_params = {'v_min':1.e-7, 
-               'n_v':100, 
+               'n_v':400, 
                'vscale':'linear',
                'sigma0':0.11,
                'alpha':1.3,
                't0eps':1.3,
                'cnst_eff':0.3333}
 
-glob_vars = {'m_disk':0.1,
-             'eps0':1.2e19, 
+glob_vars = {'m_disk':0.0009,
+             'eps0':1.5e19, 
              'a_eps_nuc':0.5,
              'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
@@ -129,7 +130,7 @@ print(logL)
 
 write_output = True
 if (write_output):
-    g = open('mkn_output.txt','w')
+    g = open('mkn_SFHo_M144139_LK_90.txt','w')
 
     g.write('%20s' %('time'))
     for ilambda in mag.keys():
@@ -145,6 +146,49 @@ if (write_output):
         g.write('\n')
 
     g.close()
+
+fig1 = plt.figure()
+#band_list = ['U']
+band_list = ['U','B','g','V','R','r']
+for band in band_list:
+    for ilambda in mag.keys():
+        if(mag[ilambda]['name']==band):
+            plt.plot(time/24./60./60.,model_mag[ilambda])
+#            plt.semilogx(time/24./60./60.,model_mag[ilambda])
+#            print('time')
+#            print(mag[ilambda]['time']/24./60./60.)
+#            print('mag')
+#            print(mag[ilambda]['mag'])
+#            plt.scatter(mag[ilambda]['time']-57982.529,mag[ilambda]['mag'])
+
+plt.xlim(0.1,10)
+plt.ylim(27,15)
+
+
+fig2 = plt.figure()
+#band_list = ['U']
+band_list = ['i','z','J','H','Ks']
+for band in band_list:
+    for ilambda in mag.keys():
+        if(mag[ilambda]['name']==band):
+            plt.plot(time/24./60./60.,model_mag[ilambda])
+#            print('time')
+#            print(mag[ilambda]['time']/24./60./60.)
+#            print('mag')
+#            print(mag[ilambda]['mag'])
+#            plt.scatter(mag[ilambda]['time']-57982.529,mag[ilambda]['mag'])
+
+plt.xlim(0.1,10)
+plt.ylim(27,15)
+plt.show()
+
+
+print_output = False
+if (print_output):
+    plt.plot(time, model_mag[7],'-')
+    plt.show()
+    
+
 
 #import matplotlib.pyplot as plt
 #print np.shape(r_ph), np.shape(L_bol)
