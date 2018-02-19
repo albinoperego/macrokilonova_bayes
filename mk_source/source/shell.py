@@ -9,6 +9,7 @@ import units
 import initialize_components
 import observer_projection as op
 import nuclear_heat
+import scipy.integrate as integrate
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
 
 def T_eff_calc(Lum,dOmega,r_ph):
@@ -108,6 +109,111 @@ class Shell(object):
             self.Teff = np.asarray(tmp)
         return self.physical_radius, self.Lbol, self.Teff
 
+#=======================================================================
+
+# TIME-SCALE
+    def t_d(self,omega,k,m_ej,v_ej):
+        beta=13.4
+        m = (4.*np.pi)*m_ej/omega
+        return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
+
+# THERMALISATION EFFICIENCY
+#    a=ipl.interpolation_a(m_ej/Msun,v_ej/c)
+#    b=ipl.interpolation_b(m_ej/Msun,v_ej/c)
+#    d=ipl.interpolation_d(m_ej/Msun,v_ej/c)
+    def epsilon(self,t,a,b,d):
+#                    return(0.36*(math.exp(-a*t/86400.)+((math.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
+        return(0.5)
+
+# RADIOACTIVE HEATING RATE
+    def L_in(self,t,m_ej):
+        t_0=1.3
+        sigma=0.11
+        return(4.e18*m_ej*((0.5-((np.arctan((t-t_0)/(sigma)))/np.pi))**1.3))
+
+# BOLOMETRIC LUMINOSITY
+    def L(self,omega,t,k,m_ej,v_ej,a,b,d):
+        x = np.linspace(0.001,t,500)
+        y = []
+        for i in range(0,len(x)):
+            y.append((self.L_in(x[i],m_ej)*self.epsilon(x[i],a,b,d)*(np.exp((x[i]**2.)/((self.t_d(omega,k,m_ej,v_ej))**2.)))*(x[i]/self.t_d(omega,k,m_ej,v_ej))))
+        x=np.asarray(x)
+        y=np.asarray(y)
+        val1=integrate.trapz(y,x)
+        return(val1*np.exp(-(t**2.)/((self.t_d(omega,k,m_ej,v_ej))**2.))/self.t_d(omega,k,m_ej,v_ej))
+
+    def villar(self,time,omega,m_ej,v_ej,k):
+
+        m_ej = m_ej * units.Msun
+        v_ej = v_ej * units.c
+
+        a = 0.1
+        b = 0.1
+        d = 0.1
+
+        L_bol,R_phot,T_BB=[],[],[]
+        for i in range(0,len(time)):
+            L_bol.append(self.L(omega,time[i],k,m_ej,v_ej,a,b,d))
+
+# BLACKBODY TEMPERATURE AND PHOTOSPHERE RADIUS
+            R_phot.append(v_ej*time[i])
+            T_BB.append((L_bol[i]/(omega*units.sigma_SB*(R_phot[i]**2.)))**0.25)
+
+        return(L_bol,R_phot,T_BB)
+
+
+    def expansion_angular_distribution_villar(self,
+                                              angular_distribution,
+                                              omega_distribution,
+                                              time,
+                                              shell_vars,
+                                              glob_vars,
+                                              glob_params,
+                                              **kwargs):
+                                       
+# assign the global model variables
+        v_min    = glob_params['v_min']
+        n_v      = glob_params['n_v']
+        vscale   = glob_params['vscale']
+        sigma0   = glob_params['sigma0']
+        alpha    = glob_params['alpha']
+        t0eps    = glob_params['t0eps']
+        cnst_eff = glob_params['cnst_eff']
+
+# assign the global variables
+        eps0      = glob_vars['eps0']
+        a_eps_nuc = glob_vars['a_eps_nuc']
+        b_eps_nuc = glob_vars['b_eps_nuc']
+        t_eps_nuc = glob_vars['t_eps_nuc']
+
+        if (shell_vars['m_ej'] == None):
+            m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
+        elif (shell_vars['xi_disk'] == None):
+            m_tot = np.float(shell_vars['m_ej'])
+
+        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
+        self.physical_radius = []
+        self.Lbol = []
+        self.Teff = []
+        
+        for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
+
+            print(omega)
+            print(m_ej)
+            print(v_rms)
+            print(kappa)
+            print(time)
+
+            tmp1,tmp2,tmp3 = self.villar(time,omega,m_ej,v_rms,kappa)
+
+            self.Lbol.append(tmp1)
+            self.physical_radius.append(tmp2)
+            self.Teff.append(tmp3)
+
+        return self.physical_radius, self.Lbol, self.Teff
+
+#=======================================================================
+
     def bolometric_luminosity(self, m_rad, time,
                               t0eps,sigma0,eps0,
                               a_eps_nuc,b_eps_nuc,t_eps_nuc,
@@ -126,6 +232,9 @@ class Shell(object):
 
     def r_ph_calc(self, vel, t):
         return (vel*units.c)*t
+
+
+
 
 #####################
 

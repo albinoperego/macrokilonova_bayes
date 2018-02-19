@@ -9,7 +9,7 @@ import ejecta as ej
 import matplotlib.pyplot as plt
 
 # initialize the angular distribution
-n_slices = 30
+n_slices = 12
 dist_slices = "cos_uniform"
 AD = ad.AngularDistribution(dist_slices,n_slices)
 angular_distribution, omega_distribution = AD(n_slices/2)
@@ -35,7 +35,7 @@ print('I have initialized the observer location')
     #initialize the time
 time_min = 3600.      #
 time_max = 2000000.   #
-n_time = 2000
+n_time = 200
 tscale   = 'log'
 # initialize global time
 if (tscale == 'linear'):
