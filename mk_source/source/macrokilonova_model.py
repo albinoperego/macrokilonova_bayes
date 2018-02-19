@@ -98,7 +98,7 @@ class MacroKilonovaModel(cpnest.model.Model):
 
         model_parameters=['distance', 'view_angle']
         model_bounds = {'view_angle':[0.0,90.0],
-                        'distance':[20,60]}
+                        'distance':[39,41]}
         for item in self.glob_vars.keys():
             model_parameters.append(item)
             model_bounds[item] = self.glob_vars[item]
@@ -223,11 +223,11 @@ if __name__=='__main__':
                    'cnst_eff':0.3333}
     
     # set of global parameters to be fit
-    glob_vars = {'m_disk':[0.0, 1.0],
-                 'eps0':  [1e18, 1e19],
-                 'a_eps_nuc':[0.1, 2.0],
-                 'b_eps_nuc':[0.1, 5.0],
-                 't_eps_nuc':[0.1, 1.0]}
+    glob_vars = {'m_disk':[0.0001, 0.5],
+                 'eps0':  [2.e18, 2.5e19],
+                 'a_eps_nuc':[0.499, 0.501],
+                 'b_eps_nuc':[2.49, 2.51],
+                 't_eps_nuc':[0.99, 1.01]}
     
     # hardcoded ejecta geometric and thermal parameters
     ejecta_params = {}
@@ -239,20 +239,20 @@ if __name__=='__main__':
     shell_vars={}
 
     shell_vars['dynamics'] = {'xi_disk':None,
-                              'm_ej':[0.01, 1.0],
-                              'central_vel':[0.001, 1.0],
+                              'm_ej':[0.001, 0.01],
+                              'central_vel':[0.1, 1.0],
                               'low_lat_vel':None,
                               'high_lat_vel':None,
                               'step_angle_vel':None,
                               'low_lat_op':[1.0,20.0],
-                              'high_lat_op':[0.1,1.0],
+                              'high_lat_op':[0.1,2.0],
                               'step_angle_op':[0.0,np.pi/2.0]}
 
     shell_vars['wind'] = {'xi_disk':[0.0,1.0],
                           'm_ej':None,
                           'step_angle_mass':[0.0,np.pi/2.0],
                           'high_lat_flag':True,
-                          'central_vel':[0.001, 1.0],
+                          'central_vel':[0.001, 0.5],
                           'low_lat_vel':None,
                           'high_lat_vel':None,
                           'step_angle_vel':None,
@@ -262,7 +262,7 @@ if __name__=='__main__':
 
     shell_vars['secular'] = {'xi_disk':[0.0,1.0],
                              'm_ej':None,
-                             'central_vel':[0.001, 1.0],
+                             'central_vel':[0.001, 0.5],
                              'low_lat_vel':None,
                              'high_lat_vel':None,
                              'step_angle_vel':None,
