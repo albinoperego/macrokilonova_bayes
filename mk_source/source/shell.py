@@ -118,11 +118,9 @@ class Shell(object):
         return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
 
 # THERMALISATION EFFICIENCY
-#    a=ipl.interpolation_a(m_ej/Msun,v_ej/c)
-#    b=ipl.interpolation_b(m_ej/Msun,v_ej/c)
-#    d=ipl.interpolation_d(m_ej/Msun,v_ej/c)
+#    (a,b,d) to be fitted from Barnes et al.
     def epsilon(self,t,a,b,d):
-#                    return(0.36*(math.exp(-a*t/86400.)+((math.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
+#                    return(0.36*(np.exp(-a*t/86400.)+((numpy.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
         return(0.5)
 
 # RADIOACTIVE HEATING RATE
@@ -133,32 +131,20 @@ class Shell(object):
 
 # BOLOMETRIC LUMINOSITY
     def L(self,omega,t,k,m_ej,v_ej,a,b,d):
-        x = np.linspace(0.001,t,500)
-        y = []
-        for i in range(0,len(x)):
-            y.append((self.L_in(x[i],m_ej)*self.epsilon(x[i],a,b,d)*(np.exp((x[i]**2.)/((self.t_d(omega,k,m_ej,v_ej))**2.)))*(x[i]/self.t_d(omega,k,m_ej,v_ej))))
-        x=np.asarray(x)
-        y=np.asarray(y)
-        val1=integrate.trapz(y,x)
-        return(val1*np.exp(-(t**2.)/((self.t_d(omega,k,m_ej,v_ej))**2.))/self.t_d(omega,k,m_ej,v_ej))
+		td = self.t_d(omega,k,m_ej,v_ej)
+		integral = integrate.cumtrapz(self.L_in(self,t,m_ej)*self.epsilon(t,a,b,d)*(np.exp(t**2.)/(td**2.))*(t/td),t,initial=0)
+		return(integral*np.exp(-(t**2.)/(td**2.))/td)
 
     def villar(self,time,omega,m_ej,v_ej,k):
-
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
-
         a = 0.1
         b = 0.1
         d = 0.1
-
-        L_bol,R_phot,T_BB=[],[],[]
-        for i in range(0,len(time)):
-            L_bol.append(self.L(omega,time[i],k,m_ej,v_ej,a,b,d))
-
-# BLACKBODY TEMPERATURE AND PHOTOSPHERE RADIUS
-            R_phot.append(v_ej*time[i])
-            T_BB.append((L_bol[i]/(omega*units.sigma_SB*(R_phot[i]**2.)))**0.25)
-
+# BOLOMETRIC LUMINOSITY, BLACKBODY TEMPERATURE AND PHOTOSPHERE RADIUS
+        L_bol = L(time)
+        R_phot = v_ej*time
+        T_BB = (L_bol/(omega*units.sigma_SB*(R_phot**2.)))**0.25
         return(L_bol,R_phot,T_BB)
 
 
