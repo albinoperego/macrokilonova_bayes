@@ -130,7 +130,7 @@ print(logL)
 
 write_output = True
 if (write_output):
-    g = open('mkn_SFHo_M144139_LK_90.txt','w')
+    g = open('mkn_model.txt','w')
 
     g.write('%20s' %('time'))
     for ilambda in mag.keys():

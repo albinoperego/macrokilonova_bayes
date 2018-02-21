@@ -38,21 +38,22 @@ class Ejecta(object):
         bolometric_luminosities = []
         for c in self.components:
             
-#            r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
-#                                                     omega_distribution,
-#                                                     time,
-#                                                     shell_vars[c.name],
-#                                                     glob_vars,
-#                                                     glob_params,
-#                                                     **kwargs)
-
-            r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
+            r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
                                                      omega_distribution,
                                                      time,
                                                      shell_vars[c.name],
                                                      glob_vars,
                                                      glob_params,
                                                      **kwargs)
+
+# Claudio, please comment above and uncomment below if you wish to use Villar's model
+#            r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
+#                                                     omega_distribution,
+#                                                     time,
+#                                                     shell_vars[c.name],
+#                                                     glob_vars,
+#                                                     glob_params,
+#                                                     **kwargs)
 
             photospheric_radii.append(r)
             bolometric_luminosities.append(Lb)
