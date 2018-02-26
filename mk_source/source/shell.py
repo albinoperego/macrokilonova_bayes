@@ -111,6 +111,7 @@ class Shell(object):
 
 #=======================================================================
 
+
 # TIME-SCALE
     def t_d(self,omega,k,m_ej,v_ej):
         beta=13.4
@@ -118,9 +119,11 @@ class Shell(object):
         return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
 
 # THERMALISATION EFFICIENCY
-#    (a,b,d) to be fitted from Barnes et al.
+#    a=ipl.interpolation_a(m_ej/Msun,v_ej/c)
+#    b=ipl.interpolation_b(m_ej/Msun,v_ej/c)
+#    d=ipl.interpolation_d(m_ej/Msun,v_ej/c)
     def epsilon(self,t,a,b,d):
-#                    return(0.36*(np.exp(-a*t/86400.)+((numpy.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
+#                    return(0.36*(math.exp(-a*t/86400.)+((math.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
         return(0.5)
 
 # RADIOACTIVE HEATING RATE
@@ -131,9 +134,14 @@ class Shell(object):
 
 # BOLOMETRIC LUMINOSITY
     def L(self,omega,t,k,m_ej,v_ej,a,b,d):
-		td = self.t_d(omega,k,m_ej,v_ej)
-		integral = integrate.cumtrapz(self.L_in(self,t,m_ej)*self.epsilon(t,a,b,d)*(np.exp(t**2.)/(td**2.))*(t/td),t,initial=0)
-		return(integral*np.exp(-(t**2.)/(td**2.))/td)
+        td=self.t_d(omega,k,m_ej,v_ej)
+        init_x = np.logspace(-3,np.log10(t[0]),100.)
+        init_y = (self.L_in(init_x,m_ej)*self.epsilon(init_x,a,b,d)*np.exp((init_x**2)/(td**2))*init_x/td)
+        init_int=integrate.trapz(init_y,init_x)
+        integral = integrate.cumtrapz(self.L_in(t,m_ej)*self.epsilon(t,a,b,d)*np.exp((t/td)**2)*(t/td),t,initial=0)
+        integral+=init_int
+        Lum=integral*np.exp(-(t**2.)/(td**2.))/td
+        return(Lum)
 
     def villar(self,time,omega,m_ej,v_ej,k):
         m_ej = m_ej * units.Msun
@@ -141,10 +149,9 @@ class Shell(object):
         a = 0.1
         b = 0.1
         d = 0.1
-# BOLOMETRIC LUMINOSITY, BLACKBODY TEMPERATURE AND PHOTOSPHERE RADIUS
-        L_bol = L(time)
-        R_phot = v_ej*time
-        T_BB = (L_bol/(omega*units.sigma_SB*(R_phot**2.)))**0.25
+        L_bol=self.L(omega,time,k,m_ej,v_ej,a,b,d)
+        R_phot=v_ej*time
+        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
         return(L_bol,R_phot,T_BB)
 
 
@@ -188,7 +195,7 @@ class Shell(object):
             print(m_ej)
             print(v_rms)
             print(kappa)
-            print(time)
+            #print(time)
 
             tmp1,tmp2,tmp3 = self.villar(time,omega,m_ej,v_rms,kappa)
 
