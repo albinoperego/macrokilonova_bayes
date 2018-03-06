@@ -127,9 +127,9 @@ for ilambda in model_mag.keys():
     if ilambda in dic_filt.keys():
         if(dic_filt[ilambda]['name'] in band_list):
             c = next(colors)
-            ax.plot(time/24./60./60.,model_mag[ilambda],color=c,linestyle='dashed')
-            ax.fill_between(time/24./60./60.,low_models[ilambda],
-                            high_models[ilambda],facecolor=c,alpha=0.5)
+            ax.plot(time/24./60./60.,mean_models[ilambda],color=c,linestyle='dashed')
+            ax.fill_between(time/24./60./60.,high_models[ilambda],
+                            low_models[ilambda],facecolor=c,alpha=0.5)
             ax.errorbar(mag[ilambda]['time']-57982.529,mag[ilambda]['mag'],yerr=mag[ilambda]['sigma'],color=c, label=dic_filt[ilambda]['name'], fmt='o')
     else: print "key",ilambda,"not found"
 plt.xscale('log')
