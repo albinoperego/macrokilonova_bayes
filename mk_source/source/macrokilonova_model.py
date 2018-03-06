@@ -57,13 +57,13 @@ class MacroKilonovaModel(cpnest.model.Model):
         #initialize the time
         self.time_min = 3600.      #
         self.time_max = 2000000.   #
-        self.n_time = 10
-        self.tscale   = 'linear'
+        self.n_time = 20
+        self.tscale   = 'log'
         # initialize global time
         if (self.tscale == 'linear'):
             self.time = np.linspace(self.time_min,self.time_max,num=self.n_time)
-        elif (tscale == 'log'):
-            self.time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+        elif (self.tscale == 'log'):
+            self.time = np.logspace(np.log10(self.time_min),np.log10(self.time_max),num=self.n_time)
         else:
             print('Error! Wrong option for the time scale')
             exit(-1)
@@ -98,7 +98,8 @@ class MacroKilonovaModel(cpnest.model.Model):
 
         model_parameters=['distance', 'view_angle']
         model_bounds = {'view_angle':[0.0,90.0],
-                        'distance':[39,41]}
+                        'distance':[35,45]}
+        
         for item in self.glob_vars.keys():
             model_parameters.append(item)
             model_bounds[item] = self.glob_vars[item]
@@ -170,7 +171,10 @@ class MacroKilonovaModel(cpnest.model.Model):
                 v = self.shell_params[s][item]
                 if v is not None and type(v) is not bool:
                     self.shell_params[s][item] = x[item+'_%s'%s]
-
+        # impose the mass constraint
+        self.shell_params['dynamics']['xi_disk'] = 1.0 - self.shell_params['wind']['xi_disk'] - self.shell_params['secular']['xi_disk']
+        x['xi_disk_dynamics'] = self.shell_params['dynamics']['xi_disk']
+        
     def log_likelihood(self,x):
 
         self.flux_factor = self.FF(x['view_angle'])
@@ -192,10 +196,11 @@ class MacroKilonovaModel(cpnest.model.Model):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
+
         return logL
             
     def log_prior(self, x):
-        logP = 0.
+        logP = 0.0
         if np.isfinite(super(MacroKilonovaModel,self).log_prior(x)):
             self.fill_control_structures(x)
             logP += -0.5*(x['distance']-40.0)**2/16.0
@@ -212,10 +217,10 @@ if __name__=='__main__':
     parser.add_option('--maxmcmc',default=1000,type='int',metavar='m',help='max MCMC points')
     parser.add_option('--poolsize',default=1000,type='int',metavar='k',help='number of points in the ensemble sampler pool')
     (opts,args)=parser.parse_args()
-
+    np.seterr(all='ignore')
     # set of global parameters not to be fit
     glob_params = {'v_min':1.e-7,
-                   'n_v':2,
+                   'n_v':10,
                    'vscale':'linear',
                    'sigma0':0.11,
                    'alpha':1.3,
@@ -224,10 +229,10 @@ if __name__=='__main__':
     
     # set of global parameters to be fit
     glob_vars = {'m_disk':[0.0001, 0.5],
-                 'eps0':  [2.e18, 2.5e19],
-                 'a_eps_nuc':[0.499, 0.501],
-                 'b_eps_nuc':[2.49, 2.51],
-                 't_eps_nuc':[0.99, 1.01]}
+                 'eps0':  [2.e17, 2.5e20],
+                 'a_eps_nuc':[0.495, 0.505],
+                 'b_eps_nuc':[2.45, 2.55],
+                 't_eps_nuc':[0.95, 1.05]}
     
     # hardcoded ejecta geometric and thermal parameters
     ejecta_params = {}
@@ -238,9 +243,9 @@ if __name__=='__main__':
     # set of shell parameters to be sampled on
     shell_vars={}
 
-    shell_vars['dynamics'] = {'xi_disk':None,
-                              'm_ej':[0.001, 0.01],
-                              'central_vel':[0.1, 1.0],
+    shell_vars['dynamics'] = {'xi_disk':[0.0, 1.0],
+                              'm_ej':None,
+                              'central_vel':[0.001, 0.333],
                               'low_lat_vel':None,
                               'high_lat_vel':None,
                               'step_angle_vel':None,
@@ -252,21 +257,21 @@ if __name__=='__main__':
                           'm_ej':None,
                           'step_angle_mass':[0.0,np.pi/2.0],
                           'high_lat_flag':True,
-                          'central_vel':[0.001, 0.5],
+                          'central_vel':[0.001, 0.333],
                           'low_lat_vel':None,
                           'high_lat_vel':None,
                           'step_angle_vel':None,
                           'low_lat_op':[1.0,20.0],
-                          'high_lat_op':[0.1,1.0],
+                          'high_lat_op':[0.01,1.0],
                           'step_angle_op':[0.0,np.pi/2.0]}
 
     shell_vars['secular'] = {'xi_disk':[0.0,1.0],
                              'm_ej':None,
-                             'central_vel':[0.001, 0.5],
+                             'central_vel':[0.001, 0.333],
                              'low_lat_vel':None,
                              'high_lat_vel':None,
                              'step_angle_vel':None,
-                             'central_op':[0.1,20.0],
+                             'central_op':[0.01,20.0],
                              'low_lat_op':None,
                              'high_lat_op':None,
                              'step_angle_op':None}
@@ -285,4 +290,22 @@ if __name__=='__main__':
                             output=opts.out_dir)
         work.run()
 
+"""
+    fig1 = plt.figure()
+    band_list = ['U','B','g','V','R']
+    for band in band_list:
+    for ilambda in model_mag.keys():
+    try:
+    if(dic_filt[ilambda]['name']==band):
+    plt.plot(time/24./60./60.,model_mag[ilambda],color=dic_filt[ilambda]['color'],label=dic_filt[ilambda]['name'])
+    plt.scatter(mag[ilambda]['time']-57982.529,mag[ilambda]['mag'],color=dic_filt[ilambda]['color'])
+    except KeyError:
+    continue
+    plt.title('UV and visible bands')
+    plt.xlabel('Time [day]')
+    plt.ylabel('AB magnitude')
+    plt.legend(loc='0')
+    plt.xlim(0.1,10)
+    plt.ylim(27,15)
+"""
 

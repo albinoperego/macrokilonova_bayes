@@ -100,6 +100,7 @@ class Shell(object):
                                                     kappa,
                                                     cnst_eff,
                                                     alpha) for t,m in zip(time,m_rad)])
+
         self.physical_radius = np.array(self.physical_radius)
         self.Lbol = np.array(self.Lbol)
         tmp = []
