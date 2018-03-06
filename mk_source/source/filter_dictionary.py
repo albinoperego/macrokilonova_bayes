@@ -46,7 +46,7 @@ filters[354]  ={ 'name'  : 'u',
 
 filters[475]  ={ 'name'  : 'g',
                  'lambda': 475e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_g.dat','filter_measures_F475W.dat']
              }
 
@@ -58,7 +58,7 @@ filters[475]  ={ 'name'  : 'g',
 
 filters[850]  ={ 'name'  : 'z',
                  'lambda': 850e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_z.dat','filter_measures_F850W.dat']
              }
 
@@ -95,13 +95,13 @@ filters[1150] ={ 'name'  : 'J_HST',
 
 filters[2150] ={ 'name'  : 'Ks',
                  'lambda': 2150e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_Ks.dat']
              }
 
 filters[1630] ={ 'name'  : 'H',
                  'lambda': 1630e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_H.dat']
              }
 
@@ -119,7 +119,7 @@ filters[658]  ={ 'name'  : 'R',
 
 filters[625]  ={ 'name'  : 'r',
                  'lambda': 625e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_r.dat','filter_measures_F625W.dat']
              }
 
@@ -131,12 +131,12 @@ filters[12130]={ 'name'  : 'C',
 
 filters[806]  ={ 'name'  : 'I',
                  'lambda': 806e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_I.dat','filter_measures_F814W.dat']
                }
 
 filters[775]  ={ 'name'  : 'i',
                  'lambda': 775e-9,
-                 'active': 1,
+                 'active': 0,
                  'filename': ['filter_measures_i.dat','filter_measures_F775W.dat']
                }

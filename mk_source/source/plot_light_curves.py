@@ -20,10 +20,10 @@ n_time = 20
 time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
 
 
-N = 100
+
 
 # read the chain and plot the maximum likelihood point, for now
-chain = np.genfromtxt('quick_test/chain_1024_1234.txt',names=True)[-N:]
+chain = np.genfromtxt('quick_test/posterior.dat',names=True)
 
 # set of global parameters not to be fit
 glob_params = {'v_min':1.e-7,
@@ -33,6 +33,8 @@ glob_params = {'v_min':1.e-7,
                'alpha':1.3,
                't0eps':1.3,
                'cnst_eff':0.3333}
+
+N = chain.shape[0]
 
 models = []
 for i in range(N):
@@ -121,7 +123,7 @@ for ilambda in model_mag.keys():
 fig = plt.figure()
 ax = fig.add_subplot(111)
 band_list = ['U','V','B','R','K','J']
-colors = iter(cm.rainbow_r(np.linspace(0, 1, len(band_list))))
+colors = iter(cm.spectral_r(np.linspace(0, 1, len(band_list))))
 
 for ilambda in model_mag.keys():
     if ilambda in dic_filt.keys():
@@ -130,7 +132,7 @@ for ilambda in model_mag.keys():
             ax.plot(time/24./60./60.,mean_models[ilambda],color=c,linestyle='dashed')
             ax.fill_between(time/24./60./60.,high_models[ilambda],
                             low_models[ilambda],facecolor=c,alpha=0.5)
-            ax.errorbar(mag[ilambda]['time']-57982.529,mag[ilambda]['mag'],yerr=mag[ilambda]['sigma'],color=c, label=dic_filt[ilambda]['name'], fmt='o')
+            ax.errorbar(mag[ilambda]['time']-57982.529,mag[ilambda]['mag'],yerr=mag[ilambda]['sigma'],color=c, label=dic_filt[ilambda]['name'], fmt='o', ms=4)
     else: print "key",ilambda,"not found"
 plt.xscale('log')
 plt.title('UV and visible bands')
