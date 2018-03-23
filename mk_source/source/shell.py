@@ -11,6 +11,7 @@ import observer_projection as op
 import nuclear_heat
 import scipy.integrate as integrate
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
+import interpolation_barnes as itp
 
 def T_eff_calc(Lum,dOmega,r_ph):
     return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
@@ -110,8 +111,9 @@ class Shell(object):
             self.Teff = np.asarray(tmp)
         return self.physical_radius, self.Lbol, self.Teff
 
-#=======================================================================
+#======================================================================#
 
+#				VILLAR
 
 # TIME-SCALE
     def t_d(self,omega,k,m_ej,v_ej):
@@ -120,36 +122,52 @@ class Shell(object):
         return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
 
 # THERMALISATION EFFICIENCY
-#    a=ipl.interpolation_a(m_ej/Msun,v_ej/c)
-#    b=ipl.interpolation_b(m_ej/Msun,v_ej/c)
-#    d=ipl.interpolation_d(m_ej/Msun,v_ej/c)
+# Note: If input parameter is outside the interpolation range (at least one of a,b or d is 0) returns thermalisation efficiency=0.5 
     def epsilon(self,t,a,b,d):
-#                    return(0.36*(math.exp(-a*t/86400.)+((math.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
-        return(0.5)
+        if (a*b*d==0):
+            print('\n Mass and velocity outside interpolation range for Barnes a,b,d parameters ... Returning Thermalisation Efficiency = 0.5\n')
+            return(0.5)
+        else:
+            return(0.36*(np.exp(-a*t/86400.)+((np.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
+#       return(0.5)
 
 # RADIOACTIVE HEATING RATE
     def L_in(self,t,m_ej):
-        t_0=1.3
-        sigma=0.11
+        t_0=1.3; sigma=0.11
         return(4.e18*m_ej*((0.5-((np.arctan((t-t_0)/(sigma)))/np.pi))**1.3))
 
+# Epsilon_Y
+# Factor that introduces heating rate dependence on opacity from Perego et al. (2017)
+    e_min=0.5; e_max=2.5; t_e=86400.
+    def e_y(self,t,k):
+	    if(k>2.):
+		    return(1.)
+	    else:
+		    return(self.e_min+self.e_max/(1.+np.exp(4.*(t/self.t_e-1.))))                
+
 # BOLOMETRIC LUMINOSITY
+# Note: to avoid overflow in e^((t/td)^2) a 'cut' is introduced. If (t/td)^2 > 500, it is fixed to 500. Now L is computed also at later times.
     def L(self,omega,t,k,m_ej,v_ej,a,b,d):
         td=self.t_d(omega,k,m_ej,v_ej)
         init_x = np.logspace(-3,np.log10(t[0]),100.)
-        init_y = (self.L_in(init_x,m_ej)*self.epsilon(init_x,a,b,d)*np.exp((init_x**2)/(td**2))*init_x/td)
+        init_y = (self.L_in(init_x,m_ej)*self.epsilon(init_x,a,b,d)*self.e_y(init_x,k)*np.exp((init_x**2)/(td**2))*init_x/td)
         init_int=integrate.trapz(init_y,init_x)
-        integral = integrate.cumtrapz(self.L_in(t,m_ej)*self.epsilon(t,a,b,d)*np.exp((t/td)**2)*(t/td),t,initial=0)
+        cut = t
+        cut = (cut**2)/((td**2)*500)
+        cut[t<td*np.sqrt(500)]=1
+        integral = integrate.cumtrapz(self.L_in(t,m_ej)*self.epsilon(t,a,b,d)*self.e_y(t,k)*np.exp((t/(td*cut))**2)*(t/td),t,initial=0)
         integral+=init_int
         Lum=integral*np.exp(-(t**2.)/(td**2.))/td
         return(Lum)
 
     def villar(self,time,omega,m_ej,v_ej,k):
+		# Interpolation from Barnes et al. (2016) using module 'interpolation_barnes'.
+		# Now it uses a single variable [m_ej/(v_ej^2)] instead of using m_ej and v_ej separately.
+        a = itp.int_a(m_ej/(v_ej**2))
+        b = itp.int_b(m_ej/(v_ej**2))
+        d = itp.int_d(m_ej/(v_ej**2))
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
-        a = 0.1
-        b = 0.1
-        d = 0.1
         L_bol=self.L(omega,time,k,m_ej,v_ej,a,b,d)
         R_phot=v_ej*time
         T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25

@@ -1,11 +1,21 @@
 import numpy as np
 import filter_dictionary
 import copy
-import units
 from scipy import interpolate
+import matplotlib.pyplot as plt
+import dered_cardelli as drd
+import units
+
+# CORRECTION FOR REDDENING: if 'True' uses 'dered_cardelli' module to correct data for reddening.
+dered_correction = True
+
+# UPPER LIMITS: if 'True' it includes every data in the files inside 'filter_data' 
+#               folder (also upper limits and uncertain data).
+# Note: Upper limits are flagged with '-1' errors, uncertain data 
+#       (that are presented in Villar table without errors but are not upper limits) with '123456789' errors.
+upper_limits = False
 
 class Filters(object):
-
     def __init__(self,usage):
         if (usage=="measures"):
             self.read_filters = read_filter_measures
@@ -14,20 +24,31 @@ class Filters(object):
         else:
             print("Wrong usage for filters.")
             exit(0)
-        
         self.dic_filt = None
         self.lambda_vec = None
         self.measures = None
-
     def __call__(self):
         if (self.dic_filt is None) and (self.lambda_vec is None) and (self.measures is None):
             self.dic_filt, self.lambda_vec, self.measures = self.read_filters()
         return self.dic_filt, self.lambda_vec, self.measures
 
+
+def read_filter_properties():
+    # load the filter informations
+    dic_filt = filter_dictionary.filters
+    # sort by wavelength
+    lambda_vec = copy.deepcopy(list(dic_filt.keys()))
+    lambda_vec.sort()
+    return dic_filt,lambda_vec
+
+
+def read_measurements(filename):
+    t, magnitude, magnitude_error = np.loadtxt(filename, unpack = True)
+    return t, magnitude, magnitude_error
+
+
 def read_filter_measures():
-
     dic_filt,lambda_vec = read_filter_properties()
-
 # load the measured magnitudes
     measures={}
     for ilambda in lambda_vec:
@@ -37,37 +58,57 @@ def read_filter_measures():
             m_tot = np.asarray([])
             sm_tot = np.asarray([])
             for fname in dic_filt[ilambda]["filename"]:
-                t,m,sm = read_measurements("filter_data/"+fname)
-                t_tot = np.append(t_tot,t)
-                m_tot = np.append(m_tot,m)
-                sm_tot = np.append(sm_tot,sm)
 
+                t,m,sm = read_measurements("filter_data/"+fname)
+                if(upper_limits):
+                    t_tot = np.append(t_tot,t)
+                    m_tot = np.append(m_tot,m)
+                    sm_tot = np.append(sm_tot,sm)
+                else:
+                    if (type(sm) is np.float64):                  # load t,mag,err for a single data point
+                        if(sm>0. and sm!=123456789):
+                            t_tot = np.append(t_tot,t)
+                            m_tot = np.append(m_tot,m)
+                            sm_tot = np.append(sm_tot,sm)
+                    else:
+                        for i in range(0,len(sm)):                # load t,mag,err for data arrays (more than 1 data point)
+                            if(sm[i]>0. and sm[i]!=123456789):
+                                t_tot=np.append(t_tot,t[i])
+                                m_tot=np.append(m_tot,m[i])
+                                sm_tot=np.append(sm_tot,sm[i])
+                if (dered_correction):                            # if dered_correction is 'True' it corrects the magnitudes [M_dered = M - correction]
+                    m_tot -= drd.dered_CCM(np.asarray([ilambda]))
+
+
+# This part plots the data in each band 
+# (upper limits with red triangles, uncertain data with black crosses, other data with blue dots)
+
+#                for i in range(0,len(m_tot)):
+#                    if(sm_tot[i]==123456789):
+#                        plt.scatter(t_tot[i]-57982.529,m_tot[i],marker='x',c='black',s=15)
+#                    elif(sm_tot[i]<0.):
+#                        plt.scatter(t_tot[i]-57982.529,m_tot[i],marker='v',c='red',s=15)
+#                    else:
+#                        plt.errorbar(t_tot[i]-57982.529,m_tot[i],yerr=sm_tot[i],marker='o',c='blue',markersize=3)
+#                plt.ylim([15,28])
+#                plt.xlim([0,20])
+#                plt.gca().invert_yaxis()
+#                plt.title('%s' %fname)
+#                plt.show()
+#
             measures[ilambda]['time']  = t_tot
             measures[ilambda]['mag']   = m_tot
             measures[ilambda]['sigma'] = sm_tot
             measures[ilambda]['name']  = dic_filt[ilambda]["name"]
-
     return dic_filt,lambda_vec,measures
 
 
-def read_filter_properties():
 
-# load the filter informations 
-    dic_filt = filter_dictionary.filters
 
-# sort by wavelength
-    lambda_vec = copy.deepcopy(list(dic_filt.keys()))
-    lambda_vec.sort()
-
-    return dic_filt,lambda_vec
 
 def planckian(nu,T_plk):
     tmp = (units.h*nu)/(units.kB*T_plk)
     return (2.*units.h*nu**3)/(units.c**2)/(np.exp(tmp)-1.)
- 
-def read_measurements(filename):
-    t, magnitude, magnitude_error = np.loadtxt(filename, unpack = True)
-    return t, magnitude, magnitude_error
 
 def m_filter(lam,T,rad,dist,ff):
     fnu = calc_fnu(lam,T,rad,dist,ff)
@@ -90,7 +131,6 @@ def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D):
     for ilambda in lambda_vec:
         if (dic_filt[ilambda]["active"]==1):
             mag_model[ilambda] = np.array([m_filter(dic_filt[ilambda]["lambda"],T,R,D,ff) for T,R in zip(ordered_T,ordered_R)])
-
     return mag_model 
 
 def calc_residuals(data,model):

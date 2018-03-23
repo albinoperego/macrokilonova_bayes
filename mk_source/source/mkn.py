@@ -59,7 +59,7 @@ E = ej.Ejecta(3, params.keys(), params)
 shell_vars={}
 
 shell_vars['dynamics'] = {'xi_disk':None,
-                      'm_ej':0.0004,
+                      'm_ej':0.04,
                       'central_vel':0.33,
                       'low_lat_vel':None,
                       'high_lat_vel':None,
@@ -99,7 +99,7 @@ glob_params = {'v_min':1.e-7,
                't0eps':1.3,
                'cnst_eff':0.3333}
 
-glob_vars = {'m_disk':0.0009,
+glob_vars = {'m_disk':0.09,
              'eps0':1.5e19, 
              'a_eps_nuc':0.5,
              'b_eps_nuc':2.5,
@@ -147,6 +147,38 @@ if (write_output):
 
     g.close()
 
+
+plot_separately = True          # Choose to plot all lightcurves in different bands on the same plot 
+								# or to plot lightcurve and data in each band on different plots
+
+if (plot_separately):			# plot lightcurve and data in each band separately
+    dic,lambdas,misure = ft.read_filter_measures()
+    fig1 = plt.figure()
+    for ilambda in mag.keys():
+        if(len(misure[ilambda]['sigma'])!=0):
+            plt.plot(time/24./60./60.,model_mag[ilambda])
+            plt.errorbar(misure[ilambda]['time']-57982.529,misure[ilambda]['mag'],yerr=misure[ilambda]['sigma'],fmt='o')
+            plt.title('%s' %misure[ilambda]['name'])
+            plt.xlim(0.1,10)
+            plt.ylim(27,15)
+            plt.show()
+else:							# plot lightcurves for every band in the same plot
+    fig1 = plt.figure()
+    for ilambda in mag.keys():
+        plt.plot(time/24./60./60.,model_mag[ilambda])
+    plt.title('Lightcurves')
+    plt.xlim(0.1,10)
+    plt.ylim(27,15)
+    plt.show()
+
+
+
+
+
+
+
+
+'''
 fig1 = plt.figure()
 #band_list = ['U']
 band_list = ['U','B','g','V','R','r']
@@ -181,6 +213,9 @@ for band in band_list:
 plt.xlim(0.1,10)
 plt.ylim(27,15)
 plt.show()
+'''
+
+
 
 
 print_output = False

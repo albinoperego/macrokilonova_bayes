@@ -38,25 +38,28 @@ class Ejecta(object):
         bolometric_luminosities = []
         for c in self.components:
             
-            r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
+#            r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
+#                                                    omega_distribution,
+#                                                     time,
+#                                                     shell_vars[c.name],
+#                                                     glob_vars,
+#                                                     glob_params,
+#                                                     **kwargs)
+#            photospheric_radii.append(r)
+#            bolometric_luminosities.append(Lb)
+
+# Claudio, please comment above and uncomment below if you wish to use Villar's model
+            r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
                                                      omega_distribution,
                                                      time,
                                                      shell_vars[c.name],
                                                      glob_vars,
                                                      glob_params,
                                                      **kwargs)
-
-# Claudio, please comment above and uncomment below if you wish to use Villar's model
-#            r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
-#                                                     omega_distribution,
-#                                                     time,
-#                                                     shell_vars[c.name],
-#                                                     glob_vars,
-#                                                     glob_params,
-#                                                     **kwargs)
-
             photospheric_radii.append(r)
             bolometric_luminosities.append(Lb)
+        print('\n Using VILLAR model\n')
+
         
         # select the photospheric radius as the maximum between the different single
         # photospheric radii
@@ -85,7 +88,7 @@ if __name__=="__main__":
     omega_distribution = [0.01,0.2,0.5]
     time_min = 36000.      #
     time_max = 172800.   #
-    n_time = 200
+    n_time = 2000
     m_tot = 0.1
     v_min = 1e-7
     n_v = 100
