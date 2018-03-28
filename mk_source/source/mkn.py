@@ -155,6 +155,8 @@ if (plot_separately):			# plot lightcurve and data in each band separately
     dic,lambdas,misure = ft.read_filter_measures()
     fig1 = plt.figure()
     for ilambda in mag.keys():
+        if (dic[ilambda]['plot'] !=1):
+            continue
         if(len(misure[ilambda]['sigma'])!=0):
             plt.plot(time/24./60./60.,model_mag[ilambda])
             plt.errorbar(misure[ilambda]['time']-57982.529,misure[ilambda]['mag'],yerr=misure[ilambda]['sigma'],fmt='o')
