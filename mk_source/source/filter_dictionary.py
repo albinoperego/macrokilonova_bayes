@@ -155,13 +155,13 @@ filters[798] ={ 'name'  : 'i_VLT',
 
 filters[238] ={ 'name'  : 'F225W_HST',
                  'lambda': 237.8e-9,
-                 'active': 1,
+                 'active': 0,
                  'plot':   0,
                  'filename': ['mag_HST_band_F225W.txt']} 
 
 filters[271] ={ 'name'  : 'F275W_HST',
                  'lambda': 271.5e-9,
-                 'active': 1,
+                 'active': 0,
                  'plot':   0,
                  'filename': ['mag_HST_band_F275W.txt']} 
 
@@ -341,13 +341,13 @@ filters[2145] ={ 'name'  : 'Ks_Subaru',
 
 filters[225] ={ 'name'  : 'M2_Swift',
                  'lambda': 225.5e-9,
-                 'active': 1,
+                 'active': 0,
                  'plot':   0,
                  'filename': ['mag_Swift_band_M2.txt']}
 
 filters[261] ={ 'name'  : 'W1_Swift',
                  'lambda': 261.4e-9,
-                 'active': 1,
+                 'active': 0,
                  'plot':   0,
                  'filename': ['mag_Swift_band_W1.txt']}
  
@@ -359,7 +359,7 @@ filters[348] ={ 'name'  : 'U_Swift',
 
 filters[208] ={ 'name'  : 'W2_Swift',
                  'lambda': 208.0e-9,
-                 'active': 1,
+                 'active': 0,
                  'plot':   0,
                  'filename': ['mag_Swift_band_W2.txt']}                 
 

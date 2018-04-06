@@ -210,10 +210,10 @@ class Shell(object):
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
-            print(omega)
-            print(m_ej)
-            print(v_rms)
-            print(kappa)
+            #print(omega)
+            #print(m_ej)
+            #print(v_rms)
+            #print(kappa)
             #print(time)
 
             tmp1,tmp2,tmp3 = self.villar(time,omega,m_ej,v_rms,kappa)

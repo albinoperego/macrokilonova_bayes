@@ -52,6 +52,7 @@ def read_filter_measures():
 # load the measured magnitudes
     measures={}
     for ilambda in lambda_vec:
+        print(ilambda)
         if (dic_filt[ilambda]["active"]==1):
             measures[ilambda] = {}
             t_tot = np.asarray([])
@@ -100,6 +101,7 @@ def read_filter_measures():
             measures[ilambda]['mag']   = m_tot
             measures[ilambda]['sigma'] = sm_tot
             measures[ilambda]['name']  = dic_filt[ilambda]["name"]
+
     return dic_filt,lambda_vec,measures
 
 
@@ -121,7 +123,7 @@ def calc_fnu(lam,temp,rad,dist,ff):
   tmp2 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
   return np.sum(tmp1+tmp2)/dist**2
 
-def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D):
+def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0):
 
     ordered_T = np.asarray([list(x) for x in zip(*T_ray)])
     ordered_R = np.asarray([list(x) for x in zip(*rad_ray)])
@@ -133,18 +135,40 @@ def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D):
             mag_model[ilambda] = np.array([m_filter(dic_filt[ilambda]["lambda"],T,R,D,ff) for T,R in zip(ordered_T,ordered_R)])
     return mag_model 
 
-def calc_residuals(data,model):
+def calc_residuals(data,model,t0):
     res = {}
     for ilambda in data.keys():
         if ilambda == 0: 
             continue
 #        fmag = interpolate.interp1d(model[0],model[ilambda], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
-        fmag = np.interp((data[ilambda]['time']-57982.529)*24.*60.*60., model[0],model[ilambda])
+        fmag = np.interp((data[ilambda]['time']-t0)*24.*60.*60., model[0],model[ilambda])
 #        res[ilambda] = np.array([(fmag-m)/sm   for t,m,sm in zip(data[ilambda]['time'],data[ilambda]['mag'],data[ilambda]['sigma'])])
         res[ilambda] = (fmag-data[ilambda]['mag'])  /data[ilambda]['sigma']
     return res
 
 
+
+def calc_all_residuals(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0,data):
+
+    res = {}
+    for ilambda in lambda_vec:
+        if (dic_filt[ilambda]["active"]==0):
+            continue
+        if (len(data[ilambda]['time'])==0):
+            continue
+
+        R_intrp = np.array([np.interp((data[ilambda]['time']-t0)*24.*60.*60.,time,x) for x in rad_ray])
+        T_intrp = np.array([np.interp((data[ilambda]['time']-t0)*24.*60.*60.,time,x) for x in T_ray])
+
+        ordered_T = np.asarray([list(x) for x in zip(*T_intrp)])
+        ordered_R = np.asarray([list(x) for x in zip(*R_intrp)])
+
+        mag_model = np.array([m_filter(dic_filt[ilambda]["lambda"],x,y,D,ff) for x,y in zip(ordered_T,ordered_R) ])
+
+        res[ilambda] = (mag_model-data[ilambda]['mag'])  /data[ilambda]['sigma']
+
+    return res
+   
 if __name__=="__main__":
 
     FT = Filters("properties") 

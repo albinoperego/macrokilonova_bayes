@@ -34,31 +34,36 @@ class Ejecta(object):
                    glob_params,
                    **kwargs):
 
+        model_grossman = False
+        model_villar = True
+
         photospheric_radii = []
         bolometric_luminosities = []
         for c in self.components:
-            
-#            r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
-#                                                    omega_distribution,
-#                                                     time,
-#                                                     shell_vars[c.name],
-#                                                     glob_vars,
-#                                                     glob_params,
-#                                                     **kwargs)
-#            photospheric_radii.append(r)
-#            bolometric_luminosities.append(Lb)
-
-# Claudio, please comment above and uncomment below if you wish to use Villar's model
-            r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
+          
+            if (model_grossman):
+                r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
+                                                    omega_distribution,
+                                                     time,
+                                                     shell_vars[c.name],
+                                                     glob_vars,
+                                                     glob_params,
+                                                     **kwargs)
+            elif (model_villar):    
+                r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
                                                      omega_distribution,
                                                      time,
                                                      shell_vars[c.name],
                                                      glob_vars,
                                                      glob_params,
                                                      **kwargs)
+#                print('\n Using VILLAR model\n')
+            else:
+                print('Please choose an available method')
+                exit()
+
             photospheric_radii.append(r)
             bolometric_luminosities.append(Lb)
-        print('\n Using VILLAR model\n')
 
         
         # select the photospheric radius as the maximum between the different single

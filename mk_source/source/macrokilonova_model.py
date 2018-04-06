@@ -185,12 +185,18 @@ class MacroKilonovaModel(cpnest.model.Model):
                                                   self.glob_vars,
                                                   self.glob_params)
 
-        # compute the magnitudes from a certain distance
-        D = x['distance']*1e6*units.pc2cm
-        model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D)
+
+#        # compute the magnitudes from a certain distance
+#        D = x['distance']*1e6*units.pc2cm
+#        model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D,t0)
+
+#        # compute the residuals
+#        residuals = ft.calc_residuals(self.mag,model_mag)
 
         # compute the residuals
-        residuals = ft.calc_residuals(self.mag,model_mag)
+        D = x['distance']*1e6*units.pc2cm
+        t0 = 57982.529
+        residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D,t0,self.mag)
 
         # compute the likelihood
         logL = 0.

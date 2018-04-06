@@ -8,6 +8,10 @@ import math
 import ejecta as ej
 import matplotlib.pyplot as plt
 
+# global properties of the source
+D = 40.e+6*units.pc2cm
+t0 = 57982.529
+
 # initialize the angular distribution
 n_slices = 12
 dist_slices = "cos_uniform"
@@ -105,6 +109,7 @@ glob_vars = {'m_disk':0.09,
              'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
 
+
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            time,
@@ -112,12 +117,20 @@ r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            glob_vars,
                            glob_params)
 
+'''
+##########################
 # compute the magnitudes from a certain distance
 D = 40.e+6*units.pc2cm
-model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D)
+model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0)
 
 # compute the residuals
-residuals = ft.calc_residuals(mag,model_mag)
+residuals = ft.calc_residuals(mag,model_mag,t0)
+##########################
+'''
+
+# compute the residuals
+residuals = ft.calc_all_residuals(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0,mag)
+
 
 # compute the likelihood
 logL = 0.
@@ -128,8 +141,15 @@ print('')
 print('logL')
 print(logL)
 
-write_output = True
+##############################
+# write out the output
+############################## 
+
+write_output = False
 if (write_output):
+
+    model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0)
+
     g = open('mkn_model.txt','w')
 
     g.write('%20s' %('time'))
@@ -148,8 +168,12 @@ if (write_output):
     g.close()
 
 
-plot_separately = True          # Choose to plot all lightcurves in different bands on the same plot 
-								# or to plot lightcurve and data in each band on different plots
+###############################
+# plot some of the lightcurves 
+############################### 
+
+plot_separately = False          # Choose to plot all lightcurves in different bands on the same plot 
+plot_together = False	         # or to plot lightcurve and data in each band on different plots
 
 if (plot_separately):			# plot lightcurve and data in each band separately
     dic,lambdas,misure = ft.read_filter_measures()
@@ -158,24 +182,23 @@ if (plot_separately):			# plot lightcurve and data in each band separately
         if (dic[ilambda]['plot'] !=1):
             continue
         if(len(misure[ilambda]['sigma'])!=0):
-            plt.plot(time/24./60./60.,model_mag[ilambda])
-            plt.errorbar(misure[ilambda]['time']-57982.529,misure[ilambda]['mag'],yerr=misure[ilambda]['sigma'],fmt='o')
+            plt.plot(time*units.sec2day,model_mag[ilambda])
+            plt.errorbar(misure[ilambda]['time']-t0,misure[ilambda]['mag'],yerr=misure[ilambda]['sigma'],fmt='o')
             plt.title('%s' %misure[ilambda]['name'])
             plt.xlim(0.1,10)
             plt.ylim(27,15)
             plt.show()
-else:							# plot lightcurves for every band in the same plot
+elif (plot_together) :							# plot lightcurves for every band in the same plot
     fig1 = plt.figure()
+    dic,lambdas,misure = ft.read_filter_measures()
     for ilambda in mag.keys():
-        plt.plot(time/24./60./60.,model_mag[ilambda])
+        if (dic[ilambda]['plot'] !=1):
+            continue
+        plt.plot(time*units.sec2day,model_mag[ilambda])
     plt.title('Lightcurves')
     plt.xlim(0.1,10)
     plt.ylim(27,15)
     plt.show()
-
-
-
-
 
 
 
