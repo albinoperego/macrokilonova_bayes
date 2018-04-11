@@ -231,11 +231,14 @@ if __name__=='__main__':
                    'sigma0':0.11,
                    'alpha':1.3,
                    't0eps':1.3,
-                   'cnst_eff':0.3333}
+                   'cnst_eff':0.3333,
+                   'lc model':'villar'}  #villar or grossman
     
     # set of global parameters to be fit
     glob_vars = {'m_disk':[0.0001, 0.5],
                  'eps0':  [2.e17, 2.5e20],
+                 'T_floor_LA':[100.,3000.],
+                 'T_floor_Ni':[100.,3000.],
                  'a_eps_nuc':[0.495, 0.505],
                  'b_eps_nuc':[2.45, 2.55],
                  't_eps_nuc':[0.95, 1.05]}

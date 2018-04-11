@@ -1,16 +1,14 @@
-import numpy as np
 import angular_distribution
-import mass_angular_distribution
-import thermalization
-import velocity_angular_distribution
-import opacity_angular_distribution
-import initialize_components
-import units
-import initialize_components
-import observer_projection as op
-import nuclear_heat
 import filters as ft
+import initialize_components
+import mass_angular_distribution
+import nuclear_heat
+import numpy as np
 import observer_projection as op
+import opacity_angular_distribution
+import thermalization
+import units
+import velocity_angular_distribution
 
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
 from shell import Shell
@@ -34,14 +32,14 @@ class Ejecta(object):
                    glob_params,
                    **kwargs):
 
-        model_grossman = True
-        model_villar = False
+        model_grossman = False
+        model_villar = True
 
         photospheric_radii = []
         bolometric_luminosities = []
         for c in self.components:
           
-            if (model_grossman):
+            if (glob_params['lc model']=='grossman'):
                 r, Lb = c.expansion_angular_distribution(angular_distribution,
                                                     omega_distribution,
                                                      time,
@@ -49,7 +47,7 @@ class Ejecta(object):
                                                      glob_vars,
                                                      glob_params,
                                                      **kwargs)
-            elif (model_villar):    
+            elif (glob_params['lc model']=='villar'):
                 r, Lb = c.expansion_angular_distribution_villar(angular_distribution,
                                                      omega_distribution,
                                                      time,
@@ -59,7 +57,7 @@ class Ejecta(object):
                                                      **kwargs)
 #                print('\n Using VILLAR model\n')
             else:
-                print('Please choose an available method')
+                print('Please choose an available method: villar or grossman')
                 exit()
 
             photospheric_radii.append(r)
