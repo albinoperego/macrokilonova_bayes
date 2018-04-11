@@ -75,7 +75,6 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-#        self.Teff = []
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
@@ -104,28 +103,12 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
 
-            T_floor = 1000.
-#            Ttmp = np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)])
-
+            T_floor = 10.
             self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,Ltmp)]))
 
-#            self.Teff.append(np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)]))
             self.Lbol.append(Ltmp)
-#            self.physical_radius.append(rtmp)
 
-#        self.physical_radius = np.array(self.physical_radius)
-#        self.Lbol = np.array(self.Lbol)
-
-#        tmp = []
-
-#        for k in range(len(angular_distribution)):
-#            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.Lbol[k,:],self.physical_radius[k,:])]))
-#            self.Teff = np.asarray(tmp)
-
-
-#        print(self.Teff)
-
-        return self.physical_radius, self.Lbol #, self.Teff
+        return self.physical_radius, self.Lbol
 
 #======================================================================#
 
@@ -185,7 +168,9 @@ class Shell(object):
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
         L_bol=self.L(omega,time,k,m_ej,v_ej,a,b,d)
-        R_phot=v_ej*time
+        T_floor = 10.
+        rtmp = v_ej*time
+        R_phot=np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
 #        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
         return(L_bol,R_phot)#,T_BB)
 

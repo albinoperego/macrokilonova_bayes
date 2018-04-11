@@ -34,8 +34,8 @@ class Ejecta(object):
                    glob_params,
                    **kwargs):
 
-        model_grossman = False
-        model_villar = True
+        model_grossman = True
+        model_villar = False
 
         photospheric_radii = []
         bolometric_luminosities = []
