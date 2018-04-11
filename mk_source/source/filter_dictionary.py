@@ -42,19 +42,19 @@ filters[2143] ={ 'name'  : 'K_CTIO',
 filters[1631] ={ 'name'  : 'H_Gemini',
                  'lambda': 1630.5e-9,
                  'active': 1,
-                 'plot':   0,
+                 'plot':   1,
                  'filename': ['mag_Gemini_telescope_band_H.txt','mag_Gemini-S_band_H.txt']}
  
 filters[1255] ={ 'name'  : 'J_Gemini',
                  'lambda': 1255.1e-9,
                  'active': 1,
-                 'plot':   0,
+                 'plot':   1,
                  'filename': ['mag_Gemini_telescope_band_J.txt','mag_Gemini-S_band_J.txt']}                      
 
 filters[2157] ={ 'name'  : 'Ks_Gemini',
                  'lambda': 2157.4e-9,
                  'active': 1,
-                 'plot':   0,
+                 'plot':   1,
                  'filename': ['mag_Gemini_telescope_band_Ks.txt','mag_Gemini-S_band_Ks.txt']}    
 
 filters[475] ={ 'name'  : 'g_Gemini_LCO1m_Keck',

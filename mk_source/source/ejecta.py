@@ -34,8 +34,8 @@ class Ejecta(object):
                    glob_params,
                    **kwargs):
 
-        model_grossman = False
-        model_villar = True
+        model_grossman = True
+        model_villar = False
 
         photospheric_radii = []
         bolometric_luminosities = []
@@ -64,7 +64,6 @@ class Ejecta(object):
 
             photospheric_radii.append(r)
             bolometric_luminosities.append(Lb)
-
         
         # select the photospheric radius as the maximum between the different single
         # photospheric radii

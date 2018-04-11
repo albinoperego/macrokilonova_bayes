@@ -52,7 +52,6 @@ def read_filter_measures():
 # load the measured magnitudes
     measures={}
     for ilambda in lambda_vec:
-        print(ilambda)
         if (dic_filt[ilambda]["active"]==1):
             measures[ilambda] = {}
             t_tot = np.asarray([])

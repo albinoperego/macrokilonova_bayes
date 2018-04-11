@@ -145,7 +145,7 @@ print(logL)
 # write out the output
 ############################## 
 
-write_output = False
+write_output = True
 if (write_output):
 
     model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0)
@@ -172,7 +172,7 @@ if (write_output):
 # plot some of the lightcurves 
 ############################### 
 
-plot_separately = False          # Choose to plot all lightcurves in different bands on the same plot 
+plot_separately = True           # Choose to plot all lightcurves in different bands on the same plot 
 plot_together = False	         # or to plot lightcurve and data in each band on different plots
 
 if (plot_separately):			# plot lightcurve and data in each band separately

@@ -75,6 +75,7 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
+        self.Teff = []
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
@@ -85,30 +86,45 @@ class Shell(object):
             mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
 
-            self.physical_radius.append(self.r_ph_calc(v_fs, time))
 
-            self.Lbol.append([self.bolometric_luminosity(m,
-                                                    t,
-                                                    t0eps,
-                                                    sigma0,
-                                                    eps0,
-                                                    a_eps_nuc,
-                                                    b_eps_nuc,
-                                                    t_eps_nuc,
-                                                    m_ej,
-                                                    omega,
-                                                    v_rms,
-                                                    kappa,
-                                                    cnst_eff,
-                                                    alpha) for t,m in zip(time,m_rad)])
+            Ltmp = np.array([self.bolometric_luminosity(m,
+                                                        t,
+                                                        t0eps,
+                                                        sigma0,
+                                                        eps0,
+                                                        a_eps_nuc,
+                                                        b_eps_nuc,
+                                                        t_eps_nuc,
+                                                        m_ej,
+                                                        omega,
+                                                        v_rms,
+                                                        kappa,
+                                                        cnst_eff,
+                                                        alpha) for t,m in zip(time,m_rad)])
 
-        self.physical_radius = np.array(self.physical_radius)
-        self.Lbol = np.array(self.Lbol)
-        tmp = []
+            rtmp = self.r_ph_calc(v_fs, time)
 
-        for k in range(len(angular_distribution)):
-            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.Lbol[k,:],self.physical_radius[k,:])]))
-            self.Teff = np.asarray(tmp)
+            T_floor = 1000.
+            Ttmp = np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)])
+
+            self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,Ltmp)]))
+
+            self.Teff.append(np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)]))
+            self.Lbol.append(Ltmp)
+#            self.physical_radius.append(rtmp)
+
+#        self.physical_radius = np.array(self.physical_radius)
+#        self.Lbol = np.array(self.Lbol)
+
+#        tmp = []
+
+#        for k in range(len(angular_distribution)):
+#            tmp.append(np.array([T_eff_calc(L,omega_distribution[k],R) for L,R in zip(self.Lbol[k,:],self.physical_radius[k,:])]))
+#            self.Teff = np.asarray(tmp)
+
+
+        print(self.Teff)
+
         return self.physical_radius, self.Lbol, self.Teff
 
 #======================================================================#
