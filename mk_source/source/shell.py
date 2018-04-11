@@ -43,6 +43,14 @@ class Shell(object):
         z = self.op_dist(angular_distribution,**kwargs)
         return x, y, z
 
+    def calc_Tfloor(self,kappa,T_floor_LA,T_floor_Ni):
+        if (kappa < 1.):
+            return T_floor_Ni
+        elif (kappa > 10.):
+            return T_floor_LA
+        else:
+            return 0.5*(T_floor_Ni + T_floor_LA)
+
     def expansion_angular_distribution(self,
                                        angular_distribution,
                                        omega_distribution,
@@ -66,6 +74,8 @@ class Shell(object):
         a_eps_nuc = glob_vars['a_eps_nuc']
         b_eps_nuc = glob_vars['b_eps_nuc']
         t_eps_nuc = glob_vars['t_eps_nuc']
+        T_floor_Ni = glob_vars['T_floor_Ni']
+        T_floor_LA = glob_vars['T_floor_LA']
 
         if (shell_vars['m_ej'] == None):
             m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
@@ -103,8 +113,9 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
 
-            T_floor = 10.
-            self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,Ltmp)]))
+            Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
+
+            self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
 
@@ -159,7 +170,7 @@ class Shell(object):
         Lum=integral*np.exp(-(t**2.)/(td**2.))/td
         return(Lum)
 
-    def villar(self,time,omega,m_ej,v_ej,k):
+    def villar(self,time,omega,m_ej,v_ej,k,T_floor_LA,T_floor_Ni):
 		# Interpolation from Barnes et al. (2016) using module 'interpolation_barnes'.
 		# Now it uses a single variable [m_ej/(v_ej^2)] instead of using m_ej and v_ej separately.
         a = itp.int_a(m_ej/(v_ej**2))
@@ -168,7 +179,7 @@ class Shell(object):
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
         L_bol=self.L(omega,time,k,m_ej,v_ej,a,b,d)
-        T_floor = 10.
+        T_floor = self.calc_Tfloor(k,T_floor_LA,T_floor_Ni)
         rtmp = v_ej*time
         R_phot=np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
 #        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
@@ -198,6 +209,8 @@ class Shell(object):
         a_eps_nuc = glob_vars['a_eps_nuc']
         b_eps_nuc = glob_vars['b_eps_nuc']
         t_eps_nuc = glob_vars['t_eps_nuc']
+        T_floor_Ni = glob_vars['T_floor_Ni']
+        T_floor_LA = glob_vars['T_floor_LA']
 
         if (shell_vars['m_ej'] == None):
             m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
@@ -217,13 +230,12 @@ class Shell(object):
             #print(kappa)
             #print(time)
 
-            tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa)
+            tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa,T_floor_LA,T_floor_Ni)
 
             self.Lbol.append(tmp1)
             self.physical_radius.append(tmp2)
-#            self.Teff.append(tmp3)
 
-        return self.physical_radius, self.Lbol #, self.Teff
+        return self.physical_radius, self.Lbol
 
 #=======================================================================
 

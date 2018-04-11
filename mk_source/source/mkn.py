@@ -105,6 +105,8 @@ glob_params = {'v_min':1.e-7,
 
 glob_vars = {'m_disk':0.09,
              'eps0':1.5e19, 
+             'T_floor_LA':1000., 
+             'T_floor_Ni':3000., 
              'a_eps_nuc':0.5,
              'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
@@ -116,17 +118,6 @@ r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            shell_vars,
                            glob_vars,
                            glob_params)
-
-'''
-##########################
-# compute the magnitudes from a certain distance
-D = 40.e+6*units.pc2cm
-model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0)
-
-# compute the residuals
-residuals = ft.calc_residuals(mag,model_mag,t0)
-##########################
-'''
 
 # compute the residuals
 residuals = ft.calc_all_residuals(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0,mag)
