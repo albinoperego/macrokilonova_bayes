@@ -75,7 +75,7 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-        self.Teff = []
+#        self.Teff = []
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
@@ -105,11 +105,11 @@ class Shell(object):
             rtmp = self.r_ph_calc(v_fs, time)
 
             T_floor = 1000.
-            Ttmp = np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)])
+#            Ttmp = np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)])
 
             self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,Ltmp)]))
 
-            self.Teff.append(np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)]))
+#            self.Teff.append(np.array([max(T_eff_calc(L,omega,r),T_floor) for L,r in zip(Ltmp,rtmp)]))
             self.Lbol.append(Ltmp)
 #            self.physical_radius.append(rtmp)
 
@@ -123,9 +123,9 @@ class Shell(object):
 #            self.Teff = np.asarray(tmp)
 
 
-        print(self.Teff)
+#        print(self.Teff)
 
-        return self.physical_radius, self.Lbol, self.Teff
+        return self.physical_radius, self.Lbol #, self.Teff
 
 #======================================================================#
 
@@ -186,8 +186,8 @@ class Shell(object):
         v_ej = v_ej * units.c
         L_bol=self.L(omega,time,k,m_ej,v_ej,a,b,d)
         R_phot=v_ej*time
-        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
-        return(L_bol,R_phot,T_BB)
+#        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
+        return(L_bol,R_phot)#,T_BB)
 
 
     def expansion_angular_distribution_villar(self,
@@ -222,7 +222,7 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-        self.Teff = []
+#        self.Teff = []
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
@@ -232,13 +232,13 @@ class Shell(object):
             #print(kappa)
             #print(time)
 
-            tmp1,tmp2,tmp3 = self.villar(time,omega,m_ej,v_rms,kappa)
+            tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa)
 
             self.Lbol.append(tmp1)
             self.physical_radius.append(tmp2)
-            self.Teff.append(tmp3)
+#            self.Teff.append(tmp3)
 
-        return self.physical_radius, self.Lbol, self.Teff
+        return self.physical_radius, self.Lbol #, self.Teff
 
 #=======================================================================
 

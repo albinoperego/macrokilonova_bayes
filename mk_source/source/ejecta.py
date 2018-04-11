@@ -34,15 +34,15 @@ class Ejecta(object):
                    glob_params,
                    **kwargs):
 
-        model_grossman = True
-        model_villar = False
+        model_grossman = False
+        model_villar = True
 
         photospheric_radii = []
         bolometric_luminosities = []
         for c in self.components:
           
             if (model_grossman):
-                r, Lb, Tc = c.expansion_angular_distribution(angular_distribution,
+                r, Lb = c.expansion_angular_distribution(angular_distribution,
                                                     omega_distribution,
                                                      time,
                                                      shell_vars[c.name],
@@ -50,7 +50,7 @@ class Ejecta(object):
                                                      glob_params,
                                                      **kwargs)
             elif (model_villar):    
-                r, Lb, Tc = c.expansion_angular_distribution_villar(angular_distribution,
+                r, Lb = c.expansion_angular_distribution_villar(angular_distribution,
                                                      omega_distribution,
                                                      time,
                                                      shell_vars[c.name],
