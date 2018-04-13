@@ -8,14 +8,14 @@ import ejecta as ej
 import matplotlib.pyplot as plt
 
 # global properties of the source
-D = 40.e+6*units.pc2cm
-t0 = 57982.529
+D = 40.e+6*units.pc2cm    # source distance [cm]
+t0 = 57982.529            # universal time of the observation [days]
 
 # initialize the angular distribution
-n_slices = 12
-dist_slices = "cos_uniform"
+n_slices = 12                   # number of slices in which the polar angle is discretized [12-18-24-30]
+dist_slices = "cos_uniform"     # discretization law for the polar angle [uniform and cos_uniform]
 AD = ad.AngularDistribution(dist_slices,n_slices)
-angular_distribution, omega_distribution = AD(n_slices/2)
+angular_distribution, omega_distribution = AD(n_slices/2)   # due to the symmetry abount the equatorial plane, the number of independent slices is half
 
 print('')
 print('I have initialized the angles')
@@ -28,7 +28,7 @@ print('')
 print('I have initialized the filters')
 
 #initialize the observer location
-view_angle = 90.
+view_angle = 30.                # viewing angle between the source and the observer
 FF = op.ObserverProjection(n_slices,dist_slices)
 flux_factor = FF(view_angle)#,view_angle_delta)
 
@@ -36,10 +36,10 @@ print('')
 print('I have initialized the observer location')
 
     #initialize the time
-time_min = 3600.      #
-time_max = 2000000.   #
-n_time = 200
-tscale   = 'log'
+time_min = 3600.      # minimum time [s]
+time_max = 2000000.   # maximum time [s]
+n_time   = 200        # number of bins in time
+tscale   = 'log'      # kind of spacing in time [log - linear]
 # initialize global time
 if (tscale == 'linear'):
     time = np.linspace(time_min,time_max,num=n_time)
@@ -62,14 +62,14 @@ E = ej.Ejecta(3, params.keys(), params)
 shell_vars={}
 
 shell_vars['dynamics'] = {'xi_disk':None,
-                      'm_ej':0.04,
-                      'central_vel':0.33,
-                      'low_lat_vel':None,
-                      'high_lat_vel':None,
-                      'step_angle_vel':None,
-                      'low_lat_op':30.,
-                      'high_lat_op':10.0,
-                      'step_angle_op':math.radians(45.)}
+                          'm_ej':0.04,
+                          'central_vel':0.33,
+                          'low_lat_vel':None,
+                          'high_lat_vel':None,
+                          'step_angle_vel':None,
+                          'low_lat_op':30.,
+                          'high_lat_op':10.0,
+                          'step_angle_op':math.radians(45.)}
 
 shell_vars['wind'] = {'xi_disk':0.02,
                       'm_ej':None,
@@ -101,7 +101,7 @@ glob_params = {'v_min':1.e-7,
                'alpha':1.3,
                't0eps':1.3,
                'cnst_eff':0.3333,
-               'lc model':'villar'}  #villar or grossman
+               'lc model':'grossman'}  #villar or grossman
 
 glob_vars = {'m_disk':0.09,
              'eps0':1.5e19, 

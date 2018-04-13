@@ -205,7 +205,6 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-#        self.Teff = []
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
             tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa,glob_vars,glob_params)
