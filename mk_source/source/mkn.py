@@ -101,7 +101,7 @@ glob_params = {'v_min':1.e-7,
                'alpha':1.3,
                't0eps':1.3,
                'cnst_eff':0.3333,
-               'lc model':'grossman'}  #villar or grossman
+               'lc model':'villar'}  #villar or grossman
 
 glob_vars = {'m_disk':0.09,
              'eps0':1.5e19, 
@@ -110,7 +110,6 @@ glob_vars = {'m_disk':0.09,
              'a_eps_nuc':0.5,
              'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
-
 
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,

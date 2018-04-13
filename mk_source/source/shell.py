@@ -43,6 +43,14 @@ class Shell(object):
         z = self.op_dist(angular_distribution,**kwargs)
         return x, y, z
 
+    def calc_Tfloor(self,kappa,T_floor_LA,T_floor_Ni):
+        if (kappa < 1.):
+            return T_floor_Ni
+        elif (kappa > 10.):
+            return T_floor_LA
+        else:
+            return 0.5*(T_floor_Ni + T_floor_LA)
+
     def expansion_angular_distribution(self,
                                        angular_distribution,
                                        omega_distribution,
@@ -66,6 +74,8 @@ class Shell(object):
         a_eps_nuc = glob_vars['a_eps_nuc']
         b_eps_nuc = glob_vars['b_eps_nuc']
         t_eps_nuc = glob_vars['t_eps_nuc']
+        T_floor_Ni = glob_vars['T_floor_Ni']
+        T_floor_LA = glob_vars['T_floor_LA']
 
         if (shell_vars['m_ej'] == None):
             m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
@@ -140,6 +150,7 @@ class Shell(object):
     def L(self,omega,t,k,m_ej,v_ej,glob_vars,glob_params):
         td=self.t_d(omega,k,m_ej,v_ej)
         init_x = np.logspace(-3,np.log10(t[0]),100.)
+        init_y = self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)
         init_y = (self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)*np.exp((init_x**2)/(td**2))*init_x/td)
         init_int=integrate.trapz(init_y,init_x)
         cut = t
@@ -150,10 +161,12 @@ class Shell(object):
         Lum=integral*np.exp(-(t**2.)/(td**2.))/td
         return(Lum)
 
-    def villar(self,time,omega,m_ej,v_ej,k,glob_params,glob_vars):
+    def villar(self,time,omega,m_ej,v_ej,k,glob_vars,glob_params):
+        T_floor_Ni = glob_vars['T_floor_Ni']
+        T_floor_LA = glob_vars['T_floor_LA']
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
-        L_bol=self.L(omega,time,k,m_ej,v_ej,glob_params,glob_vars)
+        L_bol=self.L(omega,time,k,m_ej,v_ej,glob_vars,glob_params)
         T_floor = 1000.
         rtmp = v_ej*time
         R_phot=np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
@@ -169,7 +182,7 @@ class Shell(object):
                                               glob_vars,
                                               glob_params,
                                               **kwargs):
-                                       
+        
 # assign the global model variables
         v_min    = glob_params['v_min']
         n_v      = glob_params['n_v']
@@ -184,6 +197,8 @@ class Shell(object):
         a_eps_nuc = glob_vars['a_eps_nuc']
         b_eps_nuc = glob_vars['b_eps_nuc']
         t_eps_nuc = glob_vars['t_eps_nuc']
+        T_floor_Ni = glob_vars['T_floor_Ni']
+        T_floor_LA = glob_vars['T_floor_LA']
 
         if (shell_vars['m_ej'] == None):
             m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
@@ -196,14 +211,11 @@ class Shell(object):
 #        self.Teff = []
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
-
             tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa,glob_vars,glob_params)
-
             self.Lbol.append(tmp1)
             self.physical_radius.append(tmp2)
-#            self.Teff.append(tmp3)
 
-        return self.physical_radius, self.Lbol #, self.Teff
+        return self.physical_radius, self.Lbol
 
 #=======================================================================
 
