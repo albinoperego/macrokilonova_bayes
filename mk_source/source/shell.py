@@ -112,9 +112,8 @@ class Shell(object):
                                                         alpha) for t,m in zip(time,m_rad)])
 
             rtmp = self.r_ph_calc(v_fs, time)
-
-            T_floor = 1000.
-            self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,Ltmp)]))
+            Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
+            self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
 
@@ -150,7 +149,6 @@ class Shell(object):
     def L(self,omega,t,k,m_ej,v_ej,glob_vars,glob_params):
         td=self.t_d(omega,k,m_ej,v_ej)
         init_x = np.logspace(-3,np.log10(t[0]),100.)
-        init_y = self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)
         init_y = (self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)*np.exp((init_x**2)/(td**2))*init_x/td)
         init_int=integrate.trapz(init_y,init_x)
         cut = t
@@ -167,11 +165,10 @@ class Shell(object):
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
         L_bol=self.L(omega,time,k,m_ej,v_ej,glob_vars,glob_params)
-        T_floor = 1000.
+        T_floor = self.calc_Tfloor(k,T_floor_LA,T_floor_Ni)
         rtmp = v_ej*time
         R_phot=np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
-#        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
-        return(L_bol,R_phot)#,T_BB)
+        return(L_bol,R_phot)
 
 
     def expansion_angular_distribution_villar(self,
