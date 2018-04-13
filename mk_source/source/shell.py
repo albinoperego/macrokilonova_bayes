@@ -103,7 +103,7 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
 
-            T_floor = 10.
+            T_floor = 1000.
             self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
@@ -116,59 +116,45 @@ class Shell(object):
 
 # TIME-SCALE
     def t_d(self,omega,k,m_ej,v_ej):
-        beta=13.4
-        m = (4.*np.pi)*m_ej/omega
-        return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
+		beta=13.4
+		m = (4.*np.pi)*m_ej/omega
+		return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
 
-# THERMALISATION EFFICIENCY
-# Note: If input parameter is outside the interpolation range (at least one of a,b or d is 0) returns thermalisation efficiency=0.5 
-    def epsilon(self,t,a,b,d):
-        if (a*b*d==0):
-            print('\n Mass and velocity outside interpolation range for Barnes a,b,d parameters ... Returning Thermalisation Efficiency = 0.5\n')
-            return(0.5)
-        else:
-            return(0.36*(np.exp(-a*t/86400.)+((np.log(1.+2.*b*((t/86400.)**d)))/(2.*b*((t/86400.)**d)))))
-#       return(0.5)
-
-# RADIOACTIVE HEATING RATE
-    def L_in(self,t,m_ej):
-        t_0=1.3; sigma=0.11
-        return(4.e18*m_ej*((0.5-((np.arctan((t-t_0)/(sigma)))/np.pi))**1.3))
-
-# Epsilon_Y
-# Factor that introduces heating rate dependence on opacity from Perego et al. (2017)
-    e_min=0.5; e_max=2.5; t_e=86400.
-    def e_y(self,t,k):
-	    if(k>2.):
-		    return(1.)
-	    else:
-		    return(self.e_min+self.e_max/(1.+np.exp(4.*(t/self.t_e-1.))))                
+# NUCLEAR HEATING RATE
+    def L_in(self,omega,k,t,m_ej,v_ej,glob_vars,glob_params):
+        eps0      = glob_vars['eps0']
+        a_eps_nuc = glob_vars['a_eps_nuc']
+        b_eps_nuc = glob_vars['b_eps_nuc']
+        t_eps_nuc = glob_vars['t_eps_nuc']
+        sigma0   = glob_params['sigma0']
+        alpha    = glob_params['alpha']
+        t0eps    = glob_params['t0eps']
+        cnst_eff = glob_params['cnst_eff']       
+        return(nuclear_heat.heat_rate_w_ye_dependence(alpha,t,t0eps,sigma0,eps0,self.ET,m_ej,
+                                                      omega,v_ej,cnst_eff,cnst_a_eps_nuc=a_eps_nuc,
+                                                      cnst_b_eps_nuc=b_eps_nuc,cnst_t_eps_nuc=t_eps_nuc,
+                                                      opacity=k,normalize=True)*m_ej)
 
 # BOLOMETRIC LUMINOSITY
 # Note: to avoid overflow in e^((t/td)^2) a 'cut' is introduced. If (t/td)^2 > 500, it is fixed to 500. Now L is computed also at later times.
-    def L(self,omega,t,k,m_ej,v_ej,a,b,d):
+    def L(self,omega,t,k,m_ej,v_ej,glob_vars,glob_params):
         td=self.t_d(omega,k,m_ej,v_ej)
         init_x = np.logspace(-3,np.log10(t[0]),100.)
-        init_y = (self.L_in(init_x,m_ej)*self.epsilon(init_x,a,b,d)*self.e_y(init_x,k)*np.exp((init_x**2)/(td**2))*init_x/td)
+        init_y = (self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)*np.exp((init_x**2)/(td**2))*init_x/td)
         init_int=integrate.trapz(init_y,init_x)
         cut = t
         cut = (cut**2)/((td**2)*500)
         cut[t<td*np.sqrt(500)]=1
-        integral = integrate.cumtrapz(self.L_in(t,m_ej)*self.epsilon(t,a,b,d)*self.e_y(t,k)*np.exp((t/(td*cut))**2)*(t/td),t,initial=0)
+        integral = integrate.cumtrapz(self.L_in(omega,k,t,m_ej,v_ej,glob_vars,glob_params)*np.exp((t/(td*cut))**2)*(t/td),t,initial=0)
         integral+=init_int
         Lum=integral*np.exp(-(t**2.)/(td**2.))/td
         return(Lum)
 
-    def villar(self,time,omega,m_ej,v_ej,k):
-		# Interpolation from Barnes et al. (2016) using module 'interpolation_barnes'.
-		# Now it uses a single variable [m_ej/(v_ej^2)] instead of using m_ej and v_ej separately.
-        a = itp.int_a(m_ej/(v_ej**2))
-        b = itp.int_b(m_ej/(v_ej**2))
-        d = itp.int_d(m_ej/(v_ej**2))
+    def villar(self,time,omega,m_ej,v_ej,k,glob_params,glob_vars):
         m_ej = m_ej * units.Msun
         v_ej = v_ej * units.c
-        L_bol=self.L(omega,time,k,m_ej,v_ej,a,b,d)
-        T_floor = 10.
+        L_bol=self.L(omega,time,k,m_ej,v_ej,glob_params,glob_vars)
+        T_floor = 1000.
         rtmp = v_ej*time
         R_phot=np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
 #        T_BB=(L_bol/(4.*np.pi*units.sigma_SB*(R_phot**2.)))**0.25
@@ -211,13 +197,7 @@ class Shell(object):
         
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
-            #print(omega)
-            #print(m_ej)
-            #print(v_rms)
-            #print(kappa)
-            #print(time)
-
-            tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa)
+            tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa,glob_vars,glob_params)
 
             self.Lbol.append(tmp1)
             self.physical_radius.append(tmp2)
@@ -240,7 +220,7 @@ class Shell(object):
                           cnst_a_eps_nuc=a_eps_nuc,
                           cnst_b_eps_nuc=b_eps_nuc,
                           cnst_t_eps_nuc=t_eps_nuc,
-                          opacity=kappa)
+                          opacity=kappa,normalize=False)
         return m_rad*eps
 
     def r_ph_calc(self, vel, t):
