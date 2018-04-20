@@ -47,11 +47,11 @@ class Thermalization(object):
         return (self.fa(xnew,ynew),self.fb(xnew,ynew),self.fd(xnew,ynew))
 
     def therm_efficiency_params_1d(self, m,omega,v):
-	m_iso = units.fourpi/omega * m
-	# assign the value of x=m/v^2
-	xnew = m_iso/(v*v)
-	# compute the parameters by 1-d interpolation
-	return (self.fa_1d(xnew),self.fb_1d(xnew),self.fd_1d(xnew))
+        m_iso = units.fourpi/omega * m
+        # assign the value of x=m/v^2
+        xnew = m_iso/(v*v)
+        # compute the parameters by 1-d interpolation
+        return (self.fa_1d(xnew),self.fb_1d(xnew),self.fd_1d(xnew))
 
 
 def BKWM_therm_efficiency(cls, **kwargs):

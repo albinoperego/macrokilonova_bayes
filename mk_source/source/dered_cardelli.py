@@ -6,11 +6,11 @@ import numpy as np
 def dered_CCM(wave, EBV=0.105, R_V=3.1):
     '''
     - Input: 
-		wave 1D array (Nanometers)
-		EBV: E(B-V) (default 0.105)
-		R_V: Reddening coefficient to use (default 3.1)    
+                wave 1D array (Nanometers)
+                EBV: E(B-V) (default 0.105)
+                R_V: Reddening coefficient to use (default 3.1)    
     - Output: 
-		A_lambda correction according to the CCM89 Law.
+                A_lambda correction according to the CCM89 Law.
     '''
     x = 1000./ wave  #Convert to inverse microns
     a = np.zeros_like(x)

@@ -118,13 +118,13 @@ class Shell(object):
 
 #======================================================================#
 
-#				VILLAR
+#  VILLAR MODEL
 
 # TIME-SCALE
     def t_d(self,omega,k,m_ej,v_ej):
-		beta=13.4
-		m = (4.*np.pi)*m_ej/omega
-		return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
+        beta=13.4
+        m = (4.*np.pi)*m_ej/omega
+        return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
 
 # NUCLEAR HEATING RATE
     def L_in(self,omega,k,t,m_ej,v_ej,glob_vars,glob_params):

@@ -162,10 +162,10 @@ if (write_output):
 # plot some of the lightcurves 
 ############################### 
 
-plot_separately = True           # Choose to plot all lightcurves in different bands on the same plot 
-plot_together = False	         # or to plot lightcurve and data in each band on different plots
+plot_separately = True           # Choose to plot all lightcurves in different bands on the same plot
+plot_together = False            # or to plot lightcurve and data in each band on different plots
 
-if (plot_separately):			# plot lightcurve and data in each band separately
+if (plot_separately):            # plot lightcurve and data in each band separately
     dic,lambdas,misure = ft.read_filter_measures()
     fig1 = plt.figure()
     for ilambda in mag.keys():
@@ -178,7 +178,7 @@ if (plot_separately):			# plot lightcurve and data in each band separately
             plt.xlim(0.1,10)
             plt.ylim(27,15)
             plt.show()
-elif (plot_together) :							# plot lightcurves for every band in the same plot
+elif (plot_together):        # plot lightcurves for every band in the same plot
     fig1 = plt.figure()
     dic,lambdas,misure = ft.read_filter_measures()
     for ilambda in mag.keys():

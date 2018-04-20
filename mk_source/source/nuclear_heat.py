@@ -20,17 +20,17 @@ def calc_eps_nuc(kappa,time,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc):
     else:
         return 0.5*eps0*(1 + yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time))
 
-def yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time):	
+def yevar_eps_nuc(a_eps_nuc,b_eps_nuc,t_eps_nuc,time):
     time_day=time*units.sec2day
     if (np.isscalar(time_day)):
-		tmp = min(max(4*time_day-4.,-20),20)   # t_eps_nuc still missing!
+        tmp = min(max(4*time_day-4.,-20),20)   # t_eps_nuc still missing!
     else:
-		T1=np.zeros(len(time_day))
-		T1[(4.*time_day-4.)>(-20)]=4.*time_day[(4.*time_day-4.)>(-20)]-4.
-		T1[(4.*time_day-4.)<(-20)]=-20.
-		tmp=np.zeros(len(time_day))
-		tmp[T1<20.]=T1[T1<20.]
-		tmp[T1>20.]=20	
+        T1=np.zeros(len(time_day))
+        T1[(4.*time_day-4.)>(-20)]=4.*time_day[(4.*time_day-4.)>(-20)]-4.
+        T1[(4.*time_day-4.)<(-20)]=-20.
+        tmp=np.zeros(len(time_day))
+        tmp[T1<20.]=T1[T1<20.]
+        tmp[T1>20.]=20.
     return a_eps_nuc + b_eps_nuc/(1.+np.exp(tmp))
 
 def heat_rate_w_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_eff, **kwargs):
@@ -40,16 +40,16 @@ def heat_rate_w_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_ef
     kappa     = kwargs['opacity']
     eps_nuc = calc_eps_nuc(kappa,t,eps0,a_eps_nuc,b_eps_nuc,t_eps_nuc)
     if(kwargs['normalize']):
-		m_ej=m_ej/units.Msun
-		v_rms=v_rms/units.c
+    m_ej=m_ej/units.Msun
+    v_rms=v_rms/units.c
     eps_th = ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=0.333)
     return eps_nuc*(0.5 - units.oneoverpi * np.arctan((t-t0)/sigma0))**alpha * (2.*eps_th)  #here I am dividing eps_th by 0.5
 
 def heat_rate_wo_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_eff):
     eps_nuc = eps_cnst_fac * eps0
     if(kwargs['normalize']):
-		m_ej=m_ej/units.Msun
-		v_rms=v_rms/units.c    
+    m_ej=m_ej/units.Msun
+    v_rms=v_rms/units.c    
     eps_th = ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=0.333)
     return eps_nuc*(0.5 - units.oneoverpi * np.arctan((t-t0)/sigma0))**alpha * (2.*eps_th)  #here I am dividing eps_th by 0.5
 
