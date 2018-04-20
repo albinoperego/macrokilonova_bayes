@@ -18,7 +18,7 @@ class Thermalization(object):
             self.fb = interpolate.interp2d(x, y, b, kind='linear')
             self.fd = interpolate.interp2d(x, y, d, kind='linear')
         elif (therm_eff_model=='BKWM_1d'):
-	    self.therm_efficiency = BKWM_1d_therm_efficiency
+            self.therm_efficiency = BKWM_1d_therm_efficiency
         # 1-D
         # Uses a single variable [m_ej/(v_ej^2)] instead of using m_ej and v_ej separately.
             x_barnes = [0.011,0.025,0.0556,0.1,0.111,0.125,0.25,0.5,0.5556,1.,1.25,5.]
