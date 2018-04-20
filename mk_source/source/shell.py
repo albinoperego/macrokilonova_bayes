@@ -11,7 +11,6 @@ import observer_projection as op
 import nuclear_heat
 import scipy.integrate as integrate
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
-import interpolation_barnes as itp
 
 class Shell(object):
     """
