@@ -53,9 +53,9 @@ print('')
 print('I have initialized the global time')
 
 params = {}
-params['dynamics']    = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
-params['wind']    = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
-params['secular'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
+params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
+params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
+params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
 
 E = ej.Ejecta(3, params.keys(), params)
 

@@ -14,7 +14,7 @@ from expansion_model_single_spherical import ExpansionModelSingleSpherical
 from shell import Shell
 
 def T_eff_calc(Lum,dOmega,r_ph):
-    return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
+    return (Lum/(dOmega* r_ph*r_ph *units.sigma_SB))**(0.25)
 
 class Ejecta(object):
 

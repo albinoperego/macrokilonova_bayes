@@ -13,9 +13,6 @@ import scipy.integrate as integrate
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
 import interpolation_barnes as itp
 
-def T_eff_calc(Lum,dOmega,r_ph):
-    return (Lum/(dOmega*r_ph**2*units.sigma_SB))**(1./4.)
-
 class Shell(object):
     """
     Ejecta shell class
@@ -113,7 +110,7 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
             Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
-            self.physical_radius.append(np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
+            self.physical_radius.append(np.array([min(r,np.sqrt(L/(units.fourpisigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
 
@@ -167,7 +164,7 @@ class Shell(object):
         L_bol=self.L(omega,time,k,m_ej,v_ej,glob_vars,glob_params)
         T_floor = self.calc_Tfloor(k,T_floor_LA,T_floor_Ni)
         rtmp = v_ej*time
-        R_phot=np.array([min(r,np.sqrt(L/(4.*np.pi*units.sigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
+        R_phot=np.array([min(r,np.sqrt(L/(units.fourpisigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
         return(L_bol,R_phot)
 
 

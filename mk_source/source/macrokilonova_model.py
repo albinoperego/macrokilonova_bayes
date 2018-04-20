@@ -22,7 +22,6 @@ import itertools as it
 
 import angular_distribution as ad
 import filters as ft
-import lightcurve as lc
 import numpy as np
 import observer_projection as op
 import units
@@ -68,7 +67,6 @@ class MacroKilonovaModel(cpnest.model.Model):
             print('Error! Wrong option for the time scale')
             exit(-1)
         
-        
         # number and distribution of slices for the angular integrals
         self.n_slices = n_slices
         self.dist_slices = dist_slices
@@ -77,7 +75,6 @@ class MacroKilonovaModel(cpnest.model.Model):
         self.AD = ad.AngularDistribution(self.dist_slices,self.n_slices)
         self.ang_dist, self.omega_dist = self.AD(self.n_slices/2)
 
-        
         # initialize the filters
         print("Initialising filters")
         self.FT = ft.Filters("measures")
@@ -98,7 +95,7 @@ class MacroKilonovaModel(cpnest.model.Model):
 
         model_parameters=['distance', 'view_angle']
         model_bounds = {'view_angle':[0.0,90.0],
-                        'distance':[35,45]}
+                        'distance':[39.9,40.1]}
         
         for item in self.glob_vars.keys():
             model_parameters.append(item)
@@ -172,8 +169,10 @@ class MacroKilonovaModel(cpnest.model.Model):
                 if v is not None and type(v) is not bool:
                     self.shell_params[s][item] = x[item+'_%s'%s]
         # impose the mass constraint
-        self.shell_params['dynamics']['xi_disk'] = 1.0 - self.shell_params['wind']['xi_disk'] - self.shell_params['secular']['xi_disk']
-        x['xi_disk_dynamics'] = self.shell_params['dynamics']['xi_disk']
+#        self.shell_params['dynamics']['xi_disk'] = 1.0 - self.shell_params['wind']['xi_disk'] - self.shell_params['secular']['xi_disk']
+#        x['xi_disk_dynamics'] = self.shell_params['dynamics']['xi_disk']
+        self.shell_params['secular']['xi_disk'] = min(self.shell_params['secular']['xi_disk'], 1.0 - self.shell_params['wind']['xi_disk'])
+        x['xi_disk_secular'] = self.shell_params['secular']['xi_disk']
         
     def log_likelihood(self,x):
 
@@ -238,22 +237,22 @@ if __name__=='__main__':
     glob_vars = {'m_disk':[0.0001, 0.5],
                  'eps0':  [2.e17, 2.5e20],
                  'T_floor_LA':[100.,3000.],
-                 'T_floor_Ni':[100.,3000.],
-                 'a_eps_nuc':[0.495, 0.505],
-                 'b_eps_nuc':[2.45, 2.55],
-                 't_eps_nuc':[0.95, 1.05]}
+                 'T_floor_Ni':[3000.,8000.],
+                 'a_eps_nuc':[0.499, 0.501],
+                 'b_eps_nuc':[2.49, 2.51],
+                 't_eps_nuc':[0.99, 1.01]}
     
     # hardcoded ejecta geometric and thermal parameters
     ejecta_params = {}
-    ejecta_params['dynamics']   = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-    ejecta_params['wind']       = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-    ejecta_params['secular']    = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM', 'eps_ye_dep':True}
+    ejecta_params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM_1d','eps_ye_dep':True}
+    ejecta_params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM_1d','eps_ye_dep':True}
+    ejecta_params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM_1d','eps_ye_dep':True}
 
     # set of shell parameters to be sampled on
     shell_vars={}
 
-    shell_vars['dynamics'] = {'xi_disk':[0.0, 1.0],
-                              'm_ej':None,
+    shell_vars['dynamics'] = {'xi_disk':None,
+                              'm_ej':[5.e-4,2.e-2],
                               'central_vel':[0.001, 0.333],
                               'low_lat_vel':None,
                               'high_lat_vel':None,

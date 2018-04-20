@@ -109,7 +109,7 @@ def read_filter_measures():
 
 def planckian(nu,T_plk):
     tmp = (units.h*nu)/(units.kB*T_plk)
-    return (2.*units.h*nu**3)/(units.c**2)/(np.exp(tmp)-1.)
+    return (2.*units.h*nu**3)/(units.c2)/(np.exp(tmp)-1.)
 
 def m_filter(lam,T,rad,dist,ff):
     fnu = calc_fnu(lam,T,rad,dist,ff)
@@ -118,9 +118,9 @@ def m_filter(lam,T,rad,dist,ff):
 def calc_fnu(lam,temp,rad,dist,ff):
   ff1 = ff[:len(ff)//2]
   ff2 = ff[len(ff)//2:]
-  tmp1 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad,ff1,temp)])
-  tmp2 = np.array([r**2 * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
-  return np.sum(tmp1+tmp2)/dist**2
+  tmp1 = np.array([r*r * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad,ff1,temp)])
+  tmp2 = np.array([r*r * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
+  return np.sum(tmp1+tmp2)/(dist*dist)
 
 def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0):
 
@@ -140,7 +140,7 @@ def calc_residuals(data,model,t0):
         if ilambda == 0: 
             continue
 #        fmag = interpolate.interp1d(model[0],model[ilambda], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
-        fmag = np.interp((data[ilambda]['time']-t0)*24.*60.*60., model[0],model[ilambda])
+        fmag = np.interp((data[ilambda]['time']-t0)*units.day2sec, model[0],model[ilambda])
 #        res[ilambda] = np.array([(fmag-m)/sm   for t,m,sm in zip(data[ilambda]['time'],data[ilambda]['mag'],data[ilambda]['sigma'])])
         res[ilambda] = (fmag-data[ilambda]['mag'])  /data[ilambda]['sigma']
     return res
@@ -156,8 +156,8 @@ def calc_all_residuals(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0,data):
         if (len(data[ilambda]['time'])==0):
             continue
 
-        R_intrp = np.array([np.interp((data[ilambda]['time']-t0)*24.*60.*60.,time,x) for x in rad_ray])
-        T_intrp = np.array([np.interp((data[ilambda]['time']-t0)*24.*60.*60.,time,x) for x in T_ray])
+        R_intrp = np.array([np.interp((data[ilambda]['time']-t0)*units.day2sec,time,x) for x in rad_ray])
+        T_intrp = np.array([np.interp((data[ilambda]['time']-t0)*units.day2sec,time,x) for x in T_ray])
 
         ordered_T = np.asarray([list(x) for x in zip(*T_intrp)])
         ordered_R = np.asarray([list(x) for x in zip(*R_intrp)])
