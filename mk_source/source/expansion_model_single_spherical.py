@@ -21,7 +21,7 @@ class ExpansionModelSingleSpherical(object):
 #    1.3125 = 105./80.
 #    2.1875 = 35./16.
         x2 = x*x
-        x3 = x*x2
+        x3 = x2*x
         x5 = x3*x2
         x7 = x5*x2
         return 0.3125*x7 - 1.3125*x5 + 2.1875*x3 - 2.1875*x

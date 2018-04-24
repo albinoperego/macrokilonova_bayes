@@ -86,13 +86,22 @@ class Shell(object):
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
             vel,m_vel,t_diff,t_fs = self.expansion_model(omega,m_ej,v_rms,v_min,n_v,vscale,kappa)
+
             v_diff  = np.interp(time, t_diff[::-1], vel[::-1])
             v_fs    = np.interp(time, t_fs[::-1], vel[::-1])
             mv_diff = np.interp(time, t_diff[::-1], m_vel[::-1])
             mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
 
-
+            """
+            Ltmp = m_rad * self.EPSNUC(alpha,time,t0eps,sigma0,
+                          eps0,self.ET,m_ej,omega,v_rms,
+                          cnst_eff,
+                          cnst_a_eps_nuc=a_eps_nuc,
+                          cnst_b_eps_nuc=b_eps_nuc,
+                          cnst_t_eps_nuc=t_eps_nuc,
+                          opacity=kappa,normalize=False)
+            """
             Ltmp = np.array([self.bolometric_luminosity(m,
                                                         t,
                                                         t0eps,
@@ -110,7 +119,8 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
             Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
-            self.physical_radius.append(np.array([min(r,np.sqrt(L/(units.fourpisigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
+            Tf4 = Tf**4
+            self.physical_radius.append(np.array([min(r,np.sqrt(L/(units.fourpisigma_SB*Tf4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
 
@@ -149,7 +159,9 @@ class Shell(object):
         init_y = (self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)*np.exp((init_x**2)/(td**2))*init_x/td)
         init_int=integrate.trapz(init_y,init_x)
         cut = t
+#        cut = np.array([(tt*tt)/(500.*td*td) for tt in t])
         cut = (cut**2)/((td**2)*500)
+#        cut = (np.asarray(cut)*np.asarray(cut))/((td*td)*500)
         cut[t<td*np.sqrt(500)]=1
         integral = integrate.cumtrapz(self.L_in(omega,k,t,m_ej,v_ej,glob_vars,glob_params)*np.exp((t/(td*cut))**2)*(t/td),t,initial=0)
         integral+=init_int

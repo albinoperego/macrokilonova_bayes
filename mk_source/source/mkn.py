@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 D = 40.e+6*units.pc2cm    # source distance [cm]
 t0 = 57982.529            # universal time of the observation [days]
 
-# initialize the angular distribution
-n_slices = 12                   # number of slices in which the polar angle is discretized [12-18-24-30]
+# initializ the angular distribution
+n_slices = 30                   # number of slices in which the polar angle is discretized [12-18-24-30]
 dist_slices = "cos_uniform"     # discretization law for the polar angle [uniform and cos_uniform]
 AD = ad.AngularDistribution(dist_slices,n_slices)
 angular_distribution, omega_distribution = AD(n_slices/2)   # due to the symmetry abount the equatorial plane, the number of independent slices is half
@@ -39,12 +39,33 @@ print('I have initialized the observer location')
 time_min = 3600.      # minimum time [s]
 time_max = 2000000.   # maximum time [s]
 n_time   = 200        # number of bins in time
-tscale   = 'log'      # kind of spacing in time [log - linear]
+#tscale   = 'linear'      # kind of spacing in time [log - linear]
+tscale   = 'measures'      # kind of spacing in time [log - linear - measures]
 # initialize global time
 if (tscale == 'linear'):
     time = np.linspace(time_min,time_max,num=n_time)
 elif (tscale == 'log'):
     time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
+elif (tscale == 'measures'):
+    toll = 0.05
+    all_time = []
+    for ilambda in mag.keys():
+        if (len(mag[ilambda]['time']>0)):
+            for i in range(len(mag[ilambda]['time'])):
+                all_time.append(mag[ilambda]['time'][i]-t0)
+    all_time = sorted(np.array(all_time))
+    time = []
+    i = 0
+    while (i < len(all_time)):
+        delta = (1.+2.*toll) * all_time[i]
+        i_start = i
+        while (all_time[i] < delta):
+            i = i + 1
+        time.append(0.5*(all_time[i]+all_time[i_start]))
+        if (i == len(all_time)-1):
+            break
+    time = sorted(np.array(time)*units.day2sec)
+    time = np.array(time)
 else:
     print('Error! Wrong option for the time scale')
     exit(-1)
@@ -56,6 +77,7 @@ params = {}
 params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
 params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
 params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
+# BKWM_1d
 
 E = ej.Ejecta(3, params.keys(), params)
 
@@ -111,7 +133,9 @@ glob_vars = {'m_disk':0.09,
              'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
 
-r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
+for j in range(1000):
+
+    r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            time,
                            shell_vars,
@@ -135,7 +159,7 @@ print(logL)
 # write out the output
 ############################## 
 
-write_output = True
+write_output = False
 if (write_output):
 
     model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0)
@@ -162,7 +186,7 @@ if (write_output):
 # plot some of the lightcurves 
 ############################### 
 
-plot_separately = True           # Choose to plot all lightcurves in different bands on the same plot
+plot_separately = False           # Choose to plot all lightcurves in different bands on the same plot
 plot_together = False            # or to plot lightcurve and data in each band on different plots
 
 if (plot_separately):            # plot lightcurve and data in each band separately
