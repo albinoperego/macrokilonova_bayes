@@ -133,9 +133,8 @@ glob_vars = {'m_disk':0.09,
              'b_eps_nuc':2.5,
              't_eps_nuc':1.0}
 
-for j in range(1000):
 
-    r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
+r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            time,
                            shell_vars,
