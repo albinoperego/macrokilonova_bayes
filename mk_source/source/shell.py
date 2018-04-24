@@ -93,7 +93,6 @@ class Shell(object):
             mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
 
-            """
             Ltmp = m_rad * self.EPSNUC(alpha,time,t0eps,sigma0,
                           eps0,self.ET,m_ej,omega,v_rms,
                           cnst_eff,
@@ -116,6 +115,7 @@ class Shell(object):
                                                         kappa,
                                                         cnst_eff,
                                                         alpha) for t,m in zip(time,m_rad)])
+            """
 
             rtmp = self.r_ph_calc(v_fs, time)
             Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
