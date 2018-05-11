@@ -12,20 +12,21 @@
 #SBATCH --mail-type=ALL
 #SBATCH --time=24:00:00
 
-import numpy as np
-import math
 import cpnest.model
-import sys
-import os
-from optparse import OptionParser
 import itertools as it
+import math
+import numpy as np
+from optparse import OptionParser
+import os
+import sys
 
 import angular_distribution as ad
+import ejecta as ej
 import filters as ft
 import numpy as np
 import observer_projection as op
+import source_properties as sp
 import units
-import ejecta as ej
 
 # Necessary to add cwd to path when script run
 # by SLURM (since it executes a copy)
@@ -48,15 +49,17 @@ class MacroKilonovaModel(cpnest.model.Model):
                  ejecta_params,
                  # dictionary of shell parameters defining basic properties of the shell
                  shell_params,
-                 n_slices = 12,
-                 dist_slices = "uniform",
+                 source_name,
                  **kwargs):
 
         super(MacroKilonovaModel,self).__init__(**kwargs)
 
+        # initializing the global properties of the source
+        print('Initializing the properties of the source')
+        SP = sp.SourceProperties(source_name)
         # number and distribution of slices for the angular integrals
-        self.n_slices = n_slices
-        self.dist_slices = dist_slices
+        self.n_slices = glob_params['n slices']
+        self.dist_slices = glob_params['dist slices']
         # initialize the angular distribution
         print("Initialising angular distribution")
         self.AD = ad.AngularDistribution(self.dist_slices,self.n_slices)
@@ -65,42 +68,16 @@ class MacroKilonovaModel(cpnest.model.Model):
         # initialize the filters
         print("Initialising filters")
         self.FT = ft.Filters("measures")
-        self.dic_filt,self.lambda_vec,self.mag = self.FT()
+        self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder)
 
         #initialize the time
-        self.time_min = 3600.      #
-        self.time_max = 2000000.   #
-        self.n_time = 20
-        self.tscale   = 'measures'
-        self.t0 = 57982.529
+        self.time_min = glob_params['time min']      #
+        self.time_max = glob_params['time max']   #
+        self.n_time   = glob_params['n time']
+        self.tscale   = glob_params['scale for t']
+        self.t0 = SP.t0
         # initialize global time
-        if (self.tscale == 'linear'):
-            self.time = np.linspace(self.time_min,self.time_max,num=self.n_time)
-        elif (self.tscale == 'log'):
-            self.time = np.logspace(np.log10(self.time_min),np.log10(self.time_max),num=self.n_time)
-        elif (self.tscale == 'measures'):
-            toll = 0.05
-            all_time = []
-            for ilambda in self.mag.keys():
-                if (len(self.mag[ilambda]['time']>0)):
-                    for i in range(len(self.mag[ilambda]['time'])):
-                        all_time.append(self.mag[ilambda]['time'][i]-self.t0)
-            all_time = sorted(np.array(all_time))
-            self.time = []
-            i = 0
-            while (i < len(all_time)):
-                delta = (1.+2.*toll) * all_time[i]
-                i_start = i
-                while (all_time[i] < delta):
-                    i = i + 1
-                self.time.append(0.5*(all_time[i]+all_time[i_start]))
-                if (i == len(all_time)-1):
-                    break
-            self.time = sorted(np.array(self.time)*units.day2sec)
-            self.time = np.array(self.time)
-        else:
-            print('Error! Wrong option for the time scale')
-            exit(-1)
+        self.time = SP.init_time(self.tscale,self.time_min,self.time_max,self.n_time,self.mag)
         
         # initialise the view angle
         print("Initialising observer projection")
@@ -114,7 +91,6 @@ class MacroKilonovaModel(cpnest.model.Model):
         self.ejecta = ej.Ejecta(len(self.ejecta_params), self.ejecta_params.keys(), self.ejecta_params)
         
         # set of global variables
-
         model_parameters=['distance', 'view_angle']
         model_bounds = {'view_angle':[0.0,90.0],
                         'distance':[39.9,40.1]}
@@ -123,47 +99,6 @@ class MacroKilonovaModel(cpnest.model.Model):
             model_parameters.append(item)
             model_bounds[item] = self.glob_vars[item]
 
-#        for shell, p in self.ejecta_params.iteritems():
-#            print "initialising",shell,"component"
-#            # check for mass distribution choice and add relevant parameter
-#
-#            if p['mass_dist'] =="step":
-#                model_parameters.append('step_angle_mass_%s'%shell)
-#                model_bounds['step_angle_mass_%s'%shell] = [20.0,80.0]
-#
-#            # check for velocity distribution choice and add relevant parameters
-#            if p['vel_dist'] =="step":
-#                model_parameters.append('step_angle_vel_%s'%shell)
-#                model_bounds['step_angle_vel_%s'%shell] = [20.0,80.0]
-#                model_parameters.append('high_lat_vel_%s'%shell)
-#                model_bounds['high_lat_vel_%s'%shell] = [1e-1,7e-1]
-#                model_parameters.append('low_lat_vel_%s'%shell)
-#                model_bounds['low_lat_vel_%s'%shell] = [1e-1,7e-1]
-#            elif p['vel_dist'] =="uniform":
-#                model_parameters.append('central_vel_%s'%shell)
-#                model_bounds['central_vel_%s'%shell] = [1e-1,7e-1]
-#            else:
-#                model_parameters.append('min_vel_%s'%shell)
-#                model_bounds['min_vel_%s'%shell] = [1e-1,7e-1]
-#                model_parameters.append('max_vel_%s'%shell)
-#                model_bounds['max_vel_%s'%shell] = [1e-1,7e-1] # max_vel_dyn > min_vel_dyn
-#
-#            # check for opacity distribution choice and add relevant parameters
-#            if p['op_dist']=="step":
-#                model_parameters.append('step_angle_op_%s'%shell)
-#                model_bounds['step_angle_op_%s'%shell] = [20.0,80.0]
-#                model_parameters.append('high_lat_op_%s'%shell)
-#                model_bounds['high_lat_op_%s'%shell] = [1e-1,1.0]
-#                model_parameters.append('low_lat_op_%s'%shell)
-#                model_bounds['low_lat_op_%s'%shell] = [1.0,50.0]
-#            elif p['op_dist']=="uniform":
-#                model_parameters.append('central_op_%s'%shell)
-#                model_bounds['central_op_%s'%shell] = [1e-1,50.0]
-#            else:
-#                model_parameters.append('min_op_%s'%shell)
-#                model_bounds['min_op_%s'%shell] = [1e-1,1.0]
-#                model_parameters.append('max_op_%s'%shell)
-#                model_bounds['max_op_%s'%shell] = [1.0,50.0] # max_op_dyn > min_op_dyn
         # now add the single shell parameters
         for s in self.shell_params:
             for item in self.shell_params[s]:
@@ -175,8 +110,6 @@ class MacroKilonovaModel(cpnest.model.Model):
         for n in model_parameters:
             self.names.append(n)
             self.bounds.append(model_bounds[n])
-#        print self.names, self.bounds
-#        exit()
 
     def fill_control_structures(self, x):
         # populate the relevant parameters
@@ -191,8 +124,6 @@ class MacroKilonovaModel(cpnest.model.Model):
                 if v is not None and type(v) is not bool:
                     self.shell_params[s][item] = x[item+'_%s'%s]
         # impose the mass constraint
-#        self.shell_params['dynamics']['xi_disk'] = 1.0 - self.shell_params['wind']['xi_disk'] - self.shell_params['secular']['xi_disk']
-#        x['xi_disk_dynamics'] = self.shell_params['dynamics']['xi_disk']
         self.shell_params['secular']['xi_disk'] = min(self.shell_params['secular']['xi_disk'], 1.0 - self.shell_params['wind']['xi_disk'])
         x['xi_disk_secular'] = self.shell_params['secular']['xi_disk']
         
@@ -205,14 +136,6 @@ class MacroKilonovaModel(cpnest.model.Model):
                                                   self.shell_params,
                                                   self.glob_vars,
                                                   self.glob_params)
-
-
-#        # compute the magnitudes from a certain distance
-#        D = x['distance']*1e6*units.pc2cm
-#        model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D,t0)
-
-#        # compute the residuals
-#        residuals = ft.calc_residuals(self.mag,model_mag)
 
         # compute the residuals
         D = x['distance']*1e6*units.pc2cm
@@ -244,16 +167,26 @@ if __name__=='__main__':
     parser.add_option('--poolsize',default=1000,type='int',metavar='k',help='number of points in the ensemble sampler pool')
     (opts,args)=parser.parse_args()
     np.seterr(all='ignore')
-    # set of global parameters not to be fit
-    glob_params = {'v_min':1.e-7,
-                   'n_v':10,
-                   'vscale':'linear',
-                   'sigma0':0.11,
-                   'alpha':1.3,
-                   't0eps':1.3,
-                   'cnst_eff':0.3333,
-                   'lc model':'villar'}  #villar or grossman
-    
+
+    source_name = 'AT2017gfo'
+
+    #dictionary with the global parameters of the model not to be fit
+    glob_params = {'lc model'   :'villar',      # model for the lightcurve (grossman or villar)  
+                   'v_min'      :1.e-7,         # minimal velocity for the Grossman model
+                   'n_v'        :10,            # number of points for the Grossman model
+                   'vscale'     :'linear',      # scale for the velocity in the Grossman model
+                   'sigma0'     :0.11,          # parameter for the nuclear heating rate
+                   'alpha'      :1.3,           # parameter for the nuclear heating rate
+                   't0eps'      :1.3,           # parameter for the nuclear heating rate
+                   'cnst_eff'   :0.3333,        # parameter for the constant heating efficiency
+                   'n slices'   :12,            # number for the number of slices along the polar angle [12,18,24,30]
+                   'dist slices':'uniform',     # discretization law for the polar angle [uniform or cos_uniform]
+                   'time min'   :3600.,         # minimum time [s]
+                   'time max'   :2000000.,      # maximum time [s]
+                   'n time'     :20,            # integer number of bins in time
+                   'scale for t':'linear'       # kind of spacing in time [log - linear - measures]
+                  }
+
     # set of global parameters to be fit
     glob_vars = {'m_disk':[0.0001, 0.5],
                  'eps0':  [2.e17, 2.5e20],
@@ -309,7 +242,7 @@ if __name__=='__main__':
         opts.out_dir='./test/'
 
     if opts.full_run:
-        model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, shell_vars)
+        model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, shell_vars,source_name)
         work  = cpnest.CPNest(model,
                             verbose=2,
                             Poolsize=opts.poolsize,
