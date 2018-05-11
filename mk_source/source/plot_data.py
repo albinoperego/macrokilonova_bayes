@@ -55,7 +55,7 @@ def read_filter_measures():
             for fname in dic_filt[ilambda]["filename"]:
                 print (fname)
 #
-                t,m,sm = read_measurements("filter_data/"+fname)
+                t,m,sm = read_measurements("filter_data_AT2017gfo/"+fname)
                 if(upper_limits):
                     t_tot = np.append(t_tot,t)
                     m_tot = np.append(m_tot,m)

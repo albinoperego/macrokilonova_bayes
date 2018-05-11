@@ -1,86 +1,42 @@
 import angular_distribution as ad
+import ejecta as ej
 import filters as ft
+import math
+import matplotlib.pyplot as plt
 import numpy as np
 import observer_projection as op
+import source_properties as sp
 import units
-import math
-import ejecta as ej
-import matplotlib.pyplot as plt
 
-# global properties of the source
-D = 40.e+6*units.pc2cm    # source distance [cm]
-t0 = 57982.529            # universal time of the observation [days]
+#dictionary with the global parameters of the model
+glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
+               'v_min'      :1.e-7,         # minimal velocity for the Grossman model
+               'n_v'        :400,           # number of points for the Grossman model
+               'vscale'     :'linear',      # scale for the velocity in the Grossman model
+               'sigma0'     :0.11,          # parameter for the nuclear heating rate
+               'alpha'      :1.3,           # parameter for the nuclear heating rate
+               't0eps'      :1.3,           # parameter for the nuclear heating rate
+               'cnst_eff'   :0.3333,        # parameter for the constant heating efficiency
+               'n slices'   :30,            # number for the number of slices along the polar angle [12,18,24,30]
+               'dist slices':'cos_uniform', # discretization law for the polar angle [uniform or cos_uniform]
+               'time min'   :3600.,         # minimum time [s]
+               'time max'   :2000000.,      # maximum time [s]
+               'n time'     :200,           # integer number of bins in time
+               'scale for t':'measures'     # kind of spacing in time [log - linear - measures]
+               }
 
-# initializ the angular distribution
-n_slices = 30                   # number of slices in which the polar angle is discretized [12-18-24-30]
-dist_slices = "cos_uniform"     # discretization law for the polar angle [uniform and cos_uniform]
-AD = ad.AngularDistribution(dist_slices,n_slices)
-angular_distribution, omega_distribution = AD(n_slices/2)   # due to the symmetry abount the equatorial plane, the number of independent slices is half
+source_name = 'AT2017gfo'   # name of the source or "default"
+#source_name = 'default'   # name of the source or "default"
 
-print('')
-print('I have initialized the angles')
-
-# initialize the filters
-FT = ft.Filters("measures")
-dic_filt,lambda_vec,mag = FT()
-
-print('')
-print('I have initialized the filters')
-
-#initialize the observer location
-view_angle = 30.                # viewing angle between the source and the observer
-FF = op.ObserverProjection(n_slices,dist_slices)
-flux_factor = FF(view_angle)#,view_angle_delta)
-
-print('')
-print('I have initialized the observer location')
-
-    #initialize the time
-time_min = 3600.      # minimum time [s]
-time_max = 2000000.   # maximum time [s]
-n_time   = 200        # number of bins in time
-#tscale   = 'linear'      # kind of spacing in time [log - linear]
-tscale   = 'measures'      # kind of spacing in time [log - linear - measures]
-# initialize global time
-if (tscale == 'linear'):
-    time = np.linspace(time_min,time_max,num=n_time)
-elif (tscale == 'log'):
-    time = np.logspace(np.log10(time_min),np.log10(time_max),num=n_time)
-elif (tscale == 'measures'):
-    toll = 0.05
-    all_time = []
-    for ilambda in mag.keys():
-        if (len(mag[ilambda]['time']>0)):
-            for i in range(len(mag[ilambda]['time'])):
-                all_time.append(mag[ilambda]['time'][i]-t0)
-    all_time = sorted(np.array(all_time))
-    time = []
-    i = 0
-    while (i < len(all_time)):
-        delta = (1.+2.*toll) * all_time[i]
-        i_start = i
-        while (all_time[i] < delta):
-            i = i + 1
-        time.append(0.5*(all_time[i]+all_time[i_start]))
-        if (i == len(all_time)-1):
-            break
-    time = sorted(np.array(time)*units.day2sec)
-    time = np.array(time)
-else:
-    print('Error! Wrong option for the time scale')
-    exit(-1)
-
-print('')
-print('I have initialized the global time')
-
+# dictionary for the parameters of each shell
 params = {}
-params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
-params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
-params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM_1d', 'eps_ye_dep':True}
+params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM', 'eps_ye_dep':True}
+params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM', 'eps_ye_dep':True}
 # BKWM_1d
 
-E = ej.Ejecta(3, params.keys(), params)
 
+# dictionary for the variables of each shell
 shell_vars={}
 
 shell_vars['dynamics'] = {'xi_disk':None,
@@ -116,15 +72,7 @@ shell_vars['secular'] = {'xi_disk':0.2,
                          'high_lat_op':None,
                          'step_angle_op':None}
 
-glob_params = {'v_min':1.e-7, 
-               'n_v':400, 
-               'vscale':'linear',
-               'sigma0':0.11,
-               'alpha':1.3,
-               't0eps':1.3,
-               'cnst_eff':0.3333,
-               'lc model':'grossman'}  #villar or grossman
-
+# dictionary for the global variables
 glob_vars = {'m_disk':0.09,
              'eps0':1.5e19, 
              'T_floor_LA':1000., 
@@ -134,40 +82,105 @@ glob_vars = {'m_disk':0.09,
              't_eps_nuc':1.0}
 
 
+#############################
+#  LIGHT CURVE CALCULATION  #
+#############################
+
+
+# initializing the global properties of the source
+SP = sp.SourceProperties(source_name)
+print('')
+print('I have initialized the global properties of the source')
+
+# initialize the angular distribution
+n_slices = glob_params['n slices']
+dist_slices = glob_params['dist slices']
+AD = ad.AngularDistribution(dist_slices,n_slices)
+angular_distribution, omega_distribution = AD(n_slices/2)   # due to the symmetry abount the equatorial plane, the number of independent slices is half
+print('')
+print('I have initialized the angles')
+
+# initialize the filters
+if (source_name == 'default'):
+    FT = ft.Filters("properties")
+else:
+    FT = ft.Filters("measures")
+
+dic_filt,lambda_vec,mag = FT(SP.filter_data_folder)
+print('')
+print('I have initialized the filters')
+
+#initialize the observer location
+FF = op.ObserverProjection(n_slices,dist_slices)
+flux_factor = FF(SP.view_angle)
+print('')
+print('I have initialized the observer orientation')
+
+#initialize the time
+time_min = glob_params['time min']     
+time_max = glob_params['time max']     
+n_time   = glob_params['n time']       
+tscale   = glob_params['scale for t']
+if (tscale == "measures" and source_name=='default'):
+    print('')
+    print("no measures available to set the time (default option)")
+    print("please use linear or log scale")
+    exit() 
+
+time = SP.init_time(tscale,time_min,time_max,n_time,mag)
+print('')
+print('I have initialized the global time')
+
+E = ej.Ejecta(3, params.keys(), params)
+
+# compute the lightcurve
 r_ph, L_bol, T_eff = E.lightcurve(angular_distribution,
                            omega_distribution,
                            time,
                            shell_vars,
                            glob_vars,
                            glob_params)
+print('')
+print('I have computed the lightcurve')
+
 
 # compute the residuals
-residuals = ft.calc_all_residuals(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0,mag)
+if (source_name != 'default'):
+    residuals = ft.calc_all_residuals(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,SP.D,SP.t0,mag)
 
+    print('')
+    print('I have computed the residuals')
 
-# compute the likelihood
-logL = 0.
-for ilambda in residuals.keys():
-    logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
+    # compute the likelihood
+    logL = 0.
+    for ilambda in residuals.keys():
+        logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
 
-print('')
-print('logL')
-print(logL)
+    print('')
+    print('I have computed the likehood')
+    print('logL')
+    print(logL)
 
-##############################
-# write out the output
-############################## 
+#########################
+# write out the output  #
+#########################
 
-write_output = False
+write_output = True
 if (write_output):
 
-    model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D,t0)
+    print('')
+    print('I am printing out the output')
 
-    g = open('mkn_model.txt','w')
+    model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,SP.D,SP.t0)
+
+    file_output = 'mkn_model.txt'
+    g = open(file_output,'w')
+
+    print('file name:',file_output)
 
     g.write('%20s' %('time'))
-    for ilambda in mag.keys():
-        g.write('%20s' %(mag[ilambda]['name']))
+    for ilambda in dic_filt.keys():
+        g.write('%20s' %(dic_filt[ilambda]['name']))
     g.write('\n')
     
     for i in range(len(time)):
@@ -181,31 +194,33 @@ if (write_output):
     g.close()
 
 
-###############################
-# plot some of the lightcurves 
-############################### 
+################################
+# plot some of the lightcurves #
+################################
 
 plot_separately = False           # Choose to plot all lightcurves in different bands on the same plot
-plot_together = False            # or to plot lightcurve and data in each band on different plots
+plot_together = False             # or to plot lightcurve and data in each band on different plots
 
 if (plot_separately):            # plot lightcurve and data in each band separately
-    dic,lambdas,misure = ft.read_filter_measures()
     fig1 = plt.figure()
-    for ilambda in mag.keys():
-        if (dic[ilambda]['plot'] !=1):
+    for ilambda in dic_filt.keys():
+        if (dic_filt[ilambda]['plot'] !=1):
             continue
-        if(len(misure[ilambda]['sigma'])!=0):
-            plt.plot(time*units.sec2day,model_mag[ilambda])
-            plt.errorbar(misure[ilambda]['time']-t0,misure[ilambda]['mag'],yerr=misure[ilambda]['sigma'],fmt='o')
-            plt.title('%s' %misure[ilambda]['name'])
-            plt.xlim(0.1,10)
-            plt.ylim(27,15)
-            plt.show()
+
+        plt.plot(time*units.sec2day,model_mag[ilambda])
+
+        if (source_name != 'default'):
+            if(len(misure[ilambda]['sigma'])!=0):
+                plt.errorbar(misure[ilambda]['time']-SP.t0,misure[ilambda]['mag'],yerr=misure[ilambda]['sigma'],fmt='o')
+        plt.title('%s' %dic_filt[ilambda]['name'])
+        plt.xlim(0.1,10)
+        plt.ylim(27,15)
+        plt.show()
+
 elif (plot_together):        # plot lightcurves for every band in the same plot
     fig1 = plt.figure()
-    dic,lambdas,misure = ft.read_filter_measures()
-    for ilambda in mag.keys():
-        if (dic[ilambda]['plot'] !=1):
+    for ilambda in dic_filt.keys():
+        if (dic_filt[ilambda]['plot'] !=1):
             continue
         plt.plot(time*units.sec2day,model_mag[ilambda])
     plt.title('Lightcurves')
@@ -213,9 +228,3 @@ elif (plot_together):        # plot lightcurves for every band in the same plot
     plt.ylim(27,15)
     plt.show()
 
-
-print_output = False
-if (print_output):
-    plt.plot(time, model_mag[7],'-')
-    plt.show()
-    
