@@ -1,8 +1,8 @@
 #! /bin/bash
 #SBATCH -A INF18_teongrav
-#SBATCH --partition bdw_usr_dbg
+#SBATCH --partition bdw_usr_prod
 ##SBATCH --partition knl_usr_prod
-#SBATCH --time=00:29:00
+#SBATCH --time=24:00:00
 #SBATCH -N 1
 #SBATCH -c 35
 #SBATCH -J mkn

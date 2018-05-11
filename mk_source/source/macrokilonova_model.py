@@ -53,20 +53,7 @@ class MacroKilonovaModel(cpnest.model.Model):
                  **kwargs):
 
         super(MacroKilonovaModel,self).__init__(**kwargs)
-        #initialize the time
-        self.time_min = 3600.      #
-        self.time_max = 2000000.   #
-        self.n_time = 20
-        self.tscale   = 'log'
-        # initialize global time
-        if (self.tscale == 'linear'):
-            self.time = np.linspace(self.time_min,self.time_max,num=self.n_time)
-        elif (self.tscale == 'log'):
-            self.time = np.logspace(np.log10(self.time_min),np.log10(self.time_max),num=self.n_time)
-        else:
-            print('Error! Wrong option for the time scale')
-            exit(-1)
-        
+
         # number and distribution of slices for the angular integrals
         self.n_slices = n_slices
         self.dist_slices = dist_slices
@@ -79,6 +66,41 @@ class MacroKilonovaModel(cpnest.model.Model):
         print("Initialising filters")
         self.FT = ft.Filters("measures")
         self.dic_filt,self.lambda_vec,self.mag = self.FT()
+
+        #initialize the time
+        self.time_min = 3600.      #
+        self.time_max = 2000000.   #
+        self.n_time = 20
+        self.tscale   = 'measures'
+        self.t0 = 57982.529
+        # initialize global time
+        if (self.tscale == 'linear'):
+            self.time = np.linspace(self.time_min,self.time_max,num=self.n_time)
+        elif (self.tscale == 'log'):
+            self.time = np.logspace(np.log10(self.time_min),np.log10(self.time_max),num=self.n_time)
+        elif (self.tscale == 'measures'):
+            toll = 0.05
+            all_time = []
+            for ilambda in self.mag.keys():
+                if (len(self.mag[ilambda]['time']>0)):
+                    for i in range(len(self.mag[ilambda]['time'])):
+                        all_time.append(self.mag[ilambda]['time'][i]-self.t0)
+            all_time = sorted(np.array(all_time))
+            self.time = []
+            i = 0
+            while (i < len(all_time)):
+                delta = (1.+2.*toll) * all_time[i]
+                i_start = i
+                while (all_time[i] < delta):
+                    i = i + 1
+                self.time.append(0.5*(all_time[i]+all_time[i_start]))
+                if (i == len(all_time)-1):
+                    break
+            self.time = sorted(np.array(self.time)*units.day2sec)
+            self.time = np.array(self.time)
+        else:
+            print('Error! Wrong option for the time scale')
+            exit(-1)
         
         # initialise the view angle
         print("Initialising observer projection")
@@ -194,8 +216,7 @@ class MacroKilonovaModel(cpnest.model.Model):
 
         # compute the residuals
         D = x['distance']*1e6*units.pc2cm
-        t0 = 57982.529
-        residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D,t0,self.mag)
+        residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D,self.t0,self.mag)
 
         # compute the likelihood
         logL = 0.
@@ -244,9 +265,9 @@ if __name__=='__main__':
     
     # hardcoded ejecta geometric and thermal parameters
     ejecta_params = {}
-    ejecta_params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM_1d','eps_ye_dep':True}
-    ejecta_params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM_1d','eps_ye_dep':True}
-    ejecta_params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM_1d','eps_ye_dep':True}
+    ejecta_params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
 
     # set of shell parameters to be sampled on
     shell_vars={}
