@@ -26,9 +26,9 @@ class Thermalization(object):
             b_barnes = [1.19,0.62,0.45,0.28,0.31,0.28,0.21,0.19,0.15,0.17,0.13,0.10]
             d_barnes = [1.52,1.39,1.39,1.12,1.32,1.21,1.13,0.86,1.13,0.74,0.90,0.60]
         # define the interpolation functions
-            self.fa_1d=interpolate.interp1d(x_barnes,a_barnes,fill_value='extrapolate')
-            self.fb_1d=interpolate.interp1d(x_barnes,b_barnes,fill_value='extrapolate')
-            self.fd_1d=interpolate.interp1d(x_barnes,d_barnes,fill_value='extrapolate') 
+            self.fa_1d=interpolate.interp1d(x_barnes,a_barnes,bounds_error=False,fill_value=(a_barnes[0],a_barnes[-1]))
+            self.fb_1d=interpolate.interp1d(x_barnes,b_barnes,bounds_error=False,fill_value=(b_barnes[0],b_barnes[-1]))
+            self.fd_1d=interpolate.interp1d(x_barnes,d_barnes,bounds_error=False,fill_value=(d_barnes[0],d_barnes[-1])) 
         elif (therm_eff_model=='cnst'):
             self.therm_efficiency = cnst_therm_efficiency
         else:
