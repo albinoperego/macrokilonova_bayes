@@ -165,6 +165,7 @@ if __name__=='__main__':
     parser.add_option('--nlive',default=1000,type='int',metavar='n',help='Live points')
     parser.add_option('--maxmcmc',default=1000,type='int',metavar='m',help='max MCMC points')
     parser.add_option('--poolsize',default=1000,type='int',metavar='k',help='number of points in the ensemble sampler pool')
+    parser.add_option('--seed',default=1234,type='int',metavar='s',help='seed for the pseudo-random chain')
     (opts,args)=parser.parse_args()
     np.seterr(all='ignore')
 
@@ -249,7 +250,8 @@ if __name__=='__main__':
                             Nthreads=opts.threads,
                             Nlive=opts.nlive,
                             maxmcmc=opts.maxmcmc,
-                            output=opts.out_dir)
+                            output=opts.out_dir
+                            seed=opts.seed)
         work.run()
 
 """
