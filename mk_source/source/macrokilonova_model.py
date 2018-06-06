@@ -23,6 +23,7 @@ import sys
 import angular_distribution as ad
 import ejecta as ej
 import filters as ft
+import mkn
 import numpy as np
 import observer_projection as op
 import source_properties as sp
@@ -34,7 +35,7 @@ sys.path.append(os.getcwd())
 
 class MacroKilonovaModel(cpnest.model.Model):
     """
-    Kilonova model
+    Kilonova model for cpnest
     """
 
     names = []
@@ -52,44 +53,17 @@ class MacroKilonovaModel(cpnest.model.Model):
                  source_name,
                  **kwargs):
 
-        super(MacroKilonovaModel,self).__init__(**kwargs)
+        self.MKN = mkn.MKN(glob_params,
+                  glob_vars,
+                  ejecta_params,
+                  shell_params,
+                  source_name)
 
-        # initializing the global properties of the source
-        print('Initializing the properties of the source')
-        SP = sp.SourceProperties(source_name)
-        # number and distribution of slices for the angular integrals
-        self.n_slices = glob_params['n slices']
-        self.dist_slices = glob_params['dist slices']
-        # initialize the angular distribution
-        print("Initialising angular distribution")
-        self.AD = ad.AngularDistribution(self.dist_slices,self.n_slices)
-        self.ang_dist, self.omega_dist = self.AD(self.n_slices/2)
-
-        # initialize the filters
-        print("Initialising filters")
-        self.FT = ft.Filters("measures")
-        self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder)
-
-        #initialize the time
-        self.time_min = glob_params['time min']      #
-        self.time_max = glob_params['time max']   #
-        self.n_time   = glob_params['n time']
-        self.tscale   = glob_params['scale for t']
-        self.t0 = SP.t0
-        # initialize global time
-        self.time = SP.init_time(self.tscale,self.time_min,self.time_max,self.n_time,self.mag)
-        
-        # initialise the view angle
-        print("Initialising observer projection")
-        self.FF = op.ObserverProjection(self.n_slices,self.dist_slices)
-        
-        # register the geometry of the ejecta and create an Ejecta object
-        self.glob_params  = glob_params
-        self.glob_vars  = glob_vars
+        self.glob_params   = glob_params
+        self.glob_vars     = glob_vars
         self.ejecta_params = ejecta_params
-        self.shell_params = shell_params
-        self.ejecta = ej.Ejecta(len(self.ejecta_params), self.ejecta_params.keys(), self.ejecta_params)
-        
+        self.shell_params  = shell_params
+
         # set of global variables
         model_parameters=['distance', 'view_angle']
         model_bounds = {'view_angle':[0.0,90.0],
@@ -126,25 +100,21 @@ class MacroKilonovaModel(cpnest.model.Model):
         # impose the mass constraint
         self.shell_params['secular']['xi_disk'] = min(self.shell_params['secular']['xi_disk'], 1.0 - self.shell_params['wind']['xi_disk'])
         x['xi_disk_secular'] = self.shell_params['secular']['xi_disk']
-        
+
     def log_likelihood(self,x):
 
-        self.flux_factor = self.FF(x['view_angle'])
+        self.flux_factor = self.MKN.FF(x['view_angle'])
 
-        r_ph, L_bol, T_eff = self.ejecta.lightcurve(self.ang_dist, self.omega_dist,
-                                                  self.time,
-                                                  self.shell_params,
-                                                  self.glob_vars,
-                                                  self.glob_params)
+        r_ph, L_bol, T_eff = self.MKN.ejecta.lightcurve(self.MKN.angular_distribution, self.MKN.omega_distribution,
+                                                  self.MKN.time,
+                                                  self.MKN.shell_params,
+                                                  self.MKN.glob_vars,
+                                                  self.MKN.glob_params)
 
         # compute the residuals
         D = x['distance']*1e6*units.pc2cm
-        residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,D,self.t0,self.mag)
-
-        # compute the likelihood
-        logL = 0.
-        for ilambda in residuals.keys():
-            logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
+        residuals = ft.calc_all_residuals(self.flux_factor,self.MKN.time,r_ph,T_eff,self.MKN.lambda_vec,self.MKN.dic_filt,D,self.MKN.t0,self.MKN.mag)
+        logL = self.MKN.compute_log_likelihood(residuals)
 
         return logL
             
@@ -250,7 +220,7 @@ if __name__=='__main__':
                             Nthreads=opts.threads,
                             Nlive=opts.nlive,
                             maxmcmc=opts.maxmcmc,
-                            output=opts.out_dir
+                            output=opts.out_dir,
                             seed=opts.seed)
         work.run()
 
