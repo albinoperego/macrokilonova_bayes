@@ -106,17 +106,25 @@ class MKN(object):
         
         return logL
 
+    def compute_log_likelihood(self,residuals):
+        # compute the likelihood
+        logL = 0.
+        for ilambda in residuals.keys():
+            logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
+        
+        return logL
+
     def log_likelihood(self,r_ph,T_eff):
 
         self.flux_factor = self.FF(self.view_angle)
 
         # compute the residuals
         if (source_name != 'default'):
-            print('I am computing residuals')
+            print('i.e., I am computing residuals')
             residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,self.D,self.t0,self.mag)
 
         # compute the likelihood
-            print('I am computing the likelihood')
+            print('and then I am computing the likelihood')
             logL = self.compute_log_likelihood(residuals)
 
 #            logL = 0.

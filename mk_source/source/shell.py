@@ -40,12 +40,13 @@ class Shell(object):
         return x, y, z
 
     def calc_Tfloor(self,kappa,T_floor_LA,T_floor_Ni):
-        if (kappa < 1.):
+        if (kappa <= 1.):
             return T_floor_Ni
-        elif (kappa > 10.):
-            return T_floor_LA
+#        elif (kappa > 10.):
+#            return T_floor_LA
         else:
-            return 0.5*(T_floor_Ni + T_floor_LA)
+            return T_floor_LA
+#            return 0.5*(T_floor_Ni + T_floor_LA)
 
     def expansion_angular_distribution(self,
                                        angular_distribution,
@@ -118,8 +119,7 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
             Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
-            Tf4 = Tf**4
-            self.physical_radius.append(np.array([min(r,np.sqrt(L/(units.fourpisigma_SB*Tf4))) for r,L in zip(rtmp,Ltmp)]))
+            self.physical_radius.append(np.array([min(r,np.sqrt(units.fourpi/omega*L/(units.fourpisigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
 
@@ -175,7 +175,7 @@ class Shell(object):
         L_bol=self.L(omega,time,k,m_ej,v_ej,glob_vars,glob_params)
         T_floor = self.calc_Tfloor(k,T_floor_LA,T_floor_Ni)
         rtmp = v_ej*time
-        R_phot=np.array([min(r,np.sqrt(L/(units.fourpisigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
+        R_phot=np.array([min(r,np.sqrt(L/(units.fourpi/omega*units.fourpisigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
         return(L_bol,R_phot)
 
 

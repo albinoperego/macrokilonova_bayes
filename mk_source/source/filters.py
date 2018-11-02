@@ -142,6 +142,7 @@ def calc_all_residuals(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0,data):
         if (len(data[ilambda]['time'])==0):
             continue
 
+#  here time delay must be implemented
         R_intrp = np.array([np.interp((data[ilambda]['time']-t0)*units.day2sec,time,x) for x in rad_ray])
         T_intrp = np.array([np.interp((data[ilambda]['time']-t0)*units.day2sec,time,x) for x in T_ray])
 
