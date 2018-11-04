@@ -246,7 +246,7 @@ if __name__=='__main__':
                               'high_lat_op':10.0,
                               'step_angle_op':math.radians(45.)}
     
-    shell_vars['wind'] = {'xi_disk':0.02,
+    shell_vars['wind'] = {'xi_disk':0.10,
                           'm_ej':None,
                           'step_angle_mass':math.radians(60.),
                           'high_lat_flag':True,
@@ -254,8 +254,8 @@ if __name__=='__main__':
                           'low_lat_vel':None,
                           'high_lat_vel':None,
                           'step_angle_vel':None,
-                          'low_lat_op':0.5,
-                          'high_lat_op':5.0,
+                          'low_lat_op':5.0,
+                          'high_lat_op':0.5,
                           'step_angle_op':math.radians(30.)}
     
     shell_vars['secular'] = {'xi_disk':0.2,
@@ -270,10 +270,10 @@ if __name__=='__main__':
                              'step_angle_op':None}
     
     # dictionary for the global variables
-    glob_vars = {'m_disk':0.09,
+    glob_vars = {'m_disk':0.12,
                  'eps0':1.5e19, 
-                 'T_floor_LA':1000., 
-                 'T_floor_Ni':3000., 
+                 'T_floor_LA':2000., 
+                 'T_floor_Ni':4000., 
                  'a_eps_nuc':0.5,
                  'b_eps_nuc':2.5,
                  't_eps_nuc':1.0}
@@ -292,7 +292,7 @@ if __name__=='__main__':
         print('I am printing out the output')
         model.write_output(r_ph,T_eff)
 
-    plot_separately = False            # Choose to plot all lightcurves in different bands on the same plot
+    plot_separately = True            # Choose to plot all lightcurves in different bands on the same plot
     plot_together = False             # or to plot lightcurve and data in each band on different plots
 
     if (plot_separately):
