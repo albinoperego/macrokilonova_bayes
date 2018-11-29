@@ -42,6 +42,8 @@ class MacroKilonovaModel(cpnest.model.Model):
     bounds = []
 
     def __init__(self,
+                 # number of different components in the ejecta
+                 Nshell,
                  # dictionary of global parameters defining basic properties of the ejecta
                  glob_params,
                  # dictionary of global parameters defining basic properties of the ejecta to be sampled
@@ -53,7 +55,8 @@ class MacroKilonovaModel(cpnest.model.Model):
                  source_name,
                  **kwargs):
 
-        self.MKN = mkn.MKN(glob_params,
+        self.MKN = mkn.MKN(Nshell,
+                  glob_params,
                   glob_vars,
                   ejecta_params,
                   shell_params,
@@ -98,8 +101,8 @@ class MacroKilonovaModel(cpnest.model.Model):
                 if v is not None and type(v) is not bool:
                     self.shell_params[s][item] = x[item+'_%s'%s]
         # impose the mass constraint
-        self.shell_params['secular']['xi_disk'] = min(self.shell_params['secular']['xi_disk'], 1.0 - self.shell_params['wind']['xi_disk'])
-        x['xi_disk_secular'] = self.shell_params['secular']['xi_disk']
+#        self.shell_params['secular']['xi_disk'] = min(self.shell_params['secular']['xi_disk'], 1.0 - self.shell_params['wind']['xi_disk'])
+#        x['xi_disk_secular'] = self.shell_params['secular']['xi_disk']
 
     def log_likelihood(self,x):
 
@@ -142,20 +145,20 @@ if __name__=='__main__':
     source_name = 'AT2017gfo'
 
     #dictionary with the global parameters of the model not to be fit
-    glob_params = {'lc model'   :'villar',      # model for the lightcurve (grossman or villar)  
+    glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
-                   'n_v'        :10,            # number of points for the Grossman model
+                   'n_v'        :200,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
                    'sigma0'     :0.11,          # parameter for the nuclear heating rate
                    'alpha'      :1.3,           # parameter for the nuclear heating rate
                    't0eps'      :1.3,           # parameter for the nuclear heating rate
                    'cnst_eff'   :0.3333,        # parameter for the constant heating efficiency
-                   'n slices'   :12,            # number for the number of slices along the polar angle [12,18,24,30]
-                   'dist slices':'uniform',     # discretization law for the polar angle [uniform or cos_uniform]
+                   'n slices'   :30,            # number for the number of slices along the polar angle [12,18,24,30]
+                   'dist slices':'cos_uniform', # discretization law for the polar angle [uniform or cos_uniform]
                    'time min'   :3600.,         # minimum time [s]
                    'time max'   :2000000.,      # maximum time [s]
                    'n time'     :20,            # integer number of bins in time
-                   'scale for t':'linear'       # kind of spacing in time [log - linear - measures]
+                   'scale for t':'measures'     # kind of spacing in time [log - linear - measures]
                   }
 
     # set of global parameters to be fit
@@ -166,54 +169,169 @@ if __name__=='__main__':
                  'a_eps_nuc':[0.499, 0.501],
                  'b_eps_nuc':[2.49, 2.51],
                  't_eps_nuc':[0.99, 1.01]}
+
+###############################
+# Template for isotropic case # 
+###############################
     
-    # hardcoded ejecta geometric and thermal parameters
-    ejecta_params = {}
-    ejecta_params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
-    ejecta_params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
-    ejecta_params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    # hardcoded ejecta geometric and thermal parameters for the spherical case
+    ejecta_params_iso = {}
+    ejecta_params_iso['dynamics'] = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_iso['wind']     = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_iso['secular']  = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
 
     # set of shell parameters to be sampled on
-    shell_vars={}
+    shell_vars_iso={}
 
-    shell_vars['dynamics'] = {'xi_disk':None,
-                              'm_ej':[5.e-4,2.e-2],
-                              'central_vel':[0.001, 0.333],
-                              'low_lat_vel':None,
-                              'high_lat_vel':None,
-                              'step_angle_vel':None,
-                              'low_lat_op':[1.0,20.0],
-                              'high_lat_op':[0.1,2.0],
-                              'step_angle_op':[0.0,np.pi/2.0]}
+    shell_vars_iso['dynamics'] = {'xi_disk'        :None,
+                                  'm_ej'           :[5.e-4,2.e-2],
+                                  'step_angle_mass':None,
+                                  'high_lat_flag'  :None,
+                                  'central_vel'    :[0.001, 0.333],
+                                  'high_lat_vel'   :None,
+                                  'low_lat_vel'    :None,
+                                  'step_angle_vel' :None,
+                                  'central_op'     :[0.1,30.],
+                                  'high_lat_op'    :None,
+                                  'low_lat_op'     :None,
+                                  'step_angle_op'  :None}
 
-    shell_vars['wind'] = {'xi_disk':[0.0,1.0],
-                          'm_ej':None,
-                          'step_angle_mass':[0.0,np.pi/2.0],
-                          'high_lat_flag':True,
-                          'central_vel':[0.001, 0.333],
-                          'low_lat_vel':None,
-                          'high_lat_vel':None,
-                          'step_angle_vel':None,
-                          'low_lat_op':[1.0,20.0],
-                          'high_lat_op':[0.01,1.0],
-                          'step_angle_op':[0.0,np.pi/2.0]}
+    shell_vars_iso['secular'] = {'xi_disk'        :None,
+                                 'm_ej'           :[5.e-4,2.e-2],
+                                 'step_angle_mass':None,
+                                 'high_lat_flag'  :None,
+                                 'central_vel'    :[0.001, 0.333],
+                                 'high_lat_vel'   :None,
+                                 'low_lat_vel'    :None,
+                                 'step_angle_vel' :None,
+                                 'central_op'     :[0.1,20.0],
+                                 'low_lat_op'     :None,
+                                 'high_lat_op'    :None,
+                                 'step_angle_op'  :None}
 
-    shell_vars['secular'] = {'xi_disk':[0.0,1.0],
-                             'm_ej':None,
-                             'central_vel':[0.001, 0.333],
-                             'low_lat_vel':None,
-                             'high_lat_vel':None,
-                             'step_angle_vel':None,
-                             'central_op':[0.01,20.0],
-                             'low_lat_op':None,
-                             'high_lat_op':None,
-                             'step_angle_op':None}
+    shell_vars_iso['wind'] = {'xi_disk'        :None,
+                              'm_ej'           :[5.e-4,2.e-2],
+                              'step_angle_mass':None,
+                              'high_lat_flag'  :True,
+                              'central_vel'    :[0.001, 0.333],
+                              'high_lat_vel'   :None,
+                              'low_lat_vel'    :None,
+                              'step_angle_vel' :None,
+                              'central_op'     :[0.1,30.],
+                              'high_lat_op'    :None,
+                              'low_lat_op'     :None,
+                              'step_angle_op'  :None}
+
+#################################
+# Template for anisotropic case # 
+#################################
+    
+    # hardcoded ejecta geometric and thermal parameters for the aspherical case
+    ejecta_params_aniso = {}
+    ejecta_params_aniso['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_aniso['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_aniso['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+
+    # set of shell parameters to be sampled on
+    shell_vars_aniso={}
+
+    shell_vars_aniso['dynamics'] = {'xi_disk'        :None,
+                                    'm_ej'           :[5.e-4,2.e-2],
+                                    'step_angle_mass':None,
+                                    'high_lat_flag'  :None,
+                                    'central_vel'    :[0.001, 0.333],
+                                    'high_lat_vel'   :None,
+                                    'low_lat_vel'    :None,
+                                    'step_angle_vel' :None,
+                                    'central_op'     :None,
+                                    'high_lat_op'    :[0.1,2.0],
+                                    'low_lat_op'     :[1.0,20.0],
+                                    'step_angle_op'  :[0.0,np.pi/2.0]}
+
+    shell_vars_aniso['secular'] = {'xi_disk'        :[0.0,1.0],
+                                   'm_ej'           :None,
+                                   'step_angle_mass':None,
+                                   'high_lat_flag'  :None,
+                                   'central_vel'    :[0.001, 0.333],
+                                   'high_lat_vel'   :None,
+                                   'low_lat_vel'    :None,
+                                   'step_angle_vel' :None,
+                                   'central_op'     :[0.01,20.0],
+                                   'low_lat_op'     :None,
+                                   'high_lat_op'    :None,
+                                   'step_angle_op'  :None}
+ 
+    shell_vars_aniso['wind'] = {'xi_disk'        :[0.0,1.0],
+                                'm_ej'           :None,
+                                'step_angle_mass':[0.0,np.pi/2.0],
+                                'high_lat_flag'  :True,
+                                'central_vel'    :[0.001, 0.333],
+                                'high_lat_vel'   :None,
+                                'low_lat_vel'    :None,
+                                'step_angle_vel' :None,
+                                'central_op'     :None,
+                                'high_lat_op'    :[0.01,1.0],
+                                'low_lat_op'     :[1.0,20.0],
+                                'step_angle_op'  :[0.0,np.pi/2.0]}
+
+
+##########################################################
+# choose the appropriate set of parameters and variables #
+##########################################################
+
+    model_flag = 'iso1comp'
+# possible choices:
+#  1 - iso1comp
+#  2 - iso2comp
+#  3 - iso3comp
+#  4 - aniso1comp
+#  5 - aniso2comp
+#  6 - aniso3comp
+
+    if (model_flag == 'iso1comp'):
+        Nshell = 1
+        ejecta_params = {}
+        shell_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
+        shell_vars['dynamics']    = shell_vars_iso['dynamics']
+    elif (model_flag == 'iso2comp'):
+        Nshell = 2
+        ejecta_params = {}
+        shell_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
+        shell_vars['dynamics']    = shell_vars_iso['dynamics']
+        ejecta_params['secular'] = ejecta_params_iso['secular']
+        shell_vars['secular']    = shell_vars_iso['secular']
+    elif (model_flag == 'iso3comp'):
+        Nshell = 3
+        ejecta_params = ejecta_params_iso
+        shell_vars    = shell_vars_iso
+    elif (model_flag == 'aniso1comp'):
+        Nshell = 1
+        ejecta_params = {}
+        shell_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
+        shell_vars['dynamics']    = shell_vars_aniso['dynamics']
+    elif (model_flag == 'aniso2comp'):
+        Nshell = 2
+        ejecta_params = {}
+        shell_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
+        shell_vars['dynamics']    = shell_vars_aniso['dynamics']
+        ejecta_params['secular'] = ejecta_params_aniso['secular']
+        shell_vars['secular']    = shell_vars_aniso['secular']
+    elif (model_flag == 'aniso3comp'):
+        Nshell = 3
+        ejecta_params = ejecta_params_aniso
+        shell_vars    = shell_vars_aniso
+
+
 
     if opts.out_dir is None:
         opts.out_dir='./test/'
 
     if opts.full_run:
-        model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, shell_vars,source_name)
+        model = MacroKilonovaModel(Nshell,glob_params, glob_vars, ejecta_params, shell_vars,source_name)
         work  = cpnest.CPNest(model,
                             verbose=2,
                             Poolsize=opts.poolsize,

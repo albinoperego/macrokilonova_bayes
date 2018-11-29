@@ -15,6 +15,8 @@ class MKN(object):
     """
 
     def __init__(self,
+                 # number of different components of the ejecta
+                 Nshell,
                  # dictionary of global parameters defining basic properties of the ejecta
                  glob_params,
                  # dictionary of global parameters defining basic properties of the ejecta to be sampled
@@ -78,7 +80,7 @@ class MKN(object):
         self.ejecta        = ej.Ejecta(len(self.ejecta_params), self.ejecta_params.keys(), self.ejecta_params)
        
         print('I am initializing the components')
-        self.E = ej.Ejecta(3, self.ejecta_params.keys(), self.ejecta_params)
+        self.E = ej.Ejecta(Nshell, self.ejecta_params.keys(), self.ejecta_params)
 
 #############################
 #  LIGHT CURVE CALCULATION  #
