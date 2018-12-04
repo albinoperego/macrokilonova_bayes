@@ -281,7 +281,7 @@ if __name__=='__main__':
                  't_eps_nuc':1.0}
     
     print('I am initializing the model')
-    model = MKN(glob_params, glob_vars, ejecta_params, shell_vars,source_name)
+    model = MKN(3,glob_params, glob_vars, ejecta_params, shell_vars,source_name)
 
     print('I am computing the light curves')
     r_ph,L_bol,T_eff = model.lightcurve(shell_vars) 
