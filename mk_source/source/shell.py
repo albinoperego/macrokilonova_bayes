@@ -11,6 +11,7 @@ import observer_projection as op
 import nuclear_heat
 import scipy.integrate as integrate
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
+import import_NR_data
 
 class Shell(object):
     """
@@ -55,6 +56,7 @@ class Shell(object):
                                        shell_vars,
                                        glob_vars,
                                        glob_params,
+                                       shell_name,
                                        **kwargs):
                                        
 # assign the global model variables
@@ -79,6 +81,23 @@ class Shell(object):
         elif (shell_vars['xi_disk'] == None):
             m_tot = np.float(shell_vars['m_ej'])
 
+        if (glob_params['NR_data'] and shell_name == 'dynamics'):
+            print('I am here')
+            print(NR_data)
+            fname = glob_params['NR_filename']
+            self.ejected_mass,self.velocity_rms,self.opacity = import_NR_data.importNRprofiles(fname,angular_distribution)
+            g = open('profile_NR.txt','w')
+            for i in range(len(angular_distribution)):
+                g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
+            g.close()
+        else: 
+            self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
+            if (shell_name == 'dynamics'):
+                g = open('profile_noNR.txt','w')
+                for i in range(len(angular_distribution)):
+                    g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
+                g.close()
+            
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
@@ -186,6 +205,7 @@ class Shell(object):
                                               shell_vars,
                                               glob_vars,
                                               glob_params,
+                                              shell_name,
                                               **kwargs):
         
 # assign the global model variables

@@ -16,15 +16,13 @@ class MKN(object):
 
     def __init__(self,
                  # number of different components of the ejecta
-                 Nshell,
-                 # dictionary of global parameters defining basic properties of the ejecta
                  glob_params,
                  # dictionary of global parameters defining basic properties of the ejecta to be sampled
                  glob_vars,
                  # dictionary of ejecta parameters defining its composition and geometry
                  ejecta_params,
                  # dictionary of shell parameters defining basic properties of the shell
-                 shell_params,
+                 ejecta_vars,
                  source_name,
                  **kwargs):
 
@@ -76,29 +74,31 @@ class MKN(object):
         self.glob_params   = glob_params
         self.glob_vars     = glob_vars
         self.ejecta_params = ejecta_params
-        self.shell_params  = shell_params
-        self.ejecta        = ej.Ejecta(len(self.ejecta_params), self.ejecta_params.keys(), self.ejecta_params)
+        self.ejecta_vars    = ejecta_vars
+#        self.ejecta        = ej.Ejecta(len(self.ejecta_params),self.ejecta_params.keys(),self.ejecta_params)
        
         print('I am initializing the components')
-        self.E = ej.Ejecta(Nshell, self.ejecta_params.keys(), self.ejecta_params)
+        self.E = ej.Ejecta(len(self.ejecta_params.keys()), self.ejecta_params.keys(), self.ejecta_params)
 
 #############################
 #  LIGHT CURVE CALCULATION  #
 #############################
 
-    def lightcurve(self,shell_vars):
+#    def lightcurve(self,ejecta_vars,NR_data,NR_filename):
 
-        self.shell_vars = shell_vars 
+#        self.ejecta_vars = ejecta_vars 
 
         # compute the lightcurve
-        r_ph, L_bol, T_eff = self.E.lightcurve(self.angular_distribution,
-                                               self.omega_distribution,
-                                               self.time,
-                                               self.shell_vars,
-                                               self.glob_vars,
-                                               self.glob_params)
+#        r_ph, L_bol, T_eff = self.E.lightcurve(self.angular_distribution,
+#                                               self.omega_distribution,
+#                                               self.time,
+#                                               self.ejecta_vars,
+#                                               self.glob_vars,
+#                                               self.glob_params,
+#                                               NR_data,
+#                                               NR_filename)
 
-        return r_ph,L_bol,T_eff
+#        return r_ph,L_bol,T_eff
 
     def compute_log_likelihood(self,residuals):
         # compute the likelihood
@@ -208,7 +208,7 @@ class MKN(object):
 if __name__=='__main__':
 
 #dictionary with the global parameters of the model
-    glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
+    glob_params = {'lc model'   :'grossman',      # model for the lightcurve (grossman or villar)  
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :400,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
@@ -221,7 +221,9 @@ if __name__=='__main__':
                    'time min'   :3600.,         # minimum time [s]
                    'time max'   :2000000.,      # maximum time [s]
                    'n time'     :200,           # integer number of bins in time
-                   'scale for t':'measures'     # kind of spacing in time [log - linear - measures]
+                   'scale for t':'measures',    # kind of spacing in time [log - linear - measures]
+                   'NR_data'    :False,         # use (True) or not use (False) NR profiles
+                   'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
                    }
     
     source_name = 'AT2017gfo'   # name of the source or "default"
@@ -236,9 +238,9 @@ if __name__=='__main__':
     
     
     # dictionary for the variables of each shell
-    shell_vars={}
+    ejecta_vars={}
     
-    shell_vars['dynamics'] = {'xi_disk':None,
+    ejecta_vars['dynamics'] = {'xi_disk':None,
                               'm_ej':0.04,
                               'central_vel':0.33,
                               'low_lat_vel':None,
@@ -248,7 +250,7 @@ if __name__=='__main__':
                               'high_lat_op':10.0,
                               'step_angle_op':math.radians(45.)}
     
-    shell_vars['wind'] = {'xi_disk':0.10,
+    ejecta_vars['wind'] = {'xi_disk':0.10,
                           'm_ej':None,
                           'step_angle_mass':math.radians(60.),
                           'high_lat_flag':True,
@@ -260,7 +262,7 @@ if __name__=='__main__':
                           'high_lat_op':0.5,
                           'step_angle_op':math.radians(30.)}
     
-    shell_vars['secular'] = {'xi_disk':0.2,
+    ejecta_vars['secular'] = {'xi_disk':0.2,
                              'm_ej':None,
                              'central_vel':0.06,
                              'low_lat_vel':None,
@@ -281,10 +283,16 @@ if __name__=='__main__':
                  't_eps_nuc':1.0}
     
     print('I am initializing the model')
-    model = MKN(3,glob_params, glob_vars, ejecta_params, shell_vars,source_name)
+    model = MKN(glob_params,glob_vars,ejecta_params,ejecta_vars,source_name)
 
     print('I am computing the light curves')
-    r_ph,L_bol,T_eff = model.lightcurve(shell_vars) 
+#    r_ph,L_bol,T_eff = model.lightcurve(ejecta_vars,glob_params['NR_data'],glob_params['NR_filename']) 
+    r_ph,L_bol,T_eff = model.E.lightcurve(model.angular_distribution,
+                                          model.omega_distribution,
+                                          model.time,
+                                          model.ejecta_vars,
+                                          model.glob_vars,
+                                          model.glob_params)
 
     print('I am computing the likelihood')
     logL =  model.log_likelihood(r_ph,T_eff)

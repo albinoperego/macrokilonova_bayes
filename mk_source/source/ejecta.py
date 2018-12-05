@@ -41,11 +41,12 @@ class Ejecta(object):
           
             if (glob_params['lc model']=='grossman'):
                 r, Lb = c.expansion_angular_distribution(angular_distribution,
-                                                    omega_distribution,
+                                                     omega_distribution,
                                                      time,
                                                      shell_vars[c.name],
                                                      glob_vars,
                                                      glob_params,
+                                                     c.name,
                                                      **kwargs)
             elif (glob_params['lc model']=='villar'):
                 r, Lb = c.expansion_angular_distribution_villar(angular_distribution,
@@ -54,6 +55,7 @@ class Ejecta(object):
                                                      shell_vars[c.name],
                                                      glob_vars,
                                                      glob_params,
+                                                     c.name,
                                                      **kwargs)
 #                print('\n Using VILLAR model\n')
             else:

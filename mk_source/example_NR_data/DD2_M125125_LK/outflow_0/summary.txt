@@ -1,0 +1,12 @@
+Mdisk      [1e^{-2} Msol]     nan
+tcoll      [ms]               inf
+Mej        [1e^{-2} Msol]     0.031257
+Ye                            0.177724810672
+s          [kb/baryon]        26.926085094
+vel_inf    [10^{-1} c]        1.44807709886
+E_kin      [10^51 erg]        0.00773727086679
+kilonova t [days]             0.719902834881
+kilonova L [10^41 erg]        0.0945553608957
+kilonova T [K]                3740.45533598
+radio    t [years]            4.0682486433
+radio    F [mJy]              0.00159990555654

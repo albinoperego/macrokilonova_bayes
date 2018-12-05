@@ -43,29 +43,26 @@ class MacroKilonovaModel(cpnest.model.Model):
 
     def __init__(self,
                  # number of different components in the ejecta
-                 Nshell,
-                 # dictionary of global parameters defining basic properties of the ejecta
                  glob_params,
                  # dictionary of global parameters defining basic properties of the ejecta to be sampled
                  glob_vars,
                  # dictionary of ejecta parameters defining its composition and geometry
                  ejecta_params,
                  # dictionary of shell parameters defining basic properties of the shell
-                 shell_params,
+                 ejecta_vars,
                  source_name,
                  **kwargs):
 
-        self.MKN = mkn.MKN(Nshell,
-                  glob_params,
-                  glob_vars,
-                  ejecta_params,
-                  shell_params,
-                  source_name)
+        self.MKN = mkn.MKN(glob_params,
+                           glob_vars,
+                           ejecta_params,
+                           ejecta_vars,
+                           source_name)
 
         self.glob_params   = glob_params
         self.glob_vars     = glob_vars
         self.ejecta_params = ejecta_params
-        self.shell_params  = shell_params
+        self.ejecta_vars    = ejecta_vars
 
         # set of global variables
         model_parameters=['distance', 'view_angle']
@@ -77,9 +74,9 @@ class MacroKilonovaModel(cpnest.model.Model):
             model_bounds[item] = self.glob_vars[item]
 
         # now add the single shell parameters
-        for s in self.shell_params:
-            for item in self.shell_params[s]:
-                v = self.shell_params[s][item]
+        for s in self.ejecta_vars:
+            for item in self.ejecta_vars[s]:
+                v = self.ejecta_vars[s][item]
                 if v is not None and type(v) is not bool:
                     model_parameters.append(item+'_%s'%s)
                     model_bounds[item+'_%s'%s] = v
@@ -95,24 +92,25 @@ class MacroKilonovaModel(cpnest.model.Model):
             self.glob_vars[item] = x[item]
 
         # now add the single shell parameters
-        for s in self.shell_params:
-            for item in self.shell_params[s]:
-                v = self.shell_params[s][item]
+        for s in self.ejecta_vars:
+            for item in self.ejecta_vars[s]:
+                v = self.ejecta_vars[s][item]
                 if v is not None and type(v) is not bool:
-                    self.shell_params[s][item] = x[item+'_%s'%s]
+                    self.ejecta_vars[s][item] = x[item+'_%s'%s]
         # impose the mass constraint
-#        self.shell_params['secular']['xi_disk'] = min(self.shell_params['secular']['xi_disk'], 1.0 - self.shell_params['wind']['xi_disk'])
-#        x['xi_disk_secular'] = self.shell_params['secular']['xi_disk']
+#        self.ejecta_vars['secular']['xi_disk'] = min(self.ejecta_vars['secular']['xi_disk'], 1.0 - self.ejecta_vars['wind']['xi_disk'])
+#        x['xi_disk_secular'] = self.ejecta_vars['secular']['xi_disk']
 
     def log_likelihood(self,x):
 
         self.flux_factor = self.MKN.FF(x['view_angle'])
 
-        r_ph, L_bol, T_eff = self.MKN.ejecta.lightcurve(self.MKN.angular_distribution, self.MKN.omega_distribution,
-                                                  self.MKN.time,
-                                                  self.MKN.shell_params,
-                                                  self.MKN.glob_vars,
-                                                  self.MKN.glob_params)
+        r_ph, L_bol, T_eff = self.MKN.E.lightcurve(self.MKN.angular_distribution, 
+                                                   self.MKN.omega_distribution,
+                                                   self.MKN.time,
+                                                   self.MKN.ejecta_vars,
+                                                   self.MKN.glob_vars,
+                                                   self.MKN.glob_params)
 
         # compute the residuals
         D = x['distance']*1e6*units.pc2cm
@@ -158,7 +156,9 @@ if __name__=='__main__':
                    'time min'   :3600.,         # minimum time [s]
                    'time max'   :2000000.,      # maximum time [s]
                    'n time'     :20,            # integer number of bins in time
-                   'scale for t':'measures'     # kind of spacing in time [log - linear - measures]
+                   'scale for t':'measures',    # kind of spacing in time [log - linear - measures]
+                   'NR_data'    :False,         # use (True) or not use (False) NR profiles
+                   'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
                   }
 
     # set of global parameters to be fit
@@ -181,9 +181,9 @@ if __name__=='__main__':
     ejecta_params_iso['secular']  = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
 
     # set of shell parameters to be sampled on
-    shell_vars_iso={}
+    ejecta_vars_iso={}
 
-    shell_vars_iso['dynamics'] = {'xi_disk'        :None,
+    ejecta_vars_iso['dynamics'] = {'xi_disk'        :None,
                                   'm_ej'           :[5.e-4,2.e-2],
                                   'step_angle_mass':None,
                                   'high_lat_flag'  :None,
@@ -196,7 +196,7 @@ if __name__=='__main__':
                                   'low_lat_op'     :None,
                                   'step_angle_op'  :None}
 
-    shell_vars_iso['secular'] = {'xi_disk'        :None,
+    ejecta_vars_iso['secular'] = {'xi_disk'        :None,
                                  'm_ej'           :[5.e-4,2.e-2],
                                  'step_angle_mass':None,
                                  'high_lat_flag'  :None,
@@ -209,7 +209,7 @@ if __name__=='__main__':
                                  'high_lat_op'    :None,
                                  'step_angle_op'  :None}
 
-    shell_vars_iso['wind'] = {'xi_disk'        :None,
+    ejecta_vars_iso['wind'] = {'xi_disk'        :None,
                               'm_ej'           :[5.e-4,2.e-2],
                               'step_angle_mass':None,
                               'high_lat_flag'  :True,
@@ -233,9 +233,9 @@ if __name__=='__main__':
     ejecta_params_aniso['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
 
     # set of shell parameters to be sampled on
-    shell_vars_aniso={}
+    ejecta_vars_aniso={}
 
-    shell_vars_aniso['dynamics'] = {'xi_disk'        :None,
+    ejecta_vars_aniso['dynamics'] = {'xi_disk'        :None,
                                     'm_ej'           :[5.e-4,2.e-2],
                                     'step_angle_mass':None,
                                     'high_lat_flag'  :None,
@@ -248,7 +248,7 @@ if __name__=='__main__':
                                     'low_lat_op'     :[1.0,20.0],
                                     'step_angle_op'  :[0.0,np.pi/2.0]}
 
-    shell_vars_aniso['secular'] = {'xi_disk'        :[0.0,1.0],
+    ejecta_vars_aniso['secular'] = {'xi_disk'        :[0.0,1.0],
                                    'm_ej'           :None,
                                    'step_angle_mass':None,
                                    'high_lat_flag'  :None,
@@ -261,7 +261,7 @@ if __name__=='__main__':
                                    'high_lat_op'    :None,
                                    'step_angle_op'  :None}
  
-    shell_vars_aniso['wind'] = {'xi_disk'        :[0.0,1.0],
+    ejecta_vars_aniso['wind'] = {'xi_disk'        :[0.0,1.0],
                                 'm_ej'           :None,
                                 'step_angle_mass':[0.0,np.pi/2.0],
                                 'high_lat_flag'  :True,
@@ -289,41 +289,35 @@ if __name__=='__main__':
 #  6 - aniso3comp
 
     if (model_flag == 'iso1comp'):
-        Nshell = 1
         ejecta_params = {}
-        shell_vars = {}
+        ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
-        shell_vars['dynamics']    = shell_vars_iso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_iso['dynamics']
     elif (model_flag == 'iso2comp'):
-        Nshell = 2
         ejecta_params = {}
-        shell_vars = {}
+        ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
-        shell_vars['dynamics']    = shell_vars_iso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_iso['dynamics']
         ejecta_params['secular'] = ejecta_params_iso['secular']
-        shell_vars['secular']    = shell_vars_iso['secular']
+        ejecta_vars['secular']    = ejecta_vars_iso['secular']
     elif (model_flag == 'iso3comp'):
-        Nshell = 3
         ejecta_params = ejecta_params_iso
-        shell_vars    = shell_vars_iso
+        ejecta_vars    = ejecta_vars_iso
     elif (model_flag == 'aniso1comp'):
-        Nshell = 1
         ejecta_params = {}
-        shell_vars = {}
+        ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
-        shell_vars['dynamics']    = shell_vars_aniso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_aniso['dynamics']
     elif (model_flag == 'aniso2comp'):
-        Nshell = 2
         ejecta_params = {}
-        shell_vars = {}
+        ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
-        shell_vars['dynamics']    = shell_vars_aniso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_aniso['dynamics']
         ejecta_params['secular'] = ejecta_params_aniso['secular']
-        shell_vars['secular']    = shell_vars_aniso['secular']
+        ejecta_vars['secular']    = ejecta_vars_aniso['secular']
     elif (model_flag == 'aniso3comp'):
-        Nshell = 3
         ejecta_params = ejecta_params_aniso
-        shell_vars    = shell_vars_aniso
+        ejecta_vars    = ejecta_vars_aniso
 
 
 
@@ -331,7 +325,7 @@ if __name__=='__main__':
         opts.out_dir='./test/'
 
     if opts.full_run:
-        model = MacroKilonovaModel(Nshell,glob_params, glob_vars, ejecta_params, shell_vars,source_name)
+        model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, ejecta_vars,source_name)
         work  = cpnest.CPNest(model,
                             verbose=2,
                             Poolsize=opts.poolsize,
