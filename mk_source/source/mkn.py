@@ -208,7 +208,8 @@ class MKN(object):
 if __name__=='__main__':
 
 #dictionary with the global parameters of the model
-    glob_params = {'lc model'   :'grossman',      # model for the lightcurve (grossman or villar)  
+    glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
+                   'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :400,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
@@ -229,50 +230,6 @@ if __name__=='__main__':
     source_name = 'AT2017gfo'   # name of the source or "default"
     #source_name = 'default'   # name of the source or "default"
     
-    # dictionary for the parameters of each shell
-    ejecta_params = {}
-    ejecta_params['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM', 'eps_ye_dep':True}
-    ejecta_params['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   , 'therm_model':'BKWM', 'eps_ye_dep':True}
-    ejecta_params['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform', 'therm_model':'BKWM', 'eps_ye_dep':True}
-    # BKWM_1d
-    
-    
-    # dictionary for the variables of each shell
-    ejecta_vars={}
-    
-    ejecta_vars['dynamics'] = {'xi_disk':None,
-                              'm_ej':0.04,
-                              'central_vel':0.33,
-                              'low_lat_vel':None,
-                              'high_lat_vel':None,
-                              'step_angle_vel':None,
-                              'low_lat_op':30.,
-                              'high_lat_op':10.0,
-                              'step_angle_op':math.radians(45.)}
-    
-    ejecta_vars['wind'] = {'xi_disk':0.10,
-                          'm_ej':None,
-                          'step_angle_mass':math.radians(60.),
-                          'high_lat_flag':True,
-                          'central_vel':0.08,
-                          'low_lat_vel':None,
-                          'high_lat_vel':None,
-                          'step_angle_vel':None,
-                          'low_lat_op':5.0,
-                          'high_lat_op':0.5,
-                          'step_angle_op':math.radians(30.)}
-    
-    ejecta_vars['secular'] = {'xi_disk':0.2,
-                             'm_ej':None,
-                             'central_vel':0.06,
-                             'low_lat_vel':None,
-                             'high_lat_vel':None,
-                             'step_angle_vel':None,
-                             'central_op':5.0,
-                             'low_lat_op':None,
-                             'high_lat_op':None,
-                             'step_angle_op':None}
-    
     # dictionary for the global variables
     glob_vars = {'m_disk':0.12,
                  'eps0':1.5e19, 
@@ -281,6 +238,147 @@ if __name__=='__main__':
                  'a_eps_nuc':0.5,
                  'b_eps_nuc':2.5,
                  't_eps_nuc':1.0}
+
+###############################
+# Template for isotropic case # 
+###############################
+    
+    # hardcoded ejecta geometric and thermal parameters for the spherical case
+    ejecta_params_iso = {}
+    ejecta_params_iso['dynamics'] = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_iso['wind']     = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_iso['secular']  = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+
+    # set of shell parameters to be sampled on
+    ejecta_vars_iso={}
+
+    ejecta_vars_iso['dynamics'] = {'xi_disk'        :None,
+                                  'm_ej'           :0.04,
+                                  'step_angle_mass':None,
+                                  'high_lat_flag'  :None,
+                                  'central_vel'    :0.33,
+                                  'high_lat_vel'   :None,
+                                  'low_lat_vel'    :None,
+                                  'step_angle_vel' :None,
+                                  'central_op'     :30.,
+                                  'high_lat_op'    :None,
+                                  'low_lat_op'     :None,
+                                  'step_angle_op'  :None}
+
+    ejecta_vars_iso['secular'] = {'xi_disk'        :None,
+                                 'm_ej'           :0.05,
+                                 'step_angle_mass':None,
+                                 'high_lat_flag'  :None,
+                                 'central_vel'    :0.06,
+                                 'high_lat_vel'   :None,
+                                 'low_lat_vel'    :None,
+                                 'step_angle_vel' :None,
+                                 'central_op'     :5.0,
+                                 'low_lat_op'     :None,
+                                 'high_lat_op'    :None,
+                                 'step_angle_op'  :None}
+
+    ejecta_vars_iso['wind'] = {'xi_disk'        :None,
+                              'm_ej'           :0.02,
+                              'step_angle_mass':None,
+                              'high_lat_flag'  :True,
+                              'central_vel'    :0.08,
+                              'high_lat_vel'   :None,
+                              'low_lat_vel'    :None,
+                              'step_angle_vel' :None,
+                              'central_op'     :1.0,
+                              'high_lat_op'    :None,
+                              'low_lat_op'     :None,
+                              'step_angle_op'  :None}
+
+#################################
+# Template for anisotropic case # 
+#################################
+    
+    # hardcoded ejecta geometric and thermal parameters for the aspherical case
+    ejecta_params_aniso = {}
+    ejecta_params_aniso['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_aniso['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_aniso['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+
+    # set of shell parameters to be sampled on
+    ejecta_vars_aniso={}
+
+    ejecta_vars_aniso['dynamics'] = {'xi_disk'        :None,
+                                    'm_ej'           :0.04,
+                                    'step_angle_mass':None,
+                                    'high_lat_flag'  :None,
+                                    'central_vel'    :0.33,
+                                    'high_lat_vel'   :None,
+                                    'low_lat_vel'    :None,
+                                    'step_angle_vel' :None,
+                                    'central_op'     :None,
+                                    'high_lat_op'    :10.,
+                                    'low_lat_op'     :30.,
+                                    'step_angle_op'  :math.radians(45.)}
+
+    ejecta_vars_aniso['secular'] = {'xi_disk'        :0.2,
+                                   'm_ej'           :None,
+                                   'step_angle_mass':None,
+                                   'high_lat_flag'  :None,
+                                   'central_vel'    :0.06,
+                                   'high_lat_vel'   :None,
+                                   'low_lat_vel'    :None,
+                                   'step_angle_vel' :None,
+                                   'central_op'     :5.0,
+                                   'low_lat_op'     :None,
+                                   'high_lat_op'    :None,
+                                   'step_angle_op'  :None}
+ 
+    ejecta_vars_aniso['wind'] = {'xi_disk'        :0.1,
+                                'm_ej'           :None,
+                                'step_angle_mass':math.radians(60.),
+                                'high_lat_flag'  :True,
+                                'central_vel'    :0.08,
+                                'high_lat_vel'   :None,
+                                'low_lat_vel'    :None,
+                                'step_angle_vel' :None,
+                                'central_op'     :None,
+                                'high_lat_op'    :0.1,
+                                'low_lat_op'     :5.0,
+                                'step_angle_op'  :math.radians(30.)}
+
+
+##########################################################
+# choose the appropriate set of parameters and variables #
+##########################################################
+
+    if (glob_params['mkn model'] == 'iso1comp'):
+        ejecta_params = {}
+        ejecta_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_iso['dynamics']
+    elif (glob_params['mkn model'] == 'iso2comp'):
+        ejecta_params = {}
+        ejecta_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_iso['dynamics']
+        ejecta_params['secular'] = ejecta_params_iso['secular']
+        ejecta_vars['secular']    = ejecta_vars_iso['secular']
+    elif (glob_params['mkn model'] == 'iso3comp'):
+        ejecta_params = ejecta_params_iso
+        ejecta_vars    = ejecta_vars_iso
+    elif (glob_params['mkn model'] == 'aniso1comp'):
+        ejecta_params = {}
+        ejecta_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_aniso['dynamics']
+    elif (glob_params['mkn model'] == 'aniso2comp'):
+        ejecta_params = {}
+        ejecta_vars = {}
+        ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
+        ejecta_vars['dynamics']    = ejecta_vars_aniso['dynamics']
+        ejecta_params['secular'] = ejecta_params_aniso['secular']
+        ejecta_vars['secular']    = ejecta_vars_aniso['secular']
+    elif (glob_params['mkn model'] == 'aniso3comp'):
+        ejecta_params = ejecta_params_aniso
+        ejecta_vars    = ejecta_vars_aniso
+
     
     print('I am initializing the model')
     model = MKN(glob_params,glob_vars,ejecta_params,ejecta_vars,source_name)

@@ -143,7 +143,8 @@ if __name__=='__main__':
     source_name = 'AT2017gfo'
 
     #dictionary with the global parameters of the model not to be fit
-    glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
+    glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)
+                   'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :200,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
@@ -279,43 +280,34 @@ if __name__=='__main__':
 # choose the appropriate set of parameters and variables #
 ##########################################################
 
-    model_flag = 'iso1comp'
-# possible choices:
-#  1 - iso1comp
-#  2 - iso2comp
-#  3 - iso3comp
-#  4 - aniso1comp
-#  5 - aniso2comp
-#  6 - aniso3comp
-
-    if (model_flag == 'iso1comp'):
+    if (glob_params['mkn model'] == 'iso1comp'):
         ejecta_params = {}
         ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
         ejecta_vars['dynamics']    = ejecta_vars_iso['dynamics']
-    elif (model_flag == 'iso2comp'):
+    elif (glob_params['mkn model'] == 'iso2comp'):
         ejecta_params = {}
         ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_iso['dynamics']
         ejecta_vars['dynamics']    = ejecta_vars_iso['dynamics']
         ejecta_params['secular'] = ejecta_params_iso['secular']
         ejecta_vars['secular']    = ejecta_vars_iso['secular']
-    elif (model_flag == 'iso3comp'):
+    elif (glob_params['mkn model'] == 'iso3comp'):
         ejecta_params = ejecta_params_iso
         ejecta_vars    = ejecta_vars_iso
-    elif (model_flag == 'aniso1comp'):
+    elif (glob_params['mkn model'] == 'aniso1comp'):
         ejecta_params = {}
         ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
         ejecta_vars['dynamics']    = ejecta_vars_aniso['dynamics']
-    elif (model_flag == 'aniso2comp'):
+    elif (glob_params['mkn model'] == 'aniso2comp'):
         ejecta_params = {}
         ejecta_vars = {}
         ejecta_params['dynamics'] = ejecta_params_aniso['dynamics']
         ejecta_vars['dynamics']    = ejecta_vars_aniso['dynamics']
         ejecta_params['secular'] = ejecta_params_aniso['secular']
         ejecta_vars['secular']    = ejecta_vars_aniso['secular']
-    elif (model_flag == 'aniso3comp'):
+    elif (glob_params['mkn model'] == 'aniso3comp'):
         ejecta_params = ejecta_params_aniso
         ejecta_vars    = ejecta_vars_aniso
 

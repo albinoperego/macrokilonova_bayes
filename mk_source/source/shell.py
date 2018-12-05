@@ -53,7 +53,7 @@ class Shell(object):
                                        angular_distribution,
                                        omega_distribution,
                                        time,
-                                       shell_vars,
+                                       ejecta_vars,
                                        glob_vars,
                                        glob_params,
                                        shell_name,
@@ -76,10 +76,10 @@ class Shell(object):
         T_floor_Ni = glob_vars['T_floor_Ni']
         T_floor_LA = glob_vars['T_floor_LA']
 
-        if (shell_vars['m_ej'] == None):
-            m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
-        elif (shell_vars['xi_disk'] == None):
-            m_tot = np.float(shell_vars['m_ej'])
+        if (ejecta_vars['m_ej'] == None):
+            m_tot = np.float(glob_vars['m_disk']) * np.float(ejecta_vars['xi_disk'])
+        elif (ejecta_vars['xi_disk'] == None):
+            m_tot = np.float(ejecta_vars['m_ej'])
 
         if (glob_params['NR_data'] and shell_name == 'dynamics'):
             print('I am here')
@@ -91,14 +91,14 @@ class Shell(object):
                 g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
             g.close()
         else: 
-            self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
+            self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
             if (shell_name == 'dynamics'):
                 g = open('profile_noNR.txt','w')
                 for i in range(len(angular_distribution)):
                     g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
                 g.close()
             
-        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
+        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
         
@@ -202,7 +202,7 @@ class Shell(object):
                                               angular_distribution,
                                               omega_distribution,
                                               time,
-                                              shell_vars,
+                                              ejecta_vars,
                                               glob_vars,
                                               glob_params,
                                               shell_name,
@@ -225,12 +225,12 @@ class Shell(object):
         T_floor_Ni = glob_vars['T_floor_Ni']
         T_floor_LA = glob_vars['T_floor_LA']
 
-        if (shell_vars['m_ej'] == None):
-            m_tot = np.float(glob_vars['m_disk']) * np.float(shell_vars['xi_disk'])
-        elif (shell_vars['xi_disk'] == None):
-            m_tot = np.float(shell_vars['m_ej'])
+        if (ejecta_vars['m_ej'] == None):
+            m_tot = np.float(glob_vars['m_disk']) * np.float(ejecta_vars['xi_disk'])
+        elif (ejecta_vars['xi_disk'] == None):
+            m_tot = np.float(ejecta_vars['m_ej'])
 
-        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**shell_vars)#,**kwargs)
+        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
         
@@ -283,9 +283,9 @@ if __name__=="__main__":
              't_eps_nuc':1.0}
     params = {}
     params['dynamics']    = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step', 'therm_model':'BKWM', 'eps_ye_dep':True}
-    shell_vars={}
+    ejecta_vars={}
 
-    shell_vars['dynamics'] = {'xi_disk':None,
+    ejecta_vars['dynamics'] = {'xi_disk':None,
                           'm_ej':0.005,
                           'central_vel':0.2,
                           'low_lat_vel':None,
