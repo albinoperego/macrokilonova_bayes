@@ -108,6 +108,11 @@ def calc_fnu(lam,temp,rad,dist,ff):
   tmp2 = np.array([r*r * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
   return np.sum(tmp1+tmp2)/(dist*dist)
 
+def calc_lum_iso(llum,ff):
+  tmp1 = np.array([lum * f for lum,f in zip(llum,ff[:len(ff)//2])])
+  tmp2 = np.array([lum * f for lum,f in zip(llum[::-1],ff[len(ff)//2:])])
+  return np.sum(tmp1+tmp2,axis=0)
+
 def calc_magnitudes(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0):
 
     ordered_T = np.asarray([list(x) for x in zip(*T_ray)])
