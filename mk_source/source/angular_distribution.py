@@ -12,9 +12,9 @@ class AngularDistribution(object):
             print('Error: n_slices must be an even number!')
             exit(-1)
         if angular_law=="uniform":
-            self.angular_distribution = uniform_ang
+            self.angular_distribution = self.uniform_ang
         elif angular_law=="cos_uniform":
-            self.angular_distribution = cos_uniform_ang
+            self.angular_distribution = self.cos_uniform_ang
         else:
             print("Unknown angular distribution")
             exit(0)
@@ -22,17 +22,17 @@ class AngularDistribution(object):
     def __call__(self,n):
         return self.angular_distribution(n)
 
-def uniform_ang(n):
-    delta = np.pi/2./float(n)
-    a = np.array([ [delta*i,delta*(i+1)] for i in range(int(n))])
-    o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
-    return a,o
+    def uniform_ang(self,n):
+        delta = np.pi/2./float(n)
+        a = np.array([ [delta*i,delta*(i+1)] for i in range(int(n))])
+        o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
+        return a,o
 
-def cos_uniform_ang(n):
-    delta = 1./float(n)
-    a = np.array([ [np.arccos(delta*i),np.arccos(delta*(i-1))] for i in range(n,0,-1)])
-    o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
-    return a,o
+    def cos_uniform_ang(self,n):
+        delta = 1./float(n)
+        a = np.array([ [np.arccos(delta*i),np.arccos(delta*(i-1))] for i in range(n,0,-1)])
+        o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
+        return a,o
                           
 if __name__=="__main__":
     N = 12
