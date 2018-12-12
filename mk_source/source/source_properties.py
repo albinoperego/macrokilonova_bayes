@@ -14,7 +14,7 @@ class SourceProperties(object):
 
         if (source_label == 'default'):
             self.D = 40.e+6*units.pc2cm
-            self.view_angle = 30.
+            self.view_angle = 90.
             self.filter_data_folder=None
             self.t0 = 0.e0
 

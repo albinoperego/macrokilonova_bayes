@@ -10,11 +10,14 @@ class ExpansionModelSingleSpherical(object):
             print('No other expansion model presently implemented\n')
             exit(-1)
         
-    def __call__(self, omega, m_ej, v_rms, v_min, n_v, vscale, kappa, **kwargs):
-        return self.expansion_model_single_spherical(omega,m_ej,v_rms,v_min,n_v,vscale,kappa, **kwargs)
+    def __call__(self, omega, m_ej, v_rms, v_min, n_v, vscale, vlaw, kappa, **kwargs):
+        return self.expansion_model_single_spherical(omega,m_ej,v_rms,v_min,n_v,vscale,vlaw,kappa, **kwargs)
 
-    def mass_gt_v(self,v,mej,v_exp):
-        return mej*units.Msun*(1.0 + self.func_vel(v/v_exp))  #[g]
+    def mass_gt_v(self,vlaw,v,mej,v_exp):
+        if (vlaw == 'power'):
+            return mej*units.Msun*(1.0 + self.func_vel(v/v_exp))  #[g]
+        elif (vlaw == 'uniform'):
+            return mej*units.Msun*(1.0-(v/v_exp))  #[g]
 
     def func_vel(self,x):
 #    0.3125 = 35./112.
@@ -32,9 +35,13 @@ class ExpansionModelSingleSpherical(object):
     def t_fs_v(self,kappa,v,m_v,omega):
         return np.sqrt(1.5*kappa*m_v/(omega*v*v*units.c*units.c))  #[s]
 
-    def GK_expansion_model(self,Omega,m_ej,v_rms,v_min,n_v,vscale,kappa,**kwargs):
+    def GK_expansion_model(self,Omega,m_ej,v_rms,v_min,n_v,vscale,vlaw,kappa,**kwargs):
 
-        v_max  = 3.*v_rms
+        if (vlaw == 'power'):
+            v_max  = 3.*v_rms
+        elif (vlaw == 'uniform'):
+            v_max  = np.sqrt(3) * v_rms
+
         if (vscale == 'linear'):
             vel    = np.linspace(v_min,v_max,n_v)
         elif (vscale == 'log'):
@@ -42,7 +49,7 @@ class ExpansionModelSingleSpherical(object):
         else:
             print('Wrong scale for expansion velocity')
             exit(0)
-        m_vel  = self.mass_gt_v(vel,m_ej,v_max)
+        m_vel  = self.mass_gt_v(vlaw,vel,m_ej,v_max)
         t_diff = self.t_diff_v(kappa,vel,m_vel,Omega)
         t_fs   = self.t_fs_v(kappa,vel,m_vel,Omega)
         return vel,m_vel,t_diff,t_fs

@@ -54,12 +54,14 @@ class Shell(object):
                                        omega_distribution,
                                        time,
                                        ejecta_vars,
+                                       ejecta_params,
                                        glob_vars,
                                        glob_params,
                                        shell_name,
                                        **kwargs):
                                        
 # assign the global model variables
+        v_law    = ejecta_params['v_law']
         v_min    = glob_params['v_min']
         n_v      = glob_params['n_v']
         vscale   = glob_params['vscale']
@@ -101,16 +103,23 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-        
+       
+#        m_rad_tot = []
+ 
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
-            vel,m_vel,t_diff,t_fs = self.expansion_model(omega,m_ej,v_rms,v_min,n_v,vscale,kappa)
+            vel,m_vel,t_diff,t_fs = self.expansion_model(omega,m_ej,v_rms,v_min,n_v,vscale,v_law,kappa)
 
             v_diff  = np.interp(time, t_diff[::-1], vel[::-1])
             v_fs    = np.interp(time, t_fs[::-1], vel[::-1])
             mv_diff = np.interp(time, t_diff[::-1], m_vel[::-1])
             mv_fs   = np.interp(time, t_fs[::-1], m_vel[::-1])
             m_rad = mv_diff-mv_fs
+#            m_rad = mv_diff
+
+#            m_rad_tot.append(m_rad)
+
+        #    print(m_rad.shape)
 
             Ltmp = m_rad * self.EPSNUC(alpha,time,t0eps,sigma0,
                           eps0,self.ET,m_ej,omega,v_rms,
@@ -141,6 +150,17 @@ class Shell(object):
             self.physical_radius.append(np.array([min(r,np.sqrt(units.fourpi/omega*L/(units.fourpisigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
 
             self.Lbol.append(Ltmp)
+
+#        print('Lbol',self.Lbol)
+#        print('Lbol shape',np.asarray(self.Lbol).shape)
+
+#        m_rad_tot = np.asarray(m_rad_tot)
+#        m_rad_tot_sum = np.sum(m_rad_tot,axis=0)
+
+#        print(m_rad_tot_sum.shape)
+#        print(m_rad_tot_sum/1.98e+33)
+#        print(time/86400.)
+#        exit()
 
         return self.physical_radius, self.Lbol
 
@@ -203,12 +223,14 @@ class Shell(object):
                                               omega_distribution,
                                               time,
                                               ejecta_vars,
+                                              ejecta_params,
                                               glob_vars,
                                               glob_params,
                                               shell_name,
                                               **kwargs):
         
 # assign the global model variables
+        v_law    = ejecta_params['v_law']
         v_min    = glob_params['v_min']
         n_v      = glob_params['n_v']
         vscale   = glob_params['vscale']
