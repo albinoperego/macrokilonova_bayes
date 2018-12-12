@@ -42,14 +42,14 @@ def heat_rate_w_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_ef
     if(kwargs['normalize']):
         m_ej=m_ej/units.Msun
         v_rms=v_rms/units.c
-    eps_th = ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=0.333)
+    eps_th = ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=cnst_eff)
     return eps_nuc*(0.5 - units.oneoverpi * np.arctan((t-t0)/sigma0))**alpha * (2.*eps_th)  #here I am dividing eps_th by 0.5
 
-def heat_rate_wo_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_eff):
-    eps_nuc = eps_cnst_fac * eps0
+def heat_rate_wo_ye_dependence(alpha,t,t0,sigma0,eps0,ET,m_ej,Omega,v_rms,cnst_eff, **kwargs):
+    eps_nuc = eps0
     if(kwargs['normalize']):
         m_ej=m_ej/units.Msun
         v_rms=v_rms/units.c    
-    eps_th = ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=0.333)
+    eps_th = ET(time_sec=t,mass_ej=m_ej,omega=Omega,vel=v_rms,cnst_eff=cnst_eff)
     return eps_nuc*(0.5 - units.oneoverpi * np.arctan((t-t0)/sigma0))**alpha * (2.*eps_th)  #here I am dividing eps_th by 0.5
 
