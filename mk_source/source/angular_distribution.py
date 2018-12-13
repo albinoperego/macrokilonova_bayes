@@ -19,20 +19,20 @@ class AngularDistribution(object):
             print("Unknown angular distribution")
             exit(0)
         
-    def __call__(self,n):
-        return self.angular_distribution(n)
+    def __call__(self,n,omega_frac):
+        return self.angular_distribution(n,omega_frac)
 
-    def uniform_ang(self,n):
+    def uniform_ang(self,n,omega_fraction):
         delta = np.pi/2./float(n)
         a = np.array([ [delta*i,delta*(i+1)] for i in range(int(n))])
         o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
-        return a,o
+        return a,o*omega_fraction
 
-    def cos_uniform_ang(self,n):
+    def cos_uniform_ang(self,n,omega_fraction):
         delta = 1./float(n)
         a = np.array([ [np.arccos(delta*i),np.arccos(delta*(i-1))] for i in range(n,0,-1)])
         o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
-        return a,o
+        return a,o*omega_fraction
                           
 if __name__=="__main__":
     N = 12

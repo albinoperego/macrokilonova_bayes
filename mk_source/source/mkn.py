@@ -39,7 +39,7 @@ class MKN(object):
         self.n_slices = glob_params['n slices']
         self.dist_slices = glob_params['dist slices']
         self.AD = ad.AngularDistribution(self.dist_slices,self.n_slices)
-        self.angular_distribution, self.omega_distribution = self.AD(self.n_slices/2)   # due to the symmetry abount the equatorial plane, the number of independent slices is half
+        self.angular_distribution, self.omega_distribution = self.AD(self.n_slices/2,glob_params['omega frac'])   # due to the symmetry abount the equatorial plane, the number of independent slices is half
 
         # initialize the filters
         print('I am initializing the filters')
@@ -217,6 +217,7 @@ if __name__=='__main__':
 #dictionary with the global parameters of the model
     glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
                    'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
+                   'omega frac' :0.5,           # 
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :400,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model

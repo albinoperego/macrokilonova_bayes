@@ -4,9 +4,7 @@ import mass_angular_distribution
 import thermalization
 import velocity_angular_distribution
 import opacity_angular_distribution
-import initialize_components
 import units
-import initialize_components
 import observer_projection as op
 import nuclear_heat
 import scipy.integrate as integrate

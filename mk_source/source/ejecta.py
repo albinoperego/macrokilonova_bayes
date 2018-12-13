@@ -1,6 +1,5 @@
 import angular_distribution
 import filters as ft
-import initialize_components
 import mass_angular_distribution
 import nuclear_heat
 import numpy as np
