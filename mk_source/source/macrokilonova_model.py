@@ -109,6 +109,7 @@ class MacroKilonovaModel(cpnest.model.Model):
                                                    self.MKN.omega_distribution,
                                                    self.MKN.time,
                                                    self.MKN.ejecta_vars,
+                                                   self.MKN.ejecta_params,
                                                    self.MKN.glob_vars,
                                                    self.MKN.glob_params)
 
@@ -145,6 +146,8 @@ if __name__=='__main__':
     #dictionary with the global parameters of the model not to be fit
     glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)
                    'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
+                   'omega frac' :1.0,           #
+                   'rad shell'  :True,          #
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :200,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
@@ -177,22 +180,22 @@ if __name__=='__main__':
     
     # hardcoded ejecta geometric and thermal parameters for the spherical case
     ejecta_params_iso = {}
-    ejecta_params_iso['dynamics'] = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
-    ejecta_params_iso['wind']     = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
-    ejecta_params_iso['secular']  = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_iso['dynamics'] = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True,'v_law':'power'}
+    ejecta_params_iso['wind']     = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True,'v_law':'power'}
+    ejecta_params_iso['secular']  = {'mass_dist':'uniform','vel_dist':'uniform','op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True,'v_law':'power'}
 
     # set of shell parameters to be sampled on
     ejecta_vars_iso={}
 
     ejecta_vars_iso['dynamics'] = {'xi_disk'        :None,
-                                  'm_ej'           :[5.e-4,2.e-2],
+                                  'm_ej'           :[5.e-4,1.e-1],
                                   'step_angle_mass':None,
                                   'high_lat_flag'  :None,
                                   'central_vel'    :[0.001, 0.333],
                                   'high_lat_vel'   :None,
                                   'low_lat_vel'    :None,
                                   'step_angle_vel' :None,
-                                  'central_op'     :[0.1,30.],
+                                  'central_op'     :[0.1,40.],
                                   'high_lat_op'    :None,
                                   'low_lat_op'     :None,
                                   'step_angle_op'  :None}
@@ -229,9 +232,9 @@ if __name__=='__main__':
     
     # hardcoded ejecta geometric and thermal parameters for the aspherical case
     ejecta_params_aniso = {}
-    ejecta_params_aniso['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
-    ejecta_params_aniso['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True}
-    ejecta_params_aniso['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True}
+    ejecta_params_aniso['dynamics'] = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True,'v_law':'power'}
+    ejecta_params_aniso['wind']     = {'mass_dist':'step', 'vel_dist':'uniform', 'op_dist':'step'   ,'therm_model':'BKWM','eps_ye_dep':True,'v_law':'power'}
+    ejecta_params_aniso['secular']  = {'mass_dist':'sin2', 'vel_dist':'uniform', 'op_dist':'uniform','therm_model':'BKWM','eps_ye_dep':True,'v_law':'power'}
 
     # set of shell parameters to be sampled on
     ejecta_vars_aniso={}

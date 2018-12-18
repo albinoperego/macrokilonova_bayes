@@ -217,7 +217,8 @@ if __name__=='__main__':
 #dictionary with the global parameters of the model
     glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
                    'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
-                   'omega frac' :0.5,           # 
+                   'omega frac' :0.5,           #
+                   'rad shell'  :False,         #
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :400,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
