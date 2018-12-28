@@ -101,6 +101,10 @@ class MacroKilonovaModel(cpnest.model.Model):
 #        self.ejecta_vars['secular']['xi_disk'] = min(self.ejecta_vars['secular']['xi_disk'], 1.0 - self.ejecta_vars['wind']['xi_disk'])
 #        x['xi_disk_secular'] = self.ejecta_vars['secular']['xi_disk']
 
+    # define force for hamiltonian montecarlo 
+    def force(self, x):
+        return np.zeros(1, dtype = {'names':x.names, 'formats':['f8' for _ in x.names]})
+
     def log_likelihood(self,x):
 
         self.flux_factor = self.MKN.FF(x['view_angle'])
@@ -323,14 +327,14 @@ if __name__=='__main__':
         model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, ejecta_vars,source_name)
         work  = cpnest.CPNest(model,
                             verbose=2,
-                            Poolsize=opts.poolsize,
-                            Nthreads=opts.threads,
-                            Nlive=opts.nlive,
+                            poolsize=opts.poolsize,
+                            nthreads=opts.threads,
+                            nlive=opts.nlive,
                             maxmcmc=opts.maxmcmc,
                             output=opts.out_dir,
                             seed=opts.seed)
         work.run()
-
+        work.get_posterior_samples(filename = 'posterior.dat')
 """
     fig1 = plt.figure()
     band_list = ['U','B','g','V','R']
