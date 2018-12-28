@@ -14,7 +14,7 @@ class ExpansionModelSingleSpherical(object):
         return self.expansion_model_single_spherical(omega,m_ej,v_rms,v_min,n_v,vscale,vlaw,kappa, **kwargs)
 
     def mass_gt_v(self,vlaw,v,mej,v_exp):
-        if (vlaw == 'power'):
+        if (vlaw == 'poly'):
             return mej*units.Msun*(1.0 + self.func_vel(v/v_exp))  #[g]
         elif (vlaw == 'uniform'):
             return mej*units.Msun*(1.0-(v/v_exp))  #[g]
@@ -37,7 +37,7 @@ class ExpansionModelSingleSpherical(object):
 
     def GK_expansion_model(self,Omega,m_ej,v_rms,v_min,n_v,vscale,vlaw,kappa,**kwargs):
 
-        if (vlaw == 'power'):
+        if (vlaw == 'poly'):
             v_max  = 3.*v_rms
         elif (vlaw == 'uniform'):
             v_max  = np.sqrt(3) * v_rms
