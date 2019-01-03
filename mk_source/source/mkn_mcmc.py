@@ -7,6 +7,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import observer_projection as op
+import sys
 import source_properties as sp
 import units
 
@@ -216,6 +217,8 @@ class MKN(object):
 
 if __name__=='__main__':
 
+    num_threads = int(sys.argv[1])
+
 #dictionary with the global parameters of the model
     glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
                    'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
@@ -399,7 +402,7 @@ if __name__=='__main__':
             return -np.inf
         return lp + model.log_like(theta,var_list,ejecta_vars,ejecta_params,glob_vars,glob_params)
 
-    ndim, nwalkers = 3,50
+    ndim, nwalkers = 3,500
 
     mcmc_var_list=[
                    #'gv_m_disk',
@@ -490,28 +493,23 @@ if __name__=='__main__':
     vmin = np.asarray([item[0] for item in mcmc_var_minmax])
     vmax = np.asarray([item[1] for item in mcmc_var_minmax])
 
-#    vmin=np.asarray([0.001,0.01,0.1])
-#    vmax=np.asarray([0.2,0.33,30.])
-
     pos = [vmin + np.random.uniform(0.,1.,ndim)*(vmax-vmin) for i in range(nwalkers)]
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, args=(mcmc_var_list,vmin,vmax,ejecta_vars,ejecta_params,glob_vars,glob_params), threads=3)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, args=(mcmc_var_list,vmin,vmax,ejecta_vars,ejecta_params,glob_vars,glob_params), threads=num_threads)
 
-#    sampler.run_mcmc(pos, 500)
+#    f = open("chain.dat", "w")
+#    f.close()
 
-    f = open("chain.dat", "w")
-    f.close()
-
-    nsteps = 100
+    nsteps = 1000
     for i, result in enumerate(sampler.sample(pos, iterations=nsteps)):
         if (i+1) % 10 == 0:
             print("{0:5.1%}".format(float(i) / nsteps))
             position = result[0]
-            f = open("chain.dat", "a")
-            for k in range(position.shape[0]):
-                #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
-                f.write("{0:4d} {1:s}\n".format(k,position[k]))
-            f.close()
+#            f = open("chain.dat", "a")
+#            for k in range(position.shape[0]):
+#                #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
+#                f.write("{0:4d} {1:s}\n".format(k,position[k]))
+#            f.close()
 
     samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
 
@@ -523,7 +521,8 @@ if __name__=='__main__':
     print('m mcmc',m_mcmc)
     print('v mcmc',v_mcmc)
     print('k mcmc',k_mcmc)
-
+    
+    '''
     fig2 = plt.figure(2)
     for i in range(nwalkers):
         plt.plot(sampler.chain[i,:,0])
@@ -539,4 +538,4 @@ if __name__=='__main__':
     fig5 = corner.corner(samples, labels=["$m$", "$v$", "$k$"])
 
     plt.show()
-
+    '''

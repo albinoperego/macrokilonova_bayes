@@ -30,7 +30,7 @@ class AngularDistribution(object):
 
     def cos_uniform_ang(self,n,omega_fraction):
         delta = 1./float(n)
-        a = np.array([ [np.arccos(delta*i),np.arccos(delta*(i-1))] for i in range(n,0,-1)])
+        a = np.array([ [np.arccos(delta*float(i)),np.arccos(delta*float(i-1))] for i in range(int(n),0,-1)])
         o = np.array([ 2.*np.pi*(np.cos(x[0]) - np.cos(x[1])) for x in a])
         return a,o*omega_fraction
                           
