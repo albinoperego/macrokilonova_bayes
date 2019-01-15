@@ -81,32 +81,8 @@ class MKN(object):
         self.E = ej.Ejecta(len(self.ejecta_params.keys()), self.ejecta_params.keys(), self.ejecta_params)
 
 #############################
-#  LIGHT CURVE CALCULATION  #
+#  LIKELIHOOD CALCULATION  #
 #############################
-
-#    def lightcurve(self,ejecta_vars,NR_data,NR_filename):
-
-#        self.ejecta_vars = ejecta_vars 
-
-        # compute the lightcurve
-#        r_ph, L_bol, T_eff = self.E.lightcurve(self.angular_distribution,
-#                                               self.omega_distribution,
-#                                               self.time,
-#                                               self.ejecta_vars,
-#                                               self.glob_vars,
-#                                               self.glob_params,
-#                                               NR_data,
-#                                               NR_filename)
-
-#        return r_ph,L_bol,T_eff
-
-    def compute_log_likelihood(self,residuals):
-        # compute the likelihood
-        logL = 0.
-        for ilambda in residuals.keys():
-            logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-        
-        return logL
 
     def compute_log_likelihood(self,residuals):
         # compute the likelihood
@@ -129,10 +105,6 @@ class MKN(object):
             print('and then I am computing the likelihood')
             logL = self.compute_log_likelihood(residuals)
 
-#            logL = 0.
-#            for ilambda in residuals.keys():
-#                logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-
             print('logL')
             print(logL)
 
@@ -147,32 +119,38 @@ class MKN(object):
 
     def write_output(self,r_ph,T_eff,L_bol):
 
+        # compute the bolometric luminosity
         self.model_lum = ft.calc_lum_iso(L_bol,self.flux_factor)
 
+        # compute the magnitudes
         self.model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,self.D,self.t0)
 
+        # open the output file
         file_output = 'mkn_model.txt'
         g = open(file_output,'w')
 
         print('file name:',file_output)
 
+        # write the header
         g.write('%20s %20s' %('time','luminosity'))
         for ilambda in self.dic_filt.keys():
+            if (self.dic_filt[ilambda]['active'] !=1):
+                continue
             g.write('%20s' %(self.dic_filt[ilambda]['name']))
         g.write('\n')
         g.write('%20s %20s' %('[s]','[erg/s]'))
         g.write('\n')
     
+        # write profiles of the physical quantities
         for i in range(len(self.time)):
             g.write('%20s %20s' %(self.time[i],self.model_lum[i]))
-            for ilambda in self.model_mag.keys():
-                if (ilambda == 0):
+            for ilambda in self.dic_filt.keys():
+                if (self.dic_filt[ilambda]['active'] !=1):
                     continue
                 g.write('%20s' %(self.model_mag[ilambda][i]))
             g.write('\n')
 
         g.close()
-
 
 ################################
 # plot some of the lightcurves #
@@ -191,7 +169,7 @@ class MKN(object):
                 if(len(self.mag[ilambda]['sigma'])!=0):
                     plt.errorbar(self.mag[ilambda]['time']-self.t0,self.mag[ilambda]['mag'],yerr=self.mag[ilambda]['sigma'],fmt='o')
             plt.title('%s' %self.dic_filt[ilambda]['name'])
-            plt.xlim(0.1,10)
+            plt.xlim(0.1,5)
             plt.ylim(27,15)
             plt.show()
         
@@ -207,7 +185,7 @@ class MKN(object):
                 if(len(self.mag[ilambda]['sigma'])!=0):
                     plt.errorbar(self.mag[ilambda]['time']-self.t0,self.mag[ilambda]['mag'],yerr=self.mag[ilambda]['sigma'],fmt='o')
         plt.title('Lightcurves')
-        plt.xlim(0.1,10)
+        plt.xlim(0.1,5)
         plt.ylim(27,15)
         plt.show()
 
@@ -229,7 +207,7 @@ if __name__=='__main__':
                    'n slices'   :30,            # number for the number of slices along the polar angle [12,18,24,30]
                    'dist slices':'cos_uniform', # discretization law for the polar angle [uniform or cos_uniform]
                    'time min'   :3600.,         # minimum time [s]
-                   'time max'   :2000000.,      # maximum time [s]
+                   'time max'   :432000.,       # maximum time [s]
                    'n time'     :200,           # integer number of bins in time
                    'scale for t':'log',         # kind of spacing in time [log - linear - measures]
                    'NR_data'    :False,         # use (True) or not use (False) NR profiles
@@ -410,8 +388,8 @@ if __name__=='__main__':
         print('I am printing out the output')
         model.write_output(r_ph,T_eff,L_bol)
 
-    plot_separately = True            # Choose to plot all lightcurves in different bands on the same plot
-    plot_together = False             # or to plot lightcurve and data in each band on different plots
+    plot_separately = False            # Choose to plot all lightcurves in different bands on the same plot
+    plot_together = True             # or to plot lightcurve and data in each band on different plots
 
     if (plot_separately):
         model.plot_output_sep()
