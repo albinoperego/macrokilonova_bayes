@@ -47,7 +47,7 @@ class MKN(object):
             self.FT = ft.Filters("properties")
         else:
             self.FT = ft.Filters("measures")
-        self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder)
+        self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder,glob_params["time min"]*units.sec2day+SP.t0,glob_params["time max"]*units.sec2day+SP.t0)
 
 
         #initialize the time
@@ -206,7 +206,7 @@ if __name__=='__main__':
                    'cnst_eff'   :0.3333,        # parameter for the constant heating efficiency
                    'n slices'   :30,            # number for the number of slices along the polar angle [12,18,24,30]
                    'dist slices':'cos_uniform', # discretization law for the polar angle [uniform or cos_uniform]
-                   'time min'   :3600.,         # minimum time [s]
+                   'time min'   :200000.,         # minimum time [s]
                    'time max'   :432000.,       # maximum time [s]
                    'n time'     :200,           # integer number of bins in time
                    'scale for t':'log',         # kind of spacing in time [log - linear - measures]

@@ -29,9 +29,9 @@ class Filters(object):
         self.lambda_vec = None
         self.measures = None
 
-    def __call__(self,folder):
+    def __call__(self,folder,time_min,time_max):
         if (self.dic_filt is None) and (self.lambda_vec is None) and (self.measures is None):
-            self.dic_filt, self.lambda_vec, self.measures = self.read_filters(folder)
+            self.dic_filt, self.lambda_vec, self.measures = self.read_filters(folder,time_min,time_max)
         return self.dic_filt, self.lambda_vec, self.measures
 
 
@@ -50,7 +50,7 @@ def read_measurements(filename):
     return t, magnitude, magnitude_error
 
 
-def read_filter_measures(folder_name):
+def read_filter_measures(folder_name,t_min,t_max):
     dic_filt,lambda_vec,dummy = read_filter_properties(folder_name)
 # load the measured magnitudes
     measures={}
@@ -63,6 +63,18 @@ def read_filter_measures(folder_name):
             for fname in dic_filt[ilambda]["filename"]:
 
                 t,m,sm = read_measurements(folder_name+"/"+fname)
+                t_orig = np.asarray(t)
+                m = np.asarray(m)
+                sm = np.asarray(sm)
+
+                t_tmp  = t[t_orig > t_min]  
+                m_tmp  = m[t_orig > t_min]  
+                sm_tmp = sm[t_orig > t_min] 
+
+                t  = t_tmp[t_tmp < t_max]  
+                m  = m_tmp[t_tmp < t_max]  
+                sm = sm_tmp[t_tmp < t_max] 
+
                 if(upper_limits):
                     t_tot = np.append(t_tot,t)
                     m_tot = np.append(m_tot,m)
