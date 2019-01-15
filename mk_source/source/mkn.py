@@ -217,8 +217,8 @@ if __name__=='__main__':
 #dictionary with the global parameters of the model
     glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
                    'mkn model'  :'iso1comp',    # possible choices: iso1comp, iso2comp, iso3comp, aniso1comp, aniso2comp, aniso3comp
-                   'omega frac' :1.0,           #
-                   'rad shell'  :True,          #
+                   'omega frac' :1.0,           # fraction of the solid angle filled by the ejecta
+                   'rad shell'  :True,          # exclude the free streaming part
                    'v_min'      :1.e-7,         # minimal velocity for the Grossman model
                    'n_v'        :400,           # number of points for the Grossman model
                    'vscale'     :'linear',      # scale for the velocity in the Grossman model
@@ -231,22 +231,22 @@ if __name__=='__main__':
                    'time min'   :3600.,         # minimum time [s]
                    'time max'   :2000000.,      # maximum time [s]
                    'n time'     :200,           # integer number of bins in time
-                   'scale for t':'log',    # kind of spacing in time [log - linear - measures]
+                   'scale for t':'log',         # kind of spacing in time [log - linear - measures]
                    'NR_data'    :False,         # use (True) or not use (False) NR profiles
                    'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
                    }
     
-    #source_name = 'AT2017gfo'   # name of the source or "default"
-    source_name = 'default'   # name of the source or "default"
+    source_name = 'AT2017gfo'   # name of the source or "default"
+    #source_name = 'default'   # name of the source or "default"
     
     # dictionary for the global variables
-    glob_vars = {'m_disk':0.12,
-                 'eps0':1.5e19, 
-                 'T_floor_LA':1000., 
-                 'T_floor_Ni':3500., 
-                 'a_eps_nuc':0.5,
-                 'b_eps_nuc':2.5,
-                 't_eps_nuc':1.0}
+    glob_vars = {'m_disk':0.12,        # mass of the disk [Msun], useful if the ejecta is expressed as a fraction of the disk mass
+                 'eps0':1.5e19,        # prefactor of the nuclear heating rate [erg/s/g]
+                 'T_floor_LA':1000.,   # floor temperature for Lanthanides [K] 
+                 'T_floor_Ni':3500.,   # floor temperature for Nikel [K]
+                 'a_eps_nuc':0.5,      # variation of the heating rate due to weak r-process heating: first parameter
+                 'b_eps_nuc':2.5,      # variation of the heating rate due to weak r-process heating: second parameter
+                 't_eps_nuc':1.0}      # variation of the heating rate due to weak r-process heating: time scale [days]
 
 ###############################
 # Template for isotropic case # 
@@ -410,7 +410,7 @@ if __name__=='__main__':
         print('I am printing out the output')
         model.write_output(r_ph,T_eff,L_bol)
 
-    plot_separately = False            # Choose to plot all lightcurves in different bands on the same plot
+    plot_separately = True            # Choose to plot all lightcurves in different bands on the same plot
     plot_together = False             # or to plot lightcurve and data in each band on different plots
 
     if (plot_separately):
