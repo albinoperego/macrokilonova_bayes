@@ -1,12 +1,15 @@
 import angular_distribution as ad
 import corner
 import emcee
+#from emcee.utils import MPIPool
 import ejecta as ej
 import filters as ft
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 import observer_projection as op
+from optparse import OptionParser
+import os
 import sys
 import source_properties as sp
 import units
@@ -44,7 +47,7 @@ class MKN(object):
             self.FT = ft.Filters("properties")
         else:
             self.FT = ft.Filters("measures")
-        self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder)
+        self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder,glob_params["time min"]*units.sec2day+SP.t0,glob_params["time max"]*units.sec2day+SP.t0)
 
 
         #initialize the time
@@ -79,6 +82,14 @@ class MKN(object):
         return logL
 
     def log_likelihood(self,r_ph,T_eff):
+
+        # check the viewing angle and overwrite, if necessary
+        if (glob_vars['view_angle'] != None):
+            self.view_angle=glob_vars['view_angle']
+
+        # check the source distance and overwrite, if necessary
+        if (glob_vars['source_distance'] != None):
+            self.D = glob_vars['source_distance']*units.pc2cm
 
         self.flux_factor = self.FF(self.view_angle)
 
@@ -118,6 +129,10 @@ class MKN(object):
                 glob_vars['m_disk'] = val
             elif (item == 'gv_eps0'):
                 glob_vars['eps0'] = val 
+            elif (item == 'gv_view_angle'):
+                glob_vars['view_angle'] = val 
+            elif (item == 'gv_source_distance'):
+                glob_vars['source_distance'] = val 
             elif (item == 'gv_T_floor_LA'):
                 glob_vars['T_floor_LA'] = val
             elif (item == 'gv_T_floor_Ni'):
@@ -216,8 +231,12 @@ class MKN(object):
 # ===================================================================================
 
 if __name__=='__main__':
-
-    num_threads = int(sys.argv[1])
+    parser=OptionParser()
+    parser.add_option('--outdir',default=None,type='string',metavar='DIR',help='Directory for output')
+    parser.add_option('--nthreads',default=None,type='int',metavar='N',help='Number of threads (default = 1)')
+    parser.add_option('--nwalkers',default=100,type='int',metavar='n',help='Number of walkers (default = 100)')
+    parser.add_option('--nsteps',default=1000,type='int',metavar='m',help='Number of steps (default = 1000)')
+    (opts,args)=parser.parse_args()
 
 #dictionary with the global parameters of the model
     glob_params = {'lc model'   :'grossman',    # model for the lightcurve (grossman or villar)  
@@ -231,12 +250,12 @@ if __name__=='__main__':
                    'alpha'      :1.3,           # parameter for the nuclear heating rate
                    't0eps'      :1.3,           # parameter for the nuclear heating rate
                    'cnst_eff'   :0.3333,        # parameter for the constant heating efficiency
-                   'n slices'   :30,            # number for the number of slices along the polar angle [12,18,24,30]
+                   'n slices'   :12,            # number for the number of slices along the polar angle [12,18,24,30]
                    'dist slices':'cos_uniform', # discretization law for the polar angle [uniform or cos_uniform]
                    'time min'   :3600.,         # minimum time [s]
-                   'time max'   :2000000.,      # maximum time [s]
+                   'time max'   :432000.,       # maximum time [s]
                    'n time'     :200,           # integer number of bins in time
-                   'scale for t':'log',    # kind of spacing in time [log - linear - measures]
+                   'scale for t':'measures',    # kind of spacing in time [log - linear - measures]
                    'NR_data'    :False,         # use (True) or not use (False) NR profiles
                    'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
                    }
@@ -246,7 +265,9 @@ if __name__=='__main__':
     
     # dictionary for the global variables
     glob_vars = {'m_disk':0.12,
-                 'eps0':1.5e19, 
+                 'eps0':1.5e19,
+                 'view_angle':None,      # [deg]; it uses the one in source properties
+                 'source_distance':None, # [pc] ; it uses the one in source properties
                  'T_floor_LA':1000., 
                  'T_floor_Ni':3500., 
                  'a_eps_nuc':0.5,
@@ -254,7 +275,7 @@ if __name__=='__main__':
                  't_eps_nuc':1.0}
 
 ###############################
-# Template for isotropic case # 
+# Template for isotropic case #
 ###############################
     
     # hardcoded ejecta geometric and thermal parameters for the spherical case
@@ -402,13 +423,16 @@ if __name__=='__main__':
             return -np.inf
         return lp + model.log_like(theta,var_list,ejecta_vars,ejecta_params,glob_vars,glob_params)
 
-    ndim, nwalkers = 3,500
+    ndim     = 6
+    nwalkers = opts.nwalkers
 
     mcmc_var_list=[
                    #'gv_m_disk',
-                   #'gv_eps0',
-                   #'gv_T_floor_LA',
-                   #'gv_T_floor_Ni',
+                   'gv_eps0',
+                   #'gv_view_angle',
+                   #'gv_source_distance',
+                   'gv_T_floor_LA',
+                   'gv_T_floor_Ni',
                    #'gv_a_eps_nuc',
                    #'gv_b_eps_nuc',
                    #'gv_t_eps_nuc',
@@ -449,9 +473,11 @@ if __name__=='__main__':
 
     mcmc_var_minmax=[
                      #[],   #'gv_m_disk'
-                     #[],   #'gv_eps0'
-                     #[],   #'gv_T_floor_LA'
-                     #[],   #'gv_T_floor_Ni'
+                     [1.e18,1.e20],   #'gv_eps0'
+                     #[]    # gv_view_angle',
+                     #[]    # gv_source_distance',
+                     [500.,5000.],   #'gv_T_floor_LA'
+                     [500.,5000.],   #'gv_T_floor_Ni'
                      #[],   #'gv_a_eps_nuc'
                      #[],   #'gv_b_eps_nuc'
                      #[],   #'gv_t_eps_nuc'
@@ -495,47 +521,88 @@ if __name__=='__main__':
 
     pos = [vmin + np.random.uniform(0.,1.,ndim)*(vmax-vmin) for i in range(nwalkers)]
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, args=(mcmc_var_list,vmin,vmax,ejecta_vars,ejecta_params,glob_vars,glob_params), threads=num_threads)
+#    pool = MPIPool()
+#    if not pool.is_master():
+#        pool.wait()
+#        sys.exit(0)
 
-#    f = open("chain.dat", "w")
-#    f.close()
+    sampler = emcee.EnsembleSampler(opts.nwalkers, 
+                                    ndim, 
+                                    log_prob, 
+                                    args=(mcmc_var_list,
+                                          vmin,
+                                          vmax,
+                                          ejecta_vars,
+                                          ejecta_params,
+                                          glob_vars,
+                                          glob_params), 
+                                    threads=opts.nthreads)
 
-    nsteps = 1000
-    for i, result in enumerate(sampler.sample(pos, iterations=nsteps)):
+    print('I am here')
+
+    if (opts.outdir is not 'None'):
+        try:
+            os.stat(opts.outdir)
+        except:
+            os.mkdir(opts.outdir)
+
+        f = open(opts.outdir+"/chain.dat", "w")
+        f.close()
+
+    for i, result in enumerate(sampler.sample(pos, iterations=opts.nsteps)):
         if (i+1) % 10 == 0:
-            print("{0:5.1%}".format(float(i) / nsteps))
-            position = result[0]
-#            f = open("chain.dat", "a")
-#            for k in range(position.shape[0]):
-#                #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
-#                f.write("{0:4d} {1:s}\n".format(k,position[k]))
-#            f.close()
+            print("{0:5.1%}".format(float(i) / float(opts.nsteps)))
+            # position = result[0]
+            #f = open("chain.dat", "a")
+            #for k in range(position.shape[0]):
+            #    #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
+            #    f.write("{0:4d} {1:s}\n".format(k,position[k]))
+            #f.close()
 
-    samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
+            '''
+            if (opts.outdir is not 'None'):
+                f = open(opts.outdir+"/chain.dat", "a")
+                for k in range(position.shape[0]):
+                #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
+                    f.write("{0:4d} {1:s}\n".format(k,position[k]))
+                f.close()
+            '''
 
-#    samples[:, 2] = np.exp(samples[:, 2])
-    m_mcmc, v_mcmc, k_mcmc = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
-                                 zip(*np.percentile(samples, [16, 50, 84],
-                                                    axis=0)))
+    print('I am here 1')
 
-    print('m mcmc',m_mcmc)
-    print('v mcmc',v_mcmc)
-    print('k mcmc',k_mcmc)
-    
-    '''
-    fig2 = plt.figure(2)
-    for i in range(nwalkers):
-        plt.plot(sampler.chain[i,:,0])
+    print(sampler.chain.shape)
 
-    fig3 = plt.figure(3)
-    for i in range(nwalkers):
-        plt.plot(sampler.chain[i,:,1])
+    samples = sampler.chain[:, 10:, :].reshape((-1, ndim))
 
-    fig4 = plt.figure(4)
-    for i in range(nwalkers):
-        plt.plot(sampler.chain[i,:,2])
+    print(samples.shape)
 
-    fig5 = corner.corner(samples, labels=["$m$", "$v$", "$k$"])
+    print(samples)
 
-    plt.show()
-    '''
+    print('I am here 2')
+
+#    m_mcmc, v_mcmc, k_mcmc = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
+#                             zip(*np.percentile(samples, [16, 50, 84],axis=0)))
+
+#    print('m mcmc',m_mcmc)
+#    print('v mcmc',v_mcmc)
+#    print('k mcmc',k_mcmc)
+   
+#    '''
+#    fig2 = plt.figure(2)
+#    for i in range(nwalkers):
+#        plt.plot(sampler.chain[i,:,0])
+
+#    fig3 = plt.figure(3)
+#    for i in range(nwalkers):
+#        plt.plot(sampler.chain[i,:,1])
+#
+#    fig4 = plt.figure(4)
+#    for i in range(nwalkers):
+#        plt.plot(sampler.chain[i,:,2])
+#    '''
+
+#    if (opts.outdir is not 'None'):
+#        fig = corner.corner(samples, labels=["$m$", "$v$", "$k$"])
+#        fig.savefig(opts.outdir+"/triangle.png")
+
+#    pool.close()

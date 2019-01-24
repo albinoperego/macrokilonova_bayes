@@ -41,16 +41,16 @@ class SourceProperties(object):
                 if (len(mag[ilambda]['time']>0)):
                     for i in range(len(mag[ilambda]['time'])):
                         all_time.append(mag[ilambda]['time'][i]-self.t0)
-            all_time = sorted(np.array(all_time))
+            all_time = np.asarray(sorted(np.array(all_time)))
             time = []
             i = 0
             while (i < len(all_time)):
                 delta = (1.+2.*toll) * all_time[i]
                 i_start = i
-                while (all_time[i] < delta):
+                while (all_time[i] < delta and i < (len(all_time)-1)):
                     i = i + 1
                 time.append(0.5*(all_time[i]+all_time[i_start]))
-                if (i == len(all_time)-1):
+                if (i >= len(all_time)-1):
                     break
             time = sorted(np.array(time)*units.day2sec)
         else:

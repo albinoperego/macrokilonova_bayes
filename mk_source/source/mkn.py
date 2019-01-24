@@ -209,7 +209,7 @@ if __name__=='__main__':
                    'time min'   :200000.,         # minimum time [s]
                    'time max'   :432000.,       # maximum time [s]
                    'n time'     :200,           # integer number of bins in time
-                   'scale for t':'log',         # kind of spacing in time [log - linear - measures]
+                   'scale for t':'measures',    # kind of spacing in time [log - linear - measures]
                    'NR_data'    :False,         # use (True) or not use (False) NR profiles
                    'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
                    }
