@@ -580,12 +580,15 @@ if __name__=='__main__':
 
     print('I am here 2')
 
-#    m_mcmc, v_mcmc, k_mcmc = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
-#                             zip(*np.percentile(samples, [16, 50, 84],axis=0)))
+    eps0_mcmc, T_ni_mcmc, T_la_mcmc, m_mcmc, v_mcmc, k_mcmc = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
+                             zip(*np.percentile(samples, [16, 50, 84],axis=0)))
 
-#    print('m mcmc',m_mcmc)
-#    print('v mcmc',v_mcmc)
-#    print('k mcmc',k_mcmc)
+    print('T_ni mcmc',T_ni_mcmc)
+    print('T_la mcmc',T_la_mcmc)
+    print('eps0 mcmc',eps0_mcmc)
+    print('m mcmc',m_mcmc)
+    print('v mcmc',v_mcmc)
+    print('k mcmc',k_mcmc)
    
 #    '''
 #    fig2 = plt.figure(2)
@@ -601,8 +604,8 @@ if __name__=='__main__':
 #        plt.plot(sampler.chain[i,:,2])
 #    '''
 
-#    if (opts.outdir is not 'None'):
-#        fig = corner.corner(samples, labels=["$m$", "$v$", "$k$"])
-#        fig.savefig(opts.outdir+"/triangle.png")
+    if (opts.outdir is not 'None'):
+        fig = corner.corner(samples, labels=["$m$", "$v$", "$k$"])
+        fig.savefig(opts.outdir+"/triangle.png")
 
 #    pool.close()
