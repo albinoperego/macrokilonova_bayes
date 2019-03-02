@@ -78,7 +78,6 @@ class MKN(object):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-        
         return logL
 
     def log_likelihood(self,r_ph,T_eff):
@@ -95,26 +94,15 @@ class MKN(object):
 
         # compute the residuals
         if (source_name != 'default'):
-            #print('i.e., I am computing residuals')
             residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,self.D,self.t0,self.mag)
 
         # compute the likelihood
-            #print('and then I am computing the likelihood')
             logL = self.compute_log_likelihood(residuals)
-
-            #print('logL')
-            #print(logL)
 
         else:
             logL = 0.
 
         return logL
-
-#    def log_prob(self,theta,ejecta_vars,ejecta_params,glob_vars,glob_params):
-#        lp = self.log_prior(theta)
-#        if not np.isfinite(lp):
-#            return -np.inf
-#        return lp + self.log_like(theta,ejecta_vars,ejecta_params,glob_vars,glob_params)
 
     def log_prior(self,theta,vmin,vmax):
         for i in range(len(theta)):
@@ -234,8 +222,9 @@ if __name__=='__main__':
     parser=OptionParser()
     parser.add_option('--outdir',default=None,type='string',metavar='DIR',help='Directory for output')
     parser.add_option('--nthreads',default=None,type='int',metavar='N',help='Number of threads (default = 1)')
-    parser.add_option('--nwalkers',default=100,type='int',metavar='n',help='Number of walkers (default = 100)')
+    parser.add_option('--nwalkers',default=20,type='int',metavar='n',help='Number of walkers (default = 100)')
     parser.add_option('--nsteps',default=1000,type='int',metavar='m',help='Number of steps (default = 1000)')
+    parser.add_option('--nburn',default=100,type='int',metavar='k',help='Number of burn-in steps (default = 100)')
     (opts,args)=parser.parse_args()
 
 #dictionary with the global parameters of the model
@@ -519,13 +508,15 @@ if __name__=='__main__':
     vmin = np.asarray([item[0] for item in mcmc_var_minmax])
     vmax = np.asarray([item[1] for item in mcmc_var_minmax])
 
-    pos = [vmin + np.random.uniform(0.,1.,ndim)*(vmax-vmin) for i in range(nwalkers)]
+    # flat initialization of the walkers
+    p0 = [vmin + np.random.uniform(0.,1.,ndim)*(vmax-vmin) for i in range(nwalkers)]
 
 #    pool = MPIPool()
 #    if not pool.is_master():
 #        pool.wait()
 #        sys.exit(0)
 
+    # initialize the sampler
     sampler = emcee.EnsembleSampler(opts.nwalkers, 
                                     ndim, 
                                     log_prob, 
@@ -538,7 +529,10 @@ if __name__=='__main__':
                                           glob_params), 
                                     threads=opts.nthreads)
 
-    print('I am here')
+    # burn-in to better initialize the walkers
+    print('Starting the burn-in phase')
+    pos,prob,state = sampler.run_mcmc(p0,opts.nburn)
+    print('Finished the burn-in phase')
 
     if (opts.outdir is not 'None'):
         try:
@@ -550,8 +544,20 @@ if __name__=='__main__':
         f.close()
 
     for i, result in enumerate(sampler.sample(pos, iterations=opts.nsteps)):
-        if (i+1) % 10 == 0:
-            print("{0:5.1%}".format(float(i) / float(opts.nsteps)))
+        if (i+1) % 100 == 0:
+
+            # save an intermediate step
+            print('Step %i/%i completed!' %(i+1,opts.nsteps))
+            np.save(opts.outdir+"/last_intermediate_step.npy", sampler.chain)
+
+            if (opts.outdir is not 'None'):
+                f = open(opts.outdir+"/chain.dat", "a")
+                position = result[0]
+                for k in range(position.shape[0]):
+                #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
+                    f.write("%i %30s \n" %(k,position[k]))
+                f.close()
+
             # position = result[0]
             #f = open("chain.dat", "a")
             #for k in range(position.shape[0]):
@@ -559,26 +565,13 @@ if __name__=='__main__':
             #    f.write("{0:4d} {1:s}\n".format(k,position[k]))
             #f.close()
 
-            '''
-            if (opts.outdir is not 'None'):
-                f = open(opts.outdir+"/chain.dat", "a")
-                for k in range(position.shape[0]):
-                #f.write("{0:4d} {1:s}\n".format(k, " ".join(str(position[k]))))
-                    f.write("{0:4d} {1:s}\n".format(k,position[k]))
-                f.close()
-            '''
+    # save final results
+    print('All steps completed!')
+    np.save(opts.outdir+"/last_step.npy", sampler.chain)
 
-    print('I am here 1')
-
-    print(sampler.chain.shape)
+    exit()
 
     samples = sampler.chain[:, 10:, :].reshape((-1, ndim))
-
-    print(samples.shape)
-
-    print(samples)
-
-    print('I am here 2')
 
     eps0_mcmc, T_ni_mcmc, T_la_mcmc, m_mcmc, v_mcmc, k_mcmc = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
                              zip(*np.percentile(samples, [16, 50, 84],axis=0)))

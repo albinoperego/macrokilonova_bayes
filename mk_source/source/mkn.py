@@ -89,7 +89,6 @@ class MKN(object):
         logL = 0.
         for ilambda in residuals.keys():
             logL += -0.5*np.sum(np.array([res*res for res in residuals[ilambda]]))
-        
         return logL
 
     def log_likelihood(self,r_ph,T_eff):
@@ -105,8 +104,7 @@ class MKN(object):
             print('and then I am computing the likelihood')
             logL = self.compute_log_likelihood(residuals)
 
-            print('logL')
-            print(logL)
+            print('logL:',logL)
 
         else:
             logL = 0.
