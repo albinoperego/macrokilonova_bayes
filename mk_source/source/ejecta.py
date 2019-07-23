@@ -6,14 +6,14 @@ import numpy as np
 import observer_projection as op
 import opacity_angular_distribution
 import thermalization
-import units
+import units_mkn
 import velocity_angular_distribution
 
 from expansion_model_single_spherical import ExpansionModelSingleSpherical
 from shell import Shell
 
 def T_eff_calc(Lum,dOmega,r_ph):
-    return (Lum/(dOmega* r_ph*r_ph *units.sigma_SB))**(0.25)
+    return (Lum / (dOmega * r_ph * r_ph * units_mkn.sigma_SB)) ** (0.25)
 
 class Ejecta(object):
 
@@ -37,6 +37,9 @@ class Ejecta(object):
         for c in self.components:
           
             if (glob_params['lc model']=='grossman'):
+                # print(shell_params.keys())
+                # print(shell_params[c.name])
+                # exit(1)
                 r, Lb = c.expansion_angular_distribution(angular_distribution,
                                                          omega_distribution,
                                                          time,

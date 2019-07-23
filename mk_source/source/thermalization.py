@@ -1,5 +1,5 @@
 import numpy as np
-import units
+import units_mkn
 from scipy import interpolate
 
 class Thermalization(object):
@@ -39,7 +39,7 @@ class Thermalization(object):
         return self.therm_efficiency(self, **kwargs)
 
     def therm_efficiency_params(self, m,omega,v):
-        m_iso = units.fourpi/omega * m
+        m_iso = units_mkn.fourpi / omega * m
         # assign the values of the mass and velocity
         xnew=np.log10(m_iso)   #mass     [Msun]
         ynew=v                 #velocity [c]
@@ -47,7 +47,7 @@ class Thermalization(object):
         return (self.fa(xnew,ynew),self.fb(xnew,ynew),self.fd(xnew,ynew))
 
     def therm_efficiency_params_1d(self, m,omega,v):
-        m_iso = units.fourpi/omega * m
+        m_iso = units_mkn.fourpi / omega * m
         # assign the value of x=m/v^2
         xnew = m_iso/(v*v)
         # compute the parameters by 1-d interpolation
@@ -63,7 +63,7 @@ def BKWM_therm_efficiency(cls, **kwargs):
         print('Error. For the heating efficiency, user must specify time, mass, angle and velocity\n')
         exit(-1)
     coeff=cls.therm_efficiency_params(m,omega,v)
-    time_days=t*units.sec2day
+    time_days= t * units_mkn.sec2day
     if(np.isscalar(time_days)):
         tmp = float(2.*coeff[1]*time_days**coeff[2])
         return float(0.36*(np.exp(-coeff[0]*time_days) + np.log(1.+tmp)/tmp ))
@@ -80,7 +80,7 @@ def BKWM_1d_therm_efficiency(cls, **kwargs):
         print('Error. For the heating efficiency, user must specify time, mass, angle and velocity\n')
         exit(-1)
     coeff=cls.therm_efficiency_params_1d(m,omega,v)
-    time_days=t*units.sec2day
+    time_days= t * units_mkn.sec2day
     if(np.isscalar(time_days)):
         tmp = float(2.*coeff[1]*time_days**coeff[2])
         return float(0.36*(np.exp(-coeff[0]*time_days) + np.log(1.+tmp)/tmp ))

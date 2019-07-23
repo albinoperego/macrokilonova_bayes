@@ -27,7 +27,7 @@ import mkn
 import numpy as np
 import observer_projection as op
 import source_properties as sp
-import units
+import units_mkn
 
 # Necessary to add cwd to path when script run
 # by SLURM (since it executes a copy)
@@ -114,7 +114,7 @@ class MacroKilonovaModel(cpnest.model.Model):
                                                    self.MKN.glob_params)
 
         # compute the residuals
-        D = x['distance']*1e6*units.pc2cm
+        D = x['distance'] * 1e6 * units_mkn.pc2cm
         residuals = ft.calc_all_residuals(self.flux_factor,self.MKN.time,r_ph,T_eff,self.MKN.lambda_vec,self.MKN.dic_filt,D,self.MKN.t0,self.MKN.mag)
         logL = self.MKN.compute_log_likelihood(residuals)
 

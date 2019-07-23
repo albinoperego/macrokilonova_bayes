@@ -4,7 +4,7 @@ import mass_angular_distribution
 import thermalization
 import velocity_angular_distribution
 import opacity_angular_distribution
-import units
+import units_mkn
 import observer_projection as op
 import nuclear_heat
 import scipy.integrate as integrate
@@ -31,7 +31,7 @@ class Shell(object):
         self.vel_dist        = velocity_angular_distribution.VelocityAngularDistribution(params['vel_dist'])
         self.op_dist         = opacity_angular_distribution.OpacityAngularDistribution(params['op_dist'])
         self.expansion_model = ExpansionModelSingleSpherical('GK')
-    
+
     def update(self, m_tot, angular_distribution,**kwargs):
         x = self.mass_dist(m_tot,angular_distribution,**kwargs)
         y = self.vel_dist(angular_distribution,**kwargs)
@@ -57,7 +57,7 @@ class Shell(object):
                                        glob_params,
                                        shell_name,
                                        **kwargs):
-                                       
+
 # assign the global model variables
         v_law    = ejecta_params['v_law']
         v_min    = glob_params['v_min']
@@ -80,30 +80,68 @@ class Shell(object):
             m_tot = np.float(glob_vars['m_disk']) * np.float(ejecta_vars['xi_disk'])
         elif (ejecta_vars['xi_disk'] == None):
             m_tot = np.float(ejecta_vars['m_ej'])
+        else:
+            raise ValueError("[{}] 2 ways to infer m_tot:, as m_ej:{} and xi_disk:{}"
+                             .format(self.name, ejecta_vars['m_ej'], ejecta_vars['xi_disk']))
 
-        if (glob_params['NR_data'] and shell_name == 'dynamics'):
-            print('I am here')
-            print(NR_data)
-            fname = glob_params['NR_filename']
-            self.ejected_mass,self.velocity_rms,self.opacity = import_NR_data.importNRprofiles(fname,angular_distribution)
-            g = open('profile_NR.txt','w')
-            for i in range(len(angular_distribution)):
-                g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
-            g.close()
-        else: 
-            self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
-            if (shell_name == 'dynamics'):
-                g = open('profile_noNR.txt','w')
+        # for the dynamical ejecta
+        if shell_name == 'dynamics':
+            if glob_params['NR_data']:
+                print('I am initializing NR data')
+                # print(NR_data)
+                fname = glob_params['NR_filename']
+                self.ejected_mass,self.velocity_rms,self.opacity =\
+                    import_NR_data.importNRprofiles(fname,angular_distribution, kappa_low=1., kappa_high=30.)
+                g = open('profile_NR.txt','w')
                 for i in range(len(angular_distribution)):
-                    g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
+                    g.write('%20s %20s %20s %20s \n' %(0.5*(angular_distribution[i][1]+angular_distribution[i][0]),
+                                                       self.ejected_mass[i],self.velocity_rms[i],self.opacity[i]))
                 g.close()
-            
-        self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
+            else:
+                self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
+                g = open('profile_noNR.txt', 'w')
+                for i in range(len(angular_distribution)):
+                    g.write('%20s %20s %20s %20s \n' % (0.5 * (angular_distribution[i][1] + angular_distribution[i][0]),
+                                                        self.ejected_mass[i], self.velocity_rms[i], self.opacity[i]))
+                g.close()
+
+        # for the pseudo-dynamical ejecta
+        if shell_name == 'psdynamics':
+            if glob_params['NR2_data']:
+                print('I am initializing NR2 data')
+                # print(NR_data)
+                fname2 = glob_params['NR2_filename']
+                self.ejected_mass,self.velocity_rms,self.opacity = \
+                    import_NR_data.importNRprofiles(fname2,angular_distribution,
+                                                    kappa_low=ejecta_vars["kappa_low"],
+                                                    kappa_high=ejecta_vars["kappa_high"])
+                if ejecta_vars['override_m_ej']:
+                    self.ejected_mass = ejecta_vars['m_ej'] * self.ejected_mass / sum(self.ejected_mass)
+
+                g = open('profile_NR2.txt','w')
+
+                for i in range(len(angular_distribution)):
+                    g.write('%20s %20s %20s %20s \n' % (0.5 * (angular_distribution[i][1] + angular_distribution[i][0]),
+                                                        self.ejected_mass[i], self.velocity_rms[i], self.opacity[i]))
+                g.close()
+                if ejecta_vars['m_ej'] != None: m_tot = ejecta_vars['m_ej']
+            else:
+                self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
+                g = open('profile_noNR2.txt', 'w')
+                for i in range(len(angular_distribution)):
+                    g.write('%20s %20s %20s %20s \n' % (0.5 * (angular_distribution[i][1] + angular_distribution[i][0]),
+                                                        self.ejected_mass[i], self.velocity_rms[i], self.opacity[i]))
+                g.close()
+
+
+        if shell_name not in ['psdynamics', 'dynamics']:
+            self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
+
         self.physical_radius = []
         self.Lbol = []
-       
+
 #        m_rad_tot = []
- 
+
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
 
             vel,m_vel,t_diff,t_fs = self.expansion_model(omega,m_ej,v_rms,v_min,n_v,vscale,v_law,kappa)
@@ -145,7 +183,7 @@ class Shell(object):
 
             rtmp = self.r_ph_calc(v_fs, time)
             Tf = self.calc_Tfloor(kappa,T_floor_LA,T_floor_Ni)
-            self.physical_radius.append(np.array([min(r,np.sqrt(units.fourpi/omega*L/(units.fourpisigma_SB*Tf**4))) for r,L in zip(rtmp,Ltmp)]))
+            self.physical_radius.append(np.array([min(r, np.sqrt(units_mkn.fourpi / omega * L / (units_mkn.fourpisigma_SB * Tf ** 4))) for r, L in zip(rtmp, Ltmp)]))
 
             self.Lbol.append(Ltmp)
 
@@ -170,7 +208,7 @@ class Shell(object):
     def t_d(self,omega,k,m_ej,v_ej):
         beta=13.4
         m = (4.*np.pi)*m_ej/omega
-        return(np.sqrt((2.*k*m)/(beta*v_ej*units.c)))
+        return(np.sqrt((2.*k*m) / (beta * v_ej * units_mkn.c)))
 
 # NUCLEAR HEATING RATE
     def L_in(self,omega,k,t,m_ej,v_ej,glob_vars,glob_params):
@@ -181,7 +219,7 @@ class Shell(object):
         sigma0   = glob_params['sigma0']
         alpha    = glob_params['alpha']
         t0eps    = glob_params['t0eps']
-        cnst_eff = glob_params['cnst_eff']       
+        cnst_eff = glob_params['cnst_eff']
         return(nuclear_heat.heat_rate_w_ye_dependence(alpha,t,t0eps,sigma0,eps0,self.ET,m_ej,
                                                       omega,v_ej,cnst_eff,cnst_a_eps_nuc=a_eps_nuc,
                                                       cnst_b_eps_nuc=b_eps_nuc,cnst_t_eps_nuc=t_eps_nuc,
@@ -191,7 +229,7 @@ class Shell(object):
 # Note: to avoid overflow in e^((t/td)^2) a 'cut' is introduced. If (t/td)^2 > 500, it is fixed to 500. Now L is computed also at later times.
     def L(self,omega,t,k,m_ej,v_ej,glob_vars,glob_params):
         td=self.t_d(omega,k,m_ej,v_ej)
-        init_x = np.logspace(-3,np.log10(t[0]),100.)
+        init_x = np.logspace(-3,np.log10(t[0]),100)
         init_y = (self.L_in(omega,k,init_x,m_ej,v_ej,glob_vars,glob_params)*np.exp((init_x**2)/(td**2))*init_x/td)
         init_int=integrate.trapz(init_y,init_x)
         cut = t
@@ -207,12 +245,12 @@ class Shell(object):
     def villar(self,time,omega,m_ej,v_ej,k,glob_vars,glob_params):
         T_floor_Ni = glob_vars['T_floor_Ni']
         T_floor_LA = glob_vars['T_floor_LA']
-        m_ej = m_ej * units.Msun
-        v_ej = v_ej * units.c
+        m_ej = m_ej * units_mkn.Msun
+        v_ej = v_ej * units_mkn.c
         L_bol=self.L(omega,time,k,m_ej,v_ej,glob_vars,glob_params)
         T_floor = self.calc_Tfloor(k,T_floor_LA,T_floor_Ni)
         rtmp = v_ej*time
-        R_phot=np.array([min(r,np.sqrt(L/(units.fourpi/omega*units.fourpisigma_SB*T_floor**4))) for r,L in zip(rtmp,L_bol)])
+        R_phot=np.array([min(r, np.sqrt(L / (units_mkn.fourpi / omega * units_mkn.fourpisigma_SB * T_floor ** 4))) for r, L in zip(rtmp, L_bol)])
         return(L_bol,R_phot)
 
 
@@ -226,7 +264,7 @@ class Shell(object):
                                               glob_params,
                                               shell_name,
                                               **kwargs):
-        
+
 # assign the global model variables
         v_law    = ejecta_params['v_law']
         v_min    = glob_params['v_min']
@@ -253,7 +291,7 @@ class Shell(object):
         self.ejected_mass,self.velocity_rms,self.opacity = self.update(m_tot,angular_distribution,**ejecta_vars)#,**kwargs)
         self.physical_radius = []
         self.Lbol = []
-        
+
         for omega,m_ej,v_rms,kappa in zip(omega_distribution,self.ejected_mass,self.velocity_rms,self.opacity):
             tmp1,tmp2 = self.villar(time,omega,m_ej,v_rms,kappa,glob_vars,glob_params)
             self.Lbol.append(tmp1)
@@ -269,7 +307,7 @@ class Shell(object):
                               m_ej,
                               omega,v_rms,kappa,
                               cnst_eff,alpha):
-        
+
         eps = self.EPSNUC(alpha,time,t0eps,sigma0,
                           eps0,self.ET,m_ej,omega,v_rms,
                           cnst_eff,
@@ -280,7 +318,7 @@ class Shell(object):
         return m_rad*eps
 
     def r_ph_calc(self, vel, t):
-        return (vel*units.c)*t
+        return (vel * units_mkn.c) * t
 
 
 

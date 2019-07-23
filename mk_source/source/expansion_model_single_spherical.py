@@ -1,5 +1,5 @@
 import numpy as np
-import units
+import units_mkn
 
 class ExpansionModelSingleSpherical(object):
 
@@ -15,9 +15,9 @@ class ExpansionModelSingleSpherical(object):
 
     def mass_gt_v(self,vlaw,v,mej,v_exp):
         if (vlaw == 'power'):
-            return mej*units.Msun*(1.0 + self.func_vel(v/v_exp))  #[g]
+            return mej * units_mkn.Msun * (1.0 + self.func_vel(v / v_exp))  #[g]
         elif (vlaw == 'uniform'):
-            return mej*units.Msun*(1.0-(v/v_exp))  #[g]
+            return mej * units_mkn.Msun * (1.0 - (v / v_exp))  #[g]
 
     def func_vel(self,x):
 #    0.3125 = 35./112.
@@ -30,10 +30,10 @@ class ExpansionModelSingleSpherical(object):
         return 0.3125*x7 - 1.3125*x5 + 2.1875*x3 - 2.1875*x
 
     def t_diff_v(self,kappa,v,m_v,omega):
-        return np.sqrt(kappa*m_v/(omega*v*units.c*units.c))  #[s]
+        return np.sqrt(kappa * m_v / (omega * v * units_mkn.c * units_mkn.c))  #[s]
 
     def t_fs_v(self,kappa,v,m_v,omega):
-        return np.sqrt(1.5*kappa*m_v/(omega*v*v*units.c*units.c))  #[s]
+        return np.sqrt(1.5 * kappa * m_v / (omega * v * v * units_mkn.c * units_mkn.c))  #[s]
 
     def GK_expansion_model(self,Omega,m_ej,v_rms,v_min,n_v,vscale,vlaw,kappa,**kwargs):
 

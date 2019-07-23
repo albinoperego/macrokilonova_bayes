@@ -5,7 +5,7 @@ import angular_distribution as ad
 import filters as ft
 import lightcurve as lc
 import observer_projection as op
-import units
+import units_mkn
 import ejecta as ej
 import sys
 
@@ -109,7 +109,7 @@ for i in range(N):
                                             glob_params)
         
     # compute the magnitudes from a certain distance
-    D = chain['distance'][i]*1e6*units.pc2cm
+    D = chain['distance'][i] * 1e6 * units_mkn.pc2cm
     model_mag = ft.calc_magnitudes(flux_factor,time,r_ph,T_eff,lambda_vec,dic_filt,D)
     models.append(model_mag)
     sys.stderr.write("\n")

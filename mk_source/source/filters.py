@@ -4,7 +4,7 @@ import copy
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import dered_cardelli as drd
-import units
+import units_mkn
 
 # CORRECTION FOR REDDENING: if 'True' uses 'dered_cardelli' module to correct data for reddening.
 dered_correction = True
@@ -46,6 +46,7 @@ def read_filter_properties(folder):
 
 
 def read_measurements(filename):
+    # print("reading: {}".format(filename))
     t, magnitude, magnitude_error = np.loadtxt(filename, unpack = True)
     return t, magnitude, magnitude_error
 
@@ -94,8 +95,8 @@ def read_filter_measures(folder_name):
 
 
 def planckian(nu,T_plk):
-    tmp = (units.h*nu)/(units.kB*T_plk)
-    return (2.*units.h*nu**3)/(units.c2)/(np.exp(tmp)-1.)
+    tmp = (units_mkn.h * nu) / (units_mkn.kB * T_plk)
+    return (2. * units_mkn.h * nu ** 3) / (units_mkn.c2) / (np.exp(tmp) - 1.)
 
 def m_filter(lam,T,rad,dist,ff):
     fnu = calc_fnu(lam,T,rad,dist,ff)
@@ -104,8 +105,8 @@ def m_filter(lam,T,rad,dist,ff):
 def calc_fnu(lam,temp,rad,dist,ff):
   ff1 = ff[:len(ff)//2]
   ff2 = ff[len(ff)//2:]
-  tmp1 = np.array([r*r * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad,ff1,temp)])
-  tmp2 = np.array([r*r * f * planckian(units.c/(100.*lam),T) for r,f,T in zip(rad[::-1],ff2,temp[::-1])])
+  tmp1 = np.array([r * r * f * planckian(units_mkn.c / (100. * lam), T) for r, f, T in zip(rad, ff1, temp)])
+  tmp2 = np.array([r * r * f * planckian(units_mkn.c / (100. * lam), T) for r, f, T in zip(rad[::-1], ff2, temp[::-1])])
   return np.sum(tmp1+tmp2)/(dist*dist)
 
 def calc_lum_iso(llum,ff):
@@ -131,7 +132,7 @@ def calc_residuals(data,model,t0):
         if ilambda == 0: 
             continue
 #        fmag = interpolate.interp1d(model[0],model[ilambda], copy=False, bounds_error=None, fill_value=np.nan, assume_sorted=True)
-        fmag = np.interp((data[ilambda]['time']-t0)*units.day2sec, model[0],model[ilambda])
+        fmag = np.interp((data[ilambda]['time']-t0) * units_mkn.day2sec, model[0], model[ilambda])
 #        res[ilambda] = np.array([(fmag-m)/sm   for t,m,sm in zip(data[ilambda]['time'],data[ilambda]['mag'],data[ilambda]['sigma'])])
         res[ilambda] = (fmag-data[ilambda]['mag'])  /data[ilambda]['sigma']
     return res
@@ -148,8 +149,8 @@ def calc_all_residuals(ff,time,rad_ray,T_ray,lambda_vec,dic_filt,D,t0,data):
             continue
 
 #  here time delay must be implemented
-        R_intrp = np.array([np.interp((data[ilambda]['time']-t0)*units.day2sec,time,x) for x in rad_ray])
-        T_intrp = np.array([np.interp((data[ilambda]['time']-t0)*units.day2sec,time,x) for x in T_ray])
+        R_intrp = np.array([np.interp((data[ilambda]['time']-t0) * units_mkn.day2sec, time, x) for x in rad_ray])
+        T_intrp = np.array([np.interp((data[ilambda]['time']-t0) * units_mkn.day2sec, time, x) for x in T_ray])
 
         ordered_T = np.asarray([list(x) for x in zip(*T_intrp)])
         ordered_R = np.asarray([list(x) for x in zip(*R_intrp)])

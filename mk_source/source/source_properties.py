@@ -1,5 +1,5 @@
 import numpy as np
-import units
+import units_mkn
 
 class SourceProperties(object):
 
@@ -13,17 +13,24 @@ class SourceProperties(object):
         '''
 
         if (source_label == 'default'):
-            self.D = 40.e+6*units.pc2cm
+            self.D = 40.e+6 * units_mkn.pc2cm
             self.view_angle = 90.
             self.filter_data_folder=None
             self.t0 = 0.e0
 
         elif (source_label == 'AT2017gfo'):
-            self.D = 40.e+6*units.pc2cm
-            self.view_angle = 30.
+            self.D = 40.e+6 * units_mkn.pc2cm
+            self.view_angle = 180/12.
             self.filter_data_folder='filter_data_AT2017gfo'
             self.t0 = 57982.529
 
+        elif (source_label.__contains__('AT2017gfo') and source_label.__contains__('view_angle')):
+            self.D = 40.e+6 * units_mkn.pc2cm
+            self.view_angle = float(source_label.split('view_angle=')[-1])
+            self.filter_data_folder='filter_data_AT2017gfo'
+            self.t0 = 57982.529
+            print("Source properies changed")
+            # exit(1)
         else:
             print('unknown source!')
             print('please specify a source or default')
@@ -52,7 +59,7 @@ class SourceProperties(object):
                 time.append(0.5*(all_time[i]+all_time[i_start]))
                 if (i == len(all_time)-1):
                     break
-            time = sorted(np.array(time)*units.day2sec)
+            time = sorted(np.array(time) * units_mkn.day2sec)
         else:
             print('Error! Wrong option for the time scale')
             exit(-1)
@@ -76,6 +83,6 @@ class SourceProperties(object):
             time.append(0.5*(all_time[i]+all_time[i_start]))
             if (i == len(all_time)-1):
                 break
-        time = sorted(np.array(time)*units.day2sec)
+        time = sorted(np.array(time) * units_mkn.day2sec)
         return np.array(time)
 

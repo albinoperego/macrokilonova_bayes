@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy import  interpolate
 
 class ObserverProjection(object):
 
@@ -19,7 +19,7 @@ class ObserverProjection(object):
     def read_flux_factors(self, nrays):
         view_angles = np.linspace(0.0,90.0,91)
         flux_factors = np.array([np.loadtxt(self.data_location+'/ff_ray_%d.dat'%i,unpack=True,usecols=([1])) for i in range(nrays)])
-        flux_interpolant = [InterpolatedUnivariateSpline(view_angles,f) for f in flux_factors]
+        flux_interpolant = [interpolate.interp1d(view_angles,f) for f in flux_factors]
         return flux_interpolant
 
 if __name__=="__main__":

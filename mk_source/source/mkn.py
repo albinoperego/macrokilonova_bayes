@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import observer_projection as op
 import source_properties as sp
-import units
+import units_mkn
 
 
 class MKN(object):
@@ -31,6 +31,7 @@ class MKN(object):
         # initializing the global properties of the source
         print('I am initializing the global properties of the source')
         SP = sp.SourceProperties(source_name)
+        self.source_name = source_name
         self.D = SP.D
         self.view_angle = SP.view_angle
 
@@ -42,11 +43,13 @@ class MKN(object):
         self.angular_distribution, self.omega_distribution = self.AD(self.n_slices/2,glob_params['omega frac'])   # due to the symmetry abount the equatorial plane, the number of independent slices is half
 
         # initialize the filters
-        print('I am initializing the filters')
+        print('I am initializing the filters... '),
         if (source_name == 'default'):
             self.FT = ft.Filters("properties")
+            print(' default.')
         else:
             self.FT = ft.Filters("measures")
+            print(' AT2017gfo.')
         self.dic_filt,self.lambda_vec,self.mag = self.FT(SP.filter_data_folder)
 
 
@@ -121,7 +124,7 @@ class MKN(object):
         self.flux_factor = self.FF(self.view_angle)
 
         # compute the residuals
-        if (source_name != 'default'):
+        if (self.source_name != 'default'):
             print('i.e., I am computing residuals')
             residuals = ft.calc_all_residuals(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,self.D,self.t0,self.mag)
 
@@ -147,6 +150,8 @@ class MKN(object):
 
     def write_output(self,r_ph,T_eff,L_bol):
 
+        self.flux_factor = self.FF(self.view_angle)
+
         self.model_lum = ft.calc_lum_iso(L_bol,self.flux_factor)
 
         self.model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,self.D,self.t0)
@@ -170,7 +175,6 @@ class MKN(object):
                     continue
                 g.write('%20s' %(self.model_mag[ilambda][i]))
             g.write('\n')
-
         g.close()
 
 
@@ -185,16 +189,15 @@ class MKN(object):
             if (self.dic_filt[ilambda]['plot'] !=1):
                 continue
     
-            plt.plot(self.time*units.sec2day,self.model_mag[ilambda])
+            plt.plot(self.time * units_mkn.sec2day, self.model_mag[ilambda])
     
-            if (source_name != 'default'):
+            if (self.source_name != 'default'):
                 if(len(self.mag[ilambda]['sigma'])!=0):
                     plt.errorbar(self.mag[ilambda]['time']-self.t0,self.mag[ilambda]['mag'],yerr=self.mag[ilambda]['sigma'],fmt='o')
             plt.title('%s' %self.dic_filt[ilambda]['name'])
             plt.xlim(0.1,10)
             plt.ylim(27,15)
             plt.show()
-        
 
     def plot_output_tog(self):
 
@@ -202,14 +205,101 @@ class MKN(object):
         for ilambda in self.dic_filt.keys():
             if (self.dic_filt[ilambda]['plot'] !=1):
                 continue
-            plt.plot(self.time*units.sec2day,self.model_mag[ilambda])
-            if (source_name != 'default'):
+            plt.plot(self.time * units_mkn.sec2day, self.model_mag[ilambda])
+            if (self.source_name != 'default'):
                 if(len(self.mag[ilambda]['sigma'])!=0):
                     plt.errorbar(self.mag[ilambda]['time']-self.t0,self.mag[ilambda]['mag'],yerr=self.mag[ilambda]['sigma'],fmt='o')
         plt.title('Lightcurves')
         plt.xlim(0.1,10)
         plt.ylim(27,15)
         plt.show()
+
+    def write_filters_h5(self):
+        '''
+        Saves filter information in a singular h5 file for quick use
+        :return:
+        '''
+
+        if (not self.source_name.__contains__('AT2017gfo')):
+            raise NameError('write_obs not available for non AT2017gfo sources yet.')
+
+        import h5py
+        outfile = h5py.File("AT2017gfo.h5", "w")
+
+        for ilambda in self.dic_filt.keys():
+            if (self.dic_filt[ilambda]['active'] != 1):
+                continue
+
+            if (len(self.mag[ilambda]['time']) != 0):
+                arr = np.vstack(((self.mag[ilambda]['time']-self.t0),
+                                  self.mag[ilambda]['mag'],
+                                  self.mag[ilambda]['sigma']
+                                )).T
+
+                outfile.create_dataset(self.dic_filt[ilambda]['name'], data=arr)
+                del arr
+
+        print('filters file name:', "AT2017gfo.h5")
+
+    def write_output_h5_old(self, r_ph, T_eff, L_bol):
+
+        self.flux_factor = self.FF(self.view_angle)
+
+        self.model_lum = ft.calc_lum_iso(L_bol,self.flux_factor)
+
+        self.model_mag = ft.calc_magnitudes(self.flux_factor,self.time,r_ph,T_eff,self.lambda_vec,self.dic_filt,self.D,self.t0)
+
+        import h5py
+        outfile = h5py.File("mkn_model.h5", "w")
+        outfile.create_dataset('time', data=self.time * units_mkn.sec2day)
+
+        for ilambda in self.dic_filt.keys():
+            # print(self.dic_filt[ilambda]['name'])
+            if (self.dic_filt[ilambda]['active'] !=1):
+                continue
+
+            outfile.create_dataset(self.dic_filt[ilambda]['name'], data=self.model_mag[ilambda])
+
+        print('models file name:', "mkn_model.h5")
+
+    def write_output_h5(self, r_ph, T_eff, L_bol):
+
+        self.flux_factor = self.FF(self.view_angle)
+
+        self.model_lum = ft.calc_lum_iso(L_bol, self.flux_factor)
+
+        self.model_mag = ft.calc_magnitudes(self.flux_factor, self.time, r_ph, T_eff, self.lambda_vec, self.dic_filt,
+                                            self.D, self.t0)
+
+        import h5py
+        outfile = h5py.File("mkn_model.h5", "w")
+        outfile.create_dataset('time', data=self.time * units_mkn.sec2day)
+
+        for ilambda in self.dic_filt.keys():
+            # print(self.dic_filt[ilambda]['name'])
+            if (self.dic_filt[ilambda]['active'] != 1):
+                continue
+
+            outfile.create_dataset(self.dic_filt[ilambda]['name'], data=self.model_mag[ilambda])
+
+        if True:# self.glob_params == 'save attrs':
+            for ejecta_type in self.ejecta_vars.keys():
+                outfile.create_group(str(ejecta_type))
+                for v_n in self.ejecta_vars[ejecta_type].keys():
+                    value = self.ejecta_vars[ejecta_type][v_n]
+                    if value != None:
+                        outfile[str(ejecta_type)].attrs.create(str(v_n), self.ejecta_vars[ejecta_type][v_n])
+
+                    # print("\t var:{}".format(v_n))
+                    # outfile[str(ejecta_type)].attrs.create(str(v_n), self.ejecta_vars[ejecta_type][v_n])
+                    #
+                    # try:
+                    #     outfile[str(ejecta_type)].attrs.create(str(v_n), self.ejecta_vars[ejecta_type][v_n])
+                    # except:
+                    #     print("Failed to save: {}".format(self.ejecta_vars[ejecta_type][v_n]))
+
+
+        print('models file name:', "mkn_model.h5")
 
 
 if __name__=='__main__':
@@ -233,7 +323,8 @@ if __name__=='__main__':
                    'n time'     :200,           # integer number of bins in time
                    'scale for t':'log',    # kind of spacing in time [log - linear - measures]
                    'NR_data'    :False,         # use (True) or not use (False) NR profiles
-                   'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
+                   'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat',           # path of the NR profiles, necessary if NR_data is True
+                   'NR2_filename':"",
                    }
     
     #source_name = 'AT2017gfo'   # name of the source or "default"
@@ -261,7 +352,7 @@ if __name__=='__main__':
     # set of shell parameters to be sampled on
     ejecta_vars_iso={}
 
-    ejecta_vars_iso['dynamics'] = {'xi_disk'        :None,
+    ejecta_vars_iso['dynamics'] = {'xi_disk'       :None,
                                   'm_ej'           :0.04,
                                   'step_angle_mass':None,
                                   'high_lat_flag'  :None,
@@ -372,6 +463,7 @@ if __name__=='__main__':
     elif (glob_params['mkn model'] == 'iso3comp'):
         ejecta_params = ejecta_params_iso
         ejecta_vars    = ejecta_vars_iso
+
     elif (glob_params['mkn model'] == 'aniso1comp'):
         ejecta_params = {}
         ejecta_vars = {}

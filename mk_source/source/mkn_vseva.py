@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import observer_projection as op
 import source_properties as sp
-import units
+import units_mkn
 
 
 class MKN(object):
@@ -178,7 +178,7 @@ class MKN(object):
             if (self.dic_filt[ilambda]['plot'] !=1):
                 continue
     
-            plt.plot(self.time*units.sec2day,self.model_mag[ilambda])
+            plt.plot(self.time * units_mkn.sec2day, self.model_mag[ilambda])
     
             if (source_name != 'default'):
                 if(len(self.mag[ilambda]['sigma'])!=0):
@@ -195,7 +195,7 @@ class MKN(object):
         for ilambda in self.dic_filt.keys():
             if (self.dic_filt[ilambda]['plot'] !=1):
                 continue
-            plt.plot(self.time*units.sec2day,self.model_mag[ilambda])
+            plt.plot(self.time * units_mkn.sec2day, self.model_mag[ilambda])
             if (source_name != 'default'):
                 if(len(self.mag[ilambda]['sigma'])!=0):
                     plt.errorbar(self.mag[ilambda]['time']-self.t0,self.mag[ilambda]['mag'],yerr=self.mag[ilambda]['sigma'],fmt='o')

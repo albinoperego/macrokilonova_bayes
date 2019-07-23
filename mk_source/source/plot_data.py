@@ -4,7 +4,7 @@ import copy
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import dered_cardelli as drd
-import units
+import units_mkn
 
 
 dered_correction = True
