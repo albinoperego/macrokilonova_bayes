@@ -166,7 +166,8 @@ if __name__=='__main__':
                    'n time'     :20,            # integer number of bins in time
                    'scale for t':'measures',    # kind of spacing in time [log - linear - measures]
                    'NR_data'    :False,         # use (True) or not use (False) NR profiles
-                   'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'           # path of the NR profiles, necessary if NR_data is True
+                   'NR_filename':'../example_NR_data/DD2_M125125_LK/outflow_1/ejecta_profile.dat'
+                       # path of the NR profiles, necessary if NR_data is True
                   }
 
     # set of global parameters to be fit
@@ -174,9 +175,9 @@ if __name__=='__main__':
                  'eps0':  [2.e17, 2.5e20],
                  'T_floor_LA':[100.,3000.],
                  'T_floor_Ni':[3000.,8000.],
-                 'a_eps_nuc':[0.499, 0.501],
-                 'b_eps_nuc':[2.49, 2.51],
-                 't_eps_nuc':[0.99, 1.01]}
+                 'a_eps_nuc':[0.499, 0.501], # to fix
+                 'b_eps_nuc':[2.49, 2.51],   # to fix
+                 't_eps_nuc':[0.99, 1.01]}   # to fix
 
 ###############################
 # Template for isotropic case # 
@@ -326,13 +327,13 @@ if __name__=='__main__':
     if opts.full_run:
         model = MacroKilonovaModel(glob_params, glob_vars, ejecta_params, ejecta_vars,source_name)
         work  = cpnest.CPNest(model,
-                            verbose=2,
-                            poolsize=opts.poolsize,
-                            nthreads=opts.threads,
-                            nlive=opts.nlive,
-                            maxmcmc=opts.maxmcmc,
-                            output=opts.out_dir,
-                            seed=opts.seed)
+                              verbose=2,
+                              poolsize=opts.poolsize,
+                              nthreads=opts.threads,
+                              nlive=opts.nlive,
+                              maxmcmc=opts.maxmcmc,
+                              output=opts.out_dir,
+                              seed=opts.seed)
         work.run()
         work.get_posterior_samples(filename = 'posterior.dat')
 """
